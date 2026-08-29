@@ -5,7 +5,7 @@ import { NextResponse, type NextRequest } from "next/server";
 // admin_users 테이블에 role이 없는 사용자는 /admin 어디에도 접근할 수 없다.
 const ADMIN_LOGIN_PATH = "/admin/login";
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });
 
   const supabase = createServerClient(
