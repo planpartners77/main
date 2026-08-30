@@ -1,12 +1,18 @@
 @import "tailwindcss";
 
-/* 디자인 토큰 (가이드 §5-1). 실제 브랜드 색상 확정 전까지의 임시값. */
+/* 디자인 토큰 (가이드 §5-1, 2026-08-31 벤치마킹 캡처 기준 컬러 컨셉으로 업데이트).
+   어두운 남색 블록 대신 밝은 블루 액센트 + 옅은 틴트 배경 중심으로 전환. */
 :root {
-  --background: #f6f7fb; /* 순백 대신 아주 옅은 남색빛 오프화이트 */
-  --foreground: #171f2b;
-  --brand-navy: #0e2a47; /* 프라이머리 — 보험·상조 랜딩에서 비중 있게 사용 */
-  --brand-navy-dark: #0a1f35;
-  --brand-accent: #c9902f; /* 인터넷·휴대폰·가전렌탈 혜택/가격 강조용 웜톤 */
+  --background: #ffffff;
+  --foreground: #14213a;
+  --brand-navy: #10233d; /* 헤드라인/푸터 등 짙은 텍스트·다크 영역 전용 */
+  --brand-navy-dark: #0a1729;
+  --brand-blue: #2f6feb; /* 프라이머리 액션 컬러 — 버튼/탭/링크 */
+  --brand-blue-dark: #1d54c9;
+  --brand-mint: #17c3a4; /* 상단 바 등 포인트 액센트 */
+  --brand-urgent: #e84545; /* 가격/한정 혜택 강조용 */
+  --surface-tint: #eef4ff; /* 섹션 구분용 옅은 블루 배경 */
+  --surface-tint-strong: #dfebff; /* 배너 등 더 진한 틴트 */
 }
 
 @theme inline {
@@ -14,7 +20,12 @@
   --color-foreground: var(--foreground);
   --color-brand-navy: var(--brand-navy);
   --color-brand-navy-dark: var(--brand-navy-dark);
-  --color-brand-accent: var(--brand-accent);
+  --color-brand-blue: var(--brand-blue);
+  --color-brand-blue-dark: var(--brand-blue-dark);
+  --color-brand-mint: var(--brand-mint);
+  --color-brand-urgent: var(--brand-urgent);
+  --color-surface-tint: var(--surface-tint);
+  --color-surface-tint-strong: var(--surface-tint-strong);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
