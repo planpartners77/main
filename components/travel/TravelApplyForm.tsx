@@ -2,6 +2,7 @@
 
 import { useRef, useState, type FormEvent } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { getStoredReferral } from "@/lib/referral/client";
 
 // CRIS 골프 체험 프로그램 신청 페이지. 원본(vscode_pplan/index.html, ppartners 배포본)의
 // 신청서 항목·검증 로직·회차 일정을 그대로 유지하되 PlanPartners 블루 컨셉으로 재구성했다.
@@ -221,11 +222,13 @@ export function TravelApplyForm() {
       // (leads_select_own_or_admin이 auth.uid()=user_id를 요구, guest는 둘 다 null이라 불일치)
       // id를 클라이언트에서 미리 생성해 넘긴다 — 알림 API 호출에 그대로 재사용.
       const leadId = crypto.randomUUID();
+      const referral = getStoredReferral();
 
       const { error } = await supabase.from("leads").insert({
         id: leadId,
         category_id: category?.id ?? null,
         status: "received",
+        referral_code_id: referral?.codeId ?? null,
         guest_contact: {
           program: "CRIS 국제학교 골프 체험 프로그램",
           childInfo: form.childInfo,
@@ -258,6 +261,14 @@ export function TravelApplyForm() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ type: "travel_lead", id: leadId }),
       }).catch(() => {});
+
+      if (referral) {
+        fetch("/api/referral", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ type: "convert", leadId, codeId: referral.codeId }),
+        }).catch(() => {});
+      }
 
       setSubmitted(true);
     } catch {

@@ -1,6 +1,7 @@
 import { GlobalNav } from "@/components/shared/GlobalNav";
 import { Footer } from "@/components/shared/Footer";
 import { SitePopupLayer } from "@/components/design/SitePopupLayer";
+import { ReferralCapture } from "@/components/referral/ReferralCapture";
 import { getOrderedCategories } from "@/lib/categories";
 import { getCategoryOrder } from "@/lib/design/site-settings";
 
@@ -16,6 +17,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
       <div className="flex-1 pb-14 md:pb-0">{children}</div>
       <Footer />
       <SitePopupLayer />
+      <ReferralCapture />
     </div>
   );
 }
