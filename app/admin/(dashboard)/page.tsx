@@ -7,7 +7,7 @@ import { LEAD_STATUS_OPTIONS } from "@/components/admin/leads/LeadStatusSelect";
 const QUICK_LINKS = [
   { title: "리드 확인", href: "/admin/leads", icon: "leads" },
   { title: "상품 등록", href: "/admin/products", icon: "product" },
-  { title: "회원 관리", href: "#", icon: "member" },
+  { title: "회원 관리", href: "/admin/members", icon: "member" },
   { title: "사이트 설정", href: "#", icon: "settings" },
 ];
 
