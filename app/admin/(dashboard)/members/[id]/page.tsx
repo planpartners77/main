@@ -3,11 +3,13 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getAdminSession } from "@/lib/admin/session";
 import { LEAD_STATUS_OPTIONS } from "@/components/admin/leads/LeadStatusSelect";
+import { MemberEditForm } from "@/components/admin/members/MemberEditForm";
 
 interface MemberDetail {
   id: string;
   display_name: string | null;
   phone: string | null;
+  tier_id: string | null;
   marketing_opt_in: boolean;
   created_at: string;
   customer_tiers: { name: string | null } | null;
@@ -34,7 +36,7 @@ export default async function AdminMemberDetailPage({
 
   const { data: member, error } = await supabase
     .from("profiles")
-    .select("id, display_name, phone, marketing_opt_in, created_at, customer_tiers(name)")
+    .select("id, display_name, phone, tier_id, marketing_opt_in, created_at, customer_tiers(name)")
     .eq("id", id)
     .single();
 
@@ -47,6 +49,8 @@ export default async function AdminMemberDetailPage({
     .select("id, status, created_at, categories(name), products(title)")
     .eq("user_id", id)
     .order("created_at", { ascending: false });
+
+  const { data: tiersData } = await supabase.from("customer_tiers").select("id, name");
 
   // §9-1 개인정보 열람 로그 요구사항: 누가/언제/어떤 필드를 조회했는지 매 열람마다 기록한다.
   if (session) {
@@ -77,23 +81,22 @@ export default async function AdminMemberDetailPage({
           <p className="text-sm font-semibold text-[var(--brand-navy)]">기본 정보</p>
           <dl className="mt-3 space-y-2 text-sm">
             <div className="flex justify-between">
-              <dt className="text-gray-500">연락처</dt>
-              <dd>{detail.phone ?? "-"}</dd>
-            </div>
-            <div className="flex justify-between">
-              <dt className="text-gray-500">등급</dt>
-              <dd>{detail.customer_tiers?.name ?? "일반"}</dd>
-            </div>
-            <div className="flex justify-between">
-              <dt className="text-gray-500">마케팅 수신동의</dt>
-              <dd>{detail.marketing_opt_in ? "동의" : "미동의"}</dd>
-            </div>
-            <div className="flex justify-between">
               <dt className="text-gray-500">가입일</dt>
               <dd>{new Date(detail.created_at).toLocaleDateString("ko-KR")}</dd>
             </div>
           </dl>
         </div>
+        {session && (
+          <MemberEditForm
+            memberId={detail.id}
+            actorId={session.userId}
+            initialDisplayName={detail.display_name ?? ""}
+            initialPhone={detail.phone ?? ""}
+            initialTierId={detail.tier_id ?? ""}
+            initialMarketingOptIn={detail.marketing_opt_in}
+            tierOptions={tiersData ?? []}
+          />
+        )}
       </div>
 
       <div className="mt-6 rounded-2xl border border-gray-200 bg-white p-5">

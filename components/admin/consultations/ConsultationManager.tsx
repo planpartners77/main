@@ -23,12 +23,14 @@ export interface ConsultationRow {
   } | null;
 }
 
-const STATUS_OPTIONS = [
+export const CONSULTATION_STATUS_OPTIONS = [
   { value: "booked", label: "예약" },
   { value: "in_progress", label: "상담중" },
   { value: "completed", label: "상담완료" },
   { value: "canceled", label: "취소" },
 ] as const;
+
+const STATUS_OPTIONS = CONSULTATION_STATUS_OPTIONS;
 
 const STATUS_STYLE: Record<string, string> = {
   booked: "bg-blue-50 text-blue-700",
