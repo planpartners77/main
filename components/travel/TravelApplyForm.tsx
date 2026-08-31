@@ -401,40 +401,36 @@ export function TravelApplyForm() {
                   성수기 요금 · 입학금 외 60만원
                 </span>
               </div>
-              <div className="mt-3 space-y-2">
+              <select
+                value={form.session}
+                onChange={(e) => update("session", e.target.value)}
+                className="mt-3 w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-[var(--brand-navy)] focus:border-[var(--brand-blue)] focus:outline-none"
+              >
+                <option value="" disabled>
+                  참가 차수를 선택해 주세요
+                </option>
                 {SESSIONS.map((s) => (
-                  <label
-                    key={s.id}
-                    className={`flex cursor-pointer items-center justify-between gap-3 rounded-lg border px-3 py-2.5 text-sm transition ${
-                      form.session === s.id
-                        ? "border-[var(--brand-blue)] bg-[var(--surface-tint)]"
-                        : "border-gray-200 bg-white"
+                  <option key={s.id} value={s.id}>
+                    {s.label}
+                    {s.badge ? ` — ${s.badge === "peak" ? "성수기 · +60만원" : "프로모션 · +30만원"}` : ""}
+                  </option>
+                ))}
+              </select>
+              {(() => {
+                const selected = SESSIONS.find((s) => s.id === form.session);
+                if (!selected?.badge) return null;
+                return (
+                  <span
+                    className={`mt-2 inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                      selected.badge === "peak"
+                        ? "bg-[var(--brand-urgent)]/10 text-[var(--brand-urgent)]"
+                        : "bg-[var(--brand-mint)]/15 text-[var(--brand-mint)]"
                     }`}
                   >
-                    <span className="flex items-center gap-2.5">
-                      <input
-                        type="radio"
-                        name="session"
-                        checked={form.session === s.id}
-                        onChange={() => update("session", s.id)}
-                        className="h-4 w-4 accent-[var(--brand-blue)]"
-                      />
-                      {s.label}
-                    </span>
-                    {s.badge && (
-                      <span
-                        className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold ${
-                          s.badge === "peak"
-                            ? "bg-[var(--brand-urgent)]/10 text-[var(--brand-urgent)]"
-                            : "bg-[var(--brand-mint)]/15 text-[var(--brand-mint)]"
-                        }`}
-                      >
-                        {s.badge === "peak" ? "성수기 · +60만원" : "프로모션 · +30만원"}
-                      </span>
-                    )}
-                  </label>
-                ))}
-              </div>
+                    {selected.badge === "peak" ? "성수기 · +60만원" : "프로모션 · +30만원"}
+                  </span>
+                );
+              })()}
               <FieldError message={errors.session} />
             </div>
 
