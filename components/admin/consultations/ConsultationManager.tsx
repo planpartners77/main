@@ -9,6 +9,13 @@ export interface CategoryOption {
   name: string;
 }
 
+export interface UnassignedLead {
+  id: string;
+  guest_contact: Record<string, unknown> | null;
+  created_at: string;
+  categories: { id: string; name: string } | null;
+}
+
 export interface ConsultationRow {
   id: string;
   lead_id: string;
@@ -60,9 +67,11 @@ const EMPTY_QUICK_FORM = {
 export function ConsultationManager({
   consultations,
   consultCategories,
+  unassignedLeads = [],
 }: {
   consultations: ConsultationRow[];
   consultCategories: CategoryOption[];
+  unassignedLeads?: UnassignedLead[];
 }) {
   const router = useRouter();
   const [showQuickCreate, setShowQuickCreate] = useState(false);
@@ -71,6 +80,23 @@ export function ConsultationManager({
   const [formError, setFormError] = useState<string | null>(null);
   const [savingId, setSavingId] = useState<string | null>(null);
   const [logDrafts, setLogDrafts] = useState<Record<string, string>>({});
+  const [convertError, setConvertError] = useState<string | null>(null);
+
+  async function convertLead(leadId: string) {
+    setConvertError(null);
+    setSavingId(leadId);
+    const supabase = createClient();
+    const { error } = await supabase.from("consultations").insert({
+      lead_id: leadId,
+      status: "booked",
+    });
+    setSavingId(null);
+    if (error) {
+      setConvertError(`상담 전환 실패: ${error.message}`);
+      return;
+    }
+    router.refresh();
+  }
 
   async function handleQuickCreate() {
     setFormError(null);
@@ -176,8 +202,8 @@ export function ConsultationManager({
         <div className="mt-4 rounded-2xl border border-gray-200 bg-white p-5">
           <p className="text-sm font-semibold text-[var(--brand-navy)]">전화상담 즉석등록</p>
           <p className="mt-1 text-xs text-gray-500">
-            보험·상조는 상담 필수 카테고리라 온라인 신청 폼이 아직 없습니다. 전화로 접수한 상담을
-            여기서 리드+상담 건으로 동시에 생성합니다.
+            전화로 접수한 상담을 여기서 리드+상담 건으로 동시에 생성합니다. 온라인 상담 신청 폼으로
+            들어온 리드는 아래 &quot;미배정 리드&quot; 목록에서 전환해 주세요.
           </p>
 
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
@@ -232,6 +258,41 @@ export function ConsultationManager({
           >
             {submitting ? "등록 중..." : "등록"}
           </button>
+        </div>
+      )}
+
+      {unassignedLeads.length > 0 && (
+        <div className="mt-6 rounded-2xl border border-amber-200 bg-amber-50 p-5">
+          <p className="text-sm font-semibold text-amber-800">미배정 리드 ({unassignedLeads.length}건)</p>
+          <p className="mt-1 text-xs text-amber-700">
+            온라인 상담 신청 폼(또는 기타 경로)으로 접수되었지만 아직 상담 건으로 전환되지 않은 리드입니다.
+          </p>
+          {convertError && <p className="mt-2 text-xs text-red-600">{convertError}</p>}
+          <div className="mt-3 space-y-2">
+            {unassignedLeads.map((lead) => (
+              <div
+                key={lead.id}
+                className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-amber-100 bg-white px-4 py-3"
+              >
+                <div className="text-sm">
+                  <span className="font-semibold">{contactName(lead.guest_contact)}</span>
+                  <span className="ml-2 text-gray-500">{contactPhone(lead.guest_contact)}</span>
+                  <span className="ml-2 text-xs text-gray-400">{lead.categories?.name ?? "-"}</span>
+                  <span className="ml-2 text-xs text-gray-400">
+                    {new Date(lead.created_at).toLocaleString("ko-KR", { dateStyle: "short", timeStyle: "short" })}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => convertLead(lead.id)}
+                  disabled={savingId === lead.id}
+                  className="rounded-full bg-[var(--brand-navy)] px-4 py-1.5 text-xs font-semibold text-white disabled:opacity-50"
+                >
+                  {savingId === lead.id ? "전환 중..." : "상담으로 전환"}
+                </button>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 

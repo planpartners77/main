@@ -60,5 +60,30 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true });
   }
 
+  if (type === "consult_lead") {
+    const { data } = await supabase
+      .from("leads")
+      .select("guest_contact, created_at, categories(name)")
+      .eq("id", id)
+      .maybeSingle();
+    if (!data) return NextResponse.json({ ok: false }, { status: 404 });
+
+    const c = (data.guest_contact ?? {}) as Record<string, string | null | undefined>;
+    const categoryName = (data.categories as unknown as { name: string } | null)?.name ?? "-";
+    await sendTelegramMessage(
+      [
+        "📞 <b>상담 신청 접수</b>",
+        `카테고리: ${categoryName}`,
+        `이름: ${c.name ?? "-"}`,
+        `연락처: ${c.phone ?? "-"}`,
+        `희망 시간대: ${c.preferredTime ?? "-"}`,
+        c.memo ? `문의: ${c.memo}` : null,
+      ]
+        .filter(Boolean)
+        .join("\n"),
+    );
+    return NextResponse.json({ ok: true });
+  }
+
   return NextResponse.json({ ok: false }, { status: 400 });
 }

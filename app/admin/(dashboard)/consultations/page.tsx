@@ -15,6 +15,26 @@ export default async function AdminConsultationsPage() {
     supabase.from("categories").select("id, name").eq("track_type", "consult_required").eq("is_active", true),
   ]);
 
+  const categoryIds = (categories ?? []).map((c) => c.id);
+  const assignedLeadIds = new Set((consultations ?? []).map((c) => c.lead_id));
+
+  // /consult/[category] 온라인 신청 폼으로 들어온 리드는 leads에만 생성되고 consultations는
+  // RLS상 관리자만 만들 수 있어(0012 마이그레이션) 여기서 미배정 리드를 보여주고 전환한다.
+  const { data: leadsData } = categoryIds.length
+    ? await supabase
+        .from("leads")
+        .select("id, guest_contact, created_at, categories(id, name)")
+        .in("category_id", categoryIds)
+        .order("created_at", { ascending: false })
+    : { data: [] };
+
+  const unassignedLeads = ((leadsData ?? []) as unknown as Array<{
+    id: string;
+    guest_contact: Record<string, unknown> | null;
+    created_at: string;
+    categories: { id: string; name: string } | null;
+  }>).filter((lead) => !assignedLeadIds.has(lead.id));
+
   return (
     <div>
       <Link href="/admin" className="text-sm text-gray-500 hover:text-[var(--brand-navy)]">
@@ -26,6 +46,7 @@ export default async function AdminConsultationsPage() {
         <ConsultationManager
           consultations={(consultations ?? []) as unknown as ConsultationRow[]}
           consultCategories={(categories ?? []) as CategoryOption[]}
+          unassignedLeads={unassignedLeads}
         />
       </div>
     </div>
