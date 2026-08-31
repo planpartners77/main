@@ -44,7 +44,7 @@ const NAV_GROUPS: NavGroup[] = [
   {
     label: "콘텐츠·CS",
     items: [
-      { title: "콘텐츠 관리", href: "#", icon: "content" },
+      { title: "디자인관리", href: "/admin/design", icon: "content" },
       { title: "고객 CS", href: "#", icon: "cs" },
     ],
   },
@@ -72,7 +72,10 @@ function NavLinks() {
           )}
           <div className="space-y-0.5">
             {group.items.map((item) => {
-              const active = pathname === item.href;
+              const active =
+                item.href !== "#" &&
+                (pathname === item.href ||
+                  (item.href !== "/admin" && pathname.startsWith(`${item.href}/`)));
               return (
                 <Link
                   key={item.title}
