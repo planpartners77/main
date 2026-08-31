@@ -4,6 +4,7 @@ import { useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { getReferralCodeForSignup } from "@/lib/referral/client";
 
 // 회원가입 시 서비스 이용약관·개인정보처리방침 동의(필수)와 마케팅 정보 수신 동의(선택)를
 // 함께 받는다(§12-2 Footer 법적 문서와 동일 항목). 프로필 행(profiles)은 클라이언트가 직접
@@ -54,6 +55,7 @@ export function SignupForm() {
 
     setLoading(true);
     const supabase = createClient();
+    const referredByCode = getReferralCodeForSignup();
     const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
       email,
       password,
@@ -62,6 +64,7 @@ export function SignupForm() {
           display_name: displayName,
           phone,
           marketing_opt_in: marketingAgree,
+          ...(referredByCode ? { referred_by_code: referredByCode } : {}),
         },
       },
     });

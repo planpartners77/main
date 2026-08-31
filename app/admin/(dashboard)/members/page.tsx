@@ -6,6 +6,7 @@ interface MemberRow {
   display_name: string | null;
   phone: string | null;
   marketing_opt_in: boolean;
+  referral_role: "member" | "partner";
   created_at: string;
   customer_tiers: { name: string | null } | null;
 }
@@ -14,7 +15,7 @@ export default async function AdminMembersPage() {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("profiles")
-    .select("id, display_name, phone, marketing_opt_in, created_at, customer_tiers(name)")
+    .select("id, display_name, phone, marketing_opt_in, referral_role, created_at, customer_tiers(name)")
     .order("created_at", { ascending: false })
     .limit(200);
 
@@ -50,6 +51,7 @@ export default async function AdminMembersPage() {
                 <th className="px-4 py-3">가입일</th>
                 <th className="px-4 py-3">이름</th>
                 <th className="px-4 py-3">연락처</th>
+                <th className="px-4 py-3">구분</th>
                 <th className="px-4 py-3">등급</th>
                 <th className="px-4 py-3">마케팅동의</th>
                 <th className="px-4 py-3" />
@@ -63,6 +65,15 @@ export default async function AdminMembersPage() {
                   </td>
                   <td className="px-4 py-3 font-medium">{member.display_name ?? "-"}</td>
                   <td className="px-4 py-3 text-gray-500">{member.phone ?? "-"}</td>
+                  <td className="px-4 py-3 text-gray-500">
+                    {member.referral_role === "partner" ? (
+                      <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-semibold text-blue-700">
+                        파트너
+                      </span>
+                    ) : (
+                      "일반회원"
+                    )}
+                  </td>
                   <td className="px-4 py-3 text-gray-500">{member.customer_tiers?.name ?? "일반"}</td>
                   <td className="px-4 py-3 text-gray-500">{member.marketing_opt_in ? "동의" : "미동의"}</td>
                   <td className="px-4 py-3 text-right">

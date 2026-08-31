@@ -11,8 +11,19 @@ interface MemberDetail {
   phone: string | null;
   tier_id: string | null;
   marketing_opt_in: boolean;
+  referral_role: "member" | "partner";
   created_at: string;
   customer_tiers: { name: string | null } | null;
+}
+
+interface ReferralSummary {
+  my_code: string | null;
+  total_clicks: number;
+  total_registrations: number;
+  total_leads: number;
+  referred_by_code: string | null;
+  referred_by_name: string | null;
+  network_size: number;
 }
 
 interface MemberLead {
@@ -23,7 +34,7 @@ interface MemberLead {
   products: { title: string } | null;
 }
 
-const ACCESSED_FIELDS = ["display_name", "phone", "tier_id", "marketing_opt_in"];
+const ACCESSED_FIELDS = ["display_name", "phone", "tier_id", "marketing_opt_in", "referral_role"];
 
 export default async function AdminMemberDetailPage({
   params,
@@ -36,7 +47,7 @@ export default async function AdminMemberDetailPage({
 
   const { data: member, error } = await supabase
     .from("profiles")
-    .select("id, display_name, phone, tier_id, marketing_opt_in, created_at, customer_tiers(name)")
+    .select("id, display_name, phone, tier_id, marketing_opt_in, referral_role, created_at, customer_tiers(name)")
     .eq("id", id)
     .single();
 
@@ -51,6 +62,13 @@ export default async function AdminMemberDetailPage({
     .order("created_at", { ascending: false });
 
   const { data: tiersData } = await supabase.from("customer_tiers").select("id, name");
+
+  // 회원 본인 추천코드 현황 — 관리자는 fn_get_my_referral_summary 내부의 admin_users 체크를
+  // 통과하므로 다른 회원의 요약도 그대로 조회할 수 있다(0017 마이그레이션 참고).
+  const { data: referralSummaryData } = await supabase
+    .rpc("fn_get_my_referral_summary", { p_profile_id: id })
+    .maybeSingle();
+  const referralSummary = referralSummaryData as ReferralSummary | null;
 
   // §9-1 개인정보 열람 로그 요구사항: 누가/언제/어떤 필드를 조회했는지 매 열람마다 기록한다.
   if (session) {
@@ -94,8 +112,47 @@ export default async function AdminMemberDetailPage({
             initialPhone={detail.phone ?? ""}
             initialTierId={detail.tier_id ?? ""}
             initialMarketingOptIn={detail.marketing_opt_in}
+            initialReferralRole={detail.referral_role}
             tierOptions={tiersData ?? []}
           />
+        )}
+      </div>
+
+      <div className="mt-6 rounded-2xl border border-gray-200 bg-white p-5">
+        <p className="text-sm font-semibold text-[var(--brand-navy)]">추천인 코드 현황</p>
+        {referralSummary?.my_code ? (
+          <dl className="mt-3 grid gap-2 text-sm sm:grid-cols-2">
+            <div className="flex justify-between">
+              <dt className="text-gray-500">본인 코드</dt>
+              <dd className="font-medium">{referralSummary.my_code}</dd>
+            </div>
+            <div className="flex justify-between">
+              <dt className="text-gray-500">추천인</dt>
+              <dd>
+                {referralSummary.referred_by_code
+                  ? `${referralSummary.referred_by_code}${referralSummary.referred_by_name ? ` (${referralSummary.referred_by_name})` : ""}`
+                  : "-"}
+              </dd>
+            </div>
+            <div className="flex justify-between">
+              <dt className="text-gray-500">클릭수</dt>
+              <dd>{referralSummary.total_clicks}</dd>
+            </div>
+            <div className="flex justify-between">
+              <dt className="text-gray-500">가입 전환수</dt>
+              <dd>{referralSummary.total_registrations}</dd>
+            </div>
+            <div className="flex justify-between">
+              <dt className="text-gray-500">리드 전환수</dt>
+              <dd>{referralSummary.total_leads}</dd>
+            </div>
+            <div className="flex justify-between">
+              <dt className="text-gray-500">네트워크 규모(하위 전체 가입자)</dt>
+              <dd>{referralSummary.network_size}</dd>
+            </div>
+          </dl>
+        ) : (
+          <p className="mt-4 py-6 text-center text-sm text-gray-500">발급된 추천코드가 없습니다.</p>
         )}
       </div>
 

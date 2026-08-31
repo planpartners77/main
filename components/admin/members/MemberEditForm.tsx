@@ -9,7 +9,7 @@ export interface TierOption {
   name: string | null;
 }
 
-const ACCESSED_FIELDS = ["display_name", "phone", "tier_id", "marketing_opt_in"];
+const ACCESSED_FIELDS = ["display_name", "phone", "tier_id", "marketing_opt_in", "referral_role"];
 
 export function MemberEditForm({
   memberId,
@@ -18,6 +18,7 @@ export function MemberEditForm({
   initialPhone,
   initialTierId,
   initialMarketingOptIn,
+  initialReferralRole,
   tierOptions,
 }: {
   memberId: string;
@@ -26,6 +27,7 @@ export function MemberEditForm({
   initialPhone: string;
   initialTierId: string;
   initialMarketingOptIn: boolean;
+  initialReferralRole: "member" | "partner";
   tierOptions: TierOption[];
 }) {
   const router = useRouter();
@@ -33,6 +35,7 @@ export function MemberEditForm({
   const [phone, setPhone] = useState(initialPhone);
   const [tierId, setTierId] = useState(initialTierId);
   const [marketingOptIn, setMarketingOptIn] = useState(initialMarketingOptIn);
+  const [referralRole, setReferralRole] = useState(initialReferralRole);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -50,6 +53,7 @@ export function MemberEditForm({
         phone: phone.trim() || null,
         tier_id: tierId || null,
         marketing_opt_in: marketingOptIn,
+        referral_role: referralRole,
       })
       .eq("id", memberId);
 
@@ -92,6 +96,17 @@ export function MemberEditForm({
             onChange={(e) => setPhone(e.target.value)}
             className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
           />
+        </div>
+        <div>
+          <label className="text-xs text-gray-500">구분</label>
+          <select
+            value={referralRole}
+            onChange={(e) => setReferralRole(e.target.value as "member" | "partner")}
+            className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm"
+          >
+            <option value="member">일반회원</option>
+            <option value="partner">파트너</option>
+          </select>
         </div>
         <div>
           <label className="text-xs text-gray-500">등급</label>

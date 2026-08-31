@@ -1,12 +1,23 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { ProfileEditForm } from "@/components/mypage/ProfileEditForm";
+import { ReferralShareLink } from "@/components/mypage/ReferralShareLink";
 import { LEAD_STATUS_OPTIONS } from "@/components/admin/leads/LeadStatusSelect";
 import { CONSULTATION_STATUS_OPTIONS } from "@/components/admin/consultations/ConsultationManager";
 
 // §12-10 마이페이지: 회원정보 수정 / 신청 내역(비대면) / 상담 내역(상담필수) / 사은품·지원금 현황.
 // 오프라인 매장 방문 예약과 카카오 연동 해제는 아직 실제 기능(예약 테이블, 카카오싱크 연동)이
 // 없어 §11-3의 "UI만 있고 작동하지 않는 기능" 함정을 피하기 위해 노출하지 않는다.
+
+interface ReferralSummary {
+  my_code: string | null;
+  total_clicks: number;
+  total_registrations: number;
+  total_leads: number;
+  referred_by_code: string | null;
+  referred_by_name: string | null;
+  network_size: number;
+}
 
 interface PointTransaction {
   id: number;
@@ -105,6 +116,11 @@ export default async function MyPage() {
 
   const couponRedemptions = (couponData ?? []) as unknown as CouponRedemption[];
 
+  const { data: referralSummaryData } = await supabase
+    .rpc("fn_get_my_referral_summary", { p_profile_id: user.id })
+    .maybeSingle();
+  const referralSummary = referralSummaryData as ReferralSummary | null;
+
   return (
     <main className="mx-auto max-w-3xl px-4 py-14">
       <p className="text-xs font-bold tracking-wider text-[var(--brand-blue)]">MY PAGE</p>
@@ -131,6 +147,44 @@ export default async function MyPage() {
           />
         </div>
       </section>
+
+      {referralSummary?.my_code && (
+        <section className="mt-10">
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-semibold text-gray-500">내 추천코드</h2>
+            <ReferralShareLink code={referralSummary.my_code} />
+          </div>
+          <div className="mt-3 rounded-xl border border-gray-200 bg-white p-5">
+            <p className="text-lg font-bold text-[var(--brand-navy)]">{referralSummary.my_code}</p>
+            {referralSummary.referred_by_code && (
+              <p className="mt-1 text-xs text-gray-400">
+                추천인: {referralSummary.referred_by_code}
+                {referralSummary.referred_by_name ? ` (${referralSummary.referred_by_name})` : ""}
+              </p>
+            )}
+            <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+              <div>
+                <p className="text-xs text-gray-400">클릭수</p>
+                <p className="mt-1 text-base font-semibold text-[var(--brand-navy)]">{referralSummary.total_clicks}</p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-400">가입 전환</p>
+                <p className="mt-1 text-base font-semibold text-[var(--brand-navy)]">
+                  {referralSummary.total_registrations}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-400">리드 전환</p>
+                <p className="mt-1 text-base font-semibold text-[var(--brand-navy)]">{referralSummary.total_leads}</p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-400">네트워크 규모</p>
+                <p className="mt-1 text-base font-semibold text-[var(--brand-navy)]">{referralSummary.network_size}</p>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
 
       <section className="mt-10">
         <h2 className="text-sm font-semibold text-gray-500">신청 내역</h2>
