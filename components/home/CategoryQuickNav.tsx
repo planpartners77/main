@@ -3,6 +3,7 @@ import { CATEGORIES } from "@/lib/categories";
 import { CategoryIcon } from "@/components/shared/CategoryIcon";
 
 const TONE: Record<string, string> = {
+  travel: "bg-sky-50 text-sky-600",
   internet: "bg-blue-50 text-blue-600",
   mobile: "bg-indigo-50 text-indigo-600",
   rental: "bg-emerald-50 text-emerald-600",
@@ -13,7 +14,7 @@ const TONE: Record<string, string> = {
 export function CategoryQuickNav() {
   return (
     <section className="mx-auto max-w-5xl px-4 py-12">
-      <div className="grid grid-cols-3 gap-3 sm:grid-cols-5">
+      <div className="grid grid-cols-3 gap-3 sm:grid-cols-6">
         {CATEGORIES.map((category) => (
           <Link
             key={category.slug}

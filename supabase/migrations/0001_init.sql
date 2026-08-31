@@ -25,7 +25,7 @@ create table profiles (
 
 create table categories (
   id uuid primary key default gen_random_uuid(),
-  slug text unique not null,          -- 'internet' | 'mobile' | 'rental' | 'insurance' | 'funeral'
+  slug text unique not null,          -- 'travel' | 'internet' | 'mobile' | 'rental' | 'insurance' | 'funeral'
   name text not null,
   track_type text not null check (track_type in ('self_service','consult_required')),
   regulation_level text not null check (regulation_level in ('low','medium','high')),
@@ -38,7 +38,8 @@ create table partners (
   name text not null,
   biz_reg_no text,
   settlement_rate numeric,
-  contract_status text default 'active'
+  contract_status text default 'active',
+  logo_url text -- 업로드 저장소 없이 외부 URL만 저장(호스팅 비용 절감 방침)
 );
 
 create table products (
@@ -50,6 +51,7 @@ create table products (
   incentive_min numeric,   -- 비회원에게 보여줄 범위값 하한
   incentive_max numeric,   -- 비회원에게 보여줄 범위값 상한
   incentive_exact numeric, -- 로그인 후에만 노출
+  image_url text,          -- 업로드 저장소 없이 외부 URL만 저장(호스팅 비용 절감 방침)
   extra jsonb default '{}',
   is_active boolean default true,
   created_at timestamptz default now()
@@ -157,6 +159,7 @@ create table site_settings (
 
 -- 카테고리 시드 (§4 기준)
 insert into categories (slug, name, track_type, regulation_level) values
+  ('travel', '여행', 'self_service', 'low'),
   ('internet', '인터넷', 'self_service', 'low'),
   ('mobile', '휴대폰', 'self_service', 'medium'),
   ('rental', '가전렌탈', 'self_service', 'low'),
