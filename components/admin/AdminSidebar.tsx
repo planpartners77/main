@@ -31,7 +31,7 @@ const NAV_GROUPS: NavGroup[] = [
     label: "리드·정산",
     items: [
       { title: "리드 관리", href: "/admin/leads", icon: "leads" },
-      { title: "정산", href: "#", icon: "settlement" },
+      { title: "정산", href: "/admin/settlements", icon: "settlement" },
     ],
   },
   {
