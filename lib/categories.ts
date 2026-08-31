@@ -5,6 +5,7 @@ export interface SubCategoryConfig {
   slug: string;
   name: string;
   href: string;
+  subcategories?: SubCategoryConfig[];
 }
 
 export interface CategoryConfig {
@@ -16,8 +17,9 @@ export interface CategoryConfig {
 }
 
 // 가이드 §4 카테고리 규제 등급 및 UX 트랙 기준. DB의 categories 테이블(§10-2)과 슬러그를 맞춘다.
-// 여행(travel)은 하위에 '여행'(일반 여행 상품, 준비중)·'에듀'(여기캠프 CRIS 골프 체험 등 교육성
-// 프로그램, 기존 /travel 콘텐츠) 두 갈래를 둔다 — DB categories.slug/URL은 travel로 유지.
+// 여행(travel)은 하위에 '여행'(일반 여행 상품, 준비중)·'에듀' 두 갈래를 두고, '에듀'는 다시
+// '영어캠프'(여기캠프 CRIS 골프 체험 등 교육성 프로그램, 기존 /travel 콘텐츠)·'화상영어'(준비중)
+// 2차 하위카테고리를 둔다 — DB categories.slug/URL은 travel 하나로 유지.
 export const CATEGORIES: CategoryConfig[] = [
   {
     slug: "travel",
@@ -26,7 +28,15 @@ export const CATEGORIES: CategoryConfig[] = [
     regulationLevel: "low",
     subcategories: [
       { slug: "general", name: "여행", href: "/travel/general" },
-      { slug: "edu", name: "에듀", href: "/travel" },
+      {
+        slug: "edu",
+        name: "에듀",
+        href: "/travel",
+        subcategories: [
+          { slug: "english-camp", name: "영어캠프", href: "/travel" },
+          { slug: "video-english", name: "화상영어", href: "/travel/video-english" },
+        ],
+      },
     ],
   },
   { slug: "internet", name: "인터넷", trackType: "self_service", regulationLevel: "low" },
