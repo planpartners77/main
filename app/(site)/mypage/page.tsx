@@ -8,6 +8,13 @@ import { CONSULTATION_STATUS_OPTIONS } from "@/components/admin/consultations/Co
 // 오프라인 매장 방문 예약과 카카오 연동 해제는 아직 실제 기능(예약 테이블, 카카오싱크 연동)이
 // 없어 §11-3의 "UI만 있고 작동하지 않는 기능" 함정을 피하기 위해 노출하지 않는다.
 
+interface PointTransaction {
+  id: number;
+  amount: number;
+  reason: string;
+  created_at: string;
+}
+
 interface LeadRow {
   id: string;
   status: string;
@@ -69,6 +76,15 @@ export default async function MyPage() {
   const selfServiceLeads = leads.filter((l) => l.categories?.track_type === "self_service");
   const consultLeads = leads.filter((l) => l.categories?.track_type === "consult_required");
   const settlements = leads.flatMap((l) => (l.settlements ?? []).map((s) => ({ ...s, leadTitle: l.products?.title ?? l.categories?.name ?? "-" })));
+
+  const { data: pointsData } = await supabase
+    .from("point_transactions")
+    .select("id, amount, reason, created_at")
+    .eq("profile_id", user.id)
+    .order("created_at", { ascending: false });
+
+  const pointTransactions = (pointsData ?? []) as PointTransaction[];
+  const pointBalance = pointTransactions.reduce((sum, t) => sum + t.amount, 0);
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-14">
@@ -175,6 +191,33 @@ export default async function MyPage() {
                   <p className="text-sm font-semibold">{money(s.amount)}</p>
                   <span className="text-xs text-gray-500">{SETTLEMENT_STATUS_LABEL[s.status] ?? s.status}</span>
                 </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
+      <section className="mt-10">
+        <div className="flex items-center justify-between">
+          <h2 className="text-sm font-semibold text-gray-500">포인트 현황</h2>
+          <span className="text-lg font-bold text-[var(--brand-navy)]">{pointBalance.toLocaleString("ko-KR")}P</span>
+        </div>
+        {pointTransactions.length === 0 ? (
+          <p className="mt-3 rounded-xl border border-gray-200 bg-white p-8 text-center text-sm text-gray-500">
+            포인트 내역이 없습니다. 사은품·지원금이 지급 완료되면 등급별 적립률로 자동 적립됩니다.
+          </p>
+        ) : (
+          <div className="mt-3 space-y-2">
+            {pointTransactions.map((t) => (
+              <div key={t.id} className="flex items-center justify-between rounded-xl border border-gray-200 bg-white p-4">
+                <div>
+                  <p className="text-sm font-semibold">{t.reason}</p>
+                  <p className="text-xs text-gray-400">{new Date(t.created_at).toLocaleDateString("ko-KR")}</p>
+                </div>
+                <p className={`text-sm font-semibold ${t.amount >= 0 ? "text-blue-600" : "text-red-500"}`}>
+                  {t.amount >= 0 ? "+" : ""}
+                  {t.amount.toLocaleString("ko-KR")}P
+                </p>
               </div>
             ))}
           </div>
