@@ -50,6 +50,9 @@ export function GlobalNav() {
             <Link href="/mypage" className="text-gray-600 hover:text-[var(--brand-blue)]">
               마이페이지
             </Link>
+            <Link href="/signup" className="text-gray-600 hover:text-[var(--brand-blue)]">
+              회원가입
+            </Link>
             {/* Phase 3(§12-9)에서 카카오 로그인 모달로 교체 */}
             <button className="rounded-full bg-[var(--brand-blue)] px-4 py-1.5 font-medium text-white hover:bg-[var(--brand-blue-dark)]">
               로그인

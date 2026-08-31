@@ -25,11 +25,40 @@ as $$
   );
 $$;
 
--- profiles: 본인 행만 조회/수정 가능
+-- profiles: 본인 행만 조회/수정/생성 가능. 회원가입 직후에는 이메일 인증 대기 등으로
+-- 세션(access token)이 아직 없을 수 있어 클라이언트가 직접 insert하면 auth.uid()가 null이라
+-- RLS에 막힐 수 있다 — 그래서 insert는 아래 handle_new_user 트리거(security definer)가
+-- auth.users 생성 시점에 대신 수행한다. profiles_insert_own은 추후 클라이언트 쪽에서
+-- 프로필 보완 등으로 직접 insert가 필요해질 상황을 대비한 보조 정책이다.
 create policy "profiles_select_own" on profiles
   for select using (auth.uid() = id);
+create policy "profiles_insert_own" on profiles
+  for insert with check (auth.uid() = id);
 create policy "profiles_update_own" on profiles
   for update using (auth.uid() = id);
+
+-- 회원가입(auth.users insert) 시 signUp()의 options.data로 전달한 메타데이터로
+-- profiles 행을 자동 생성. RLS를 우회해야 하므로 security definer로 선언한다.
+create or replace function public.handle_new_user()
+returns trigger
+language plpgsql
+security definer set search_path = public
+as $$
+begin
+  insert into public.profiles (id, display_name, phone, marketing_opt_in)
+  values (
+    new.id,
+    new.raw_user_meta_data ->> 'display_name',
+    new.raw_user_meta_data ->> 'phone',
+    coalesce((new.raw_user_meta_data ->> 'marketing_opt_in')::boolean, false)
+  );
+  return new;
+end;
+$$;
+
+create trigger on_auth_user_created
+  after insert on auth.users
+  for each row execute function public.handle_new_user();
 
 -- leads: 본인이 신청한 건 또는 담당 카테고리 관리자만 조회. 비회원 신청(guest)은
 -- user_id가 null이므로 select 정책 대상이 아니며, 관리자 조회만 가능하다.
