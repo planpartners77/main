@@ -1,8 +1,10 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { CATEGORIES } from "@/lib/categories";
+import { createClient } from "@/lib/supabase/client";
 
 function ConsultTag() {
   return (
@@ -15,6 +17,25 @@ function ConsultTag() {
 // 가이드 §12-2: 상단 GNB(데스크톱) + 하단 고정 탭바(모바일)로 전환되는 반응형 네비게이션.
 export function GlobalNav() {
   const pathname = usePathname();
+  const router = useRouter();
+  const [loggedIn, setLoggedIn] = useState(false);
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data }) => setLoggedIn(!!data.user));
+
+    const { data: subscription } = supabase.auth.onAuthStateChange((_event, session) => {
+      setLoggedIn(!!session?.user);
+    });
+    return () => subscription.subscription.unsubscribe();
+  }, []);
+
+  async function handleSignOut() {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    router.push("/");
+    router.refresh();
+  }
 
   return (
     <>
@@ -53,10 +74,22 @@ export function GlobalNav() {
             <Link href="/signup" className="text-gray-600 hover:text-[var(--brand-blue)]">
               회원가입
             </Link>
-            {/* Phase 3(§12-9)에서 카카오 로그인 모달로 교체 */}
-            <button className="rounded-full bg-[var(--brand-blue)] px-4 py-1.5 font-medium text-white hover:bg-[var(--brand-blue-dark)]">
-              로그인
-            </button>
+            {/* 카카오싱크 심사 완료 전까지 이메일/비밀번호 로그인으로 임시 대체(§12-9는 원래 카카오 로그인 모달 계획) */}
+            {loggedIn ? (
+              <button
+                onClick={handleSignOut}
+                className="rounded-full border border-gray-200 px-4 py-1.5 font-medium text-gray-600 hover:border-[var(--brand-blue)] hover:text-[var(--brand-blue)]"
+              >
+                로그아웃
+              </button>
+            ) : (
+              <Link
+                href="/login"
+                className="rounded-full bg-[var(--brand-blue)] px-4 py-1.5 font-medium text-white hover:bg-[var(--brand-blue-dark)]"
+              >
+                로그인
+              </Link>
+            )}
           </div>
         </nav>
       </header>
