@@ -6,13 +6,17 @@ import { ReviewsSection } from "@/components/home/ReviewsSection";
 import { PopularProducts } from "@/components/home/PopularProducts";
 import { WhyPossible } from "@/components/home/WhyPossible";
 import { BottomCta } from "@/components/home/BottomCta";
+import { BannerStrip } from "@/components/design/BannerStrip";
+import { getActiveBanners } from "@/lib/design/public-queries";
 
 // 아정당(ajd.co.kr) 랜딩 페이지의 섹션 구성을 참고해 레이아웃을 구성하되, 문구/색상/수치는
 // 플랜파트너스 고유의 것으로 새로 작성했다(§12-3).
-export default function Home() {
+export default async function Home() {
+  const banners = await getActiveBanners(null);
   return (
     <>
       <Hero />
+      <BannerStrip banners={banners} />
       <CategoryQuickNav />
       <IncentiveBanner />
       <TrustPoints />
