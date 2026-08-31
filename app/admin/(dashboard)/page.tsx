@@ -8,7 +8,7 @@ const QUICK_LINKS = [
   { title: "리드 확인", href: "/admin/leads", icon: "leads" },
   { title: "상품 등록", href: "/admin/products", icon: "product" },
   { title: "회원 관리", href: "/admin/members", icon: "member" },
-  { title: "사이트 설정", href: "#", icon: "settings" },
+  { title: "매장 관리", href: "/admin/stores", icon: "settings" },
 ];
 
 const STATUS_STYLE: Record<string, string> = {
@@ -35,8 +35,7 @@ interface LeadRow {
 }
 
 // 대시보드는 실제 leads/products/profiles 집계만 보여준다(방문자 수 등 아직 없는 분석
-// 인프라 수치는 지어내지 않고 애초에 카드에서 뺌). Phase 4 나머지 모듈이 실제 화면을
-// 갖추면 QUICK_LINKS의 "#"만 채우면 된다.
+// 인프라 수치는 지어내지 않고 애초에 카드에서 뺌).
 export default async function AdminDashboardPage() {
   const session = await getAdminSession();
   const supabase = await createClient();
