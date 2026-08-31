@@ -6,7 +6,7 @@ import type { SubCategoryConfig } from "@/lib/categories";
 // 렌더링하고, 손자 항목은 오른쪽으로 펼쳐지는 2단 플라이아웃으로 표시한다.
 export function CategoryDropdown({ items }: { items: SubCategoryConfig[] }) {
   return (
-    <div className="min-w-[7.5rem] overflow-hidden rounded-xl border border-gray-100 bg-white py-1 shadow-lg shadow-gray-200/70 ring-1 ring-black/5">
+    <div className="min-w-[7.5rem] rounded-xl border border-gray-100 bg-white py-1 shadow-lg shadow-gray-200/70 ring-1 ring-black/5">
       {items.map((item) => (
         <div key={item.slug} className={item.subcategories ? "group/nested relative" : undefined}>
           <Link
