@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { BUSINESS_INFO } from "@/lib/business-info";
 import { LEGAL_NAV } from "@/lib/legal-content";
+import { getSnsLinks } from "@/lib/design/site-settings";
 
 function LegalRow({ label, value }: { label: string; value: string | null }) {
   return (
@@ -20,12 +21,13 @@ const MENU_LINKS = [
   { href: "/rewards", label: "사은품 지급 명단" },
 ];
 
-// 소셜 채널은 아직 실제 운영 계정이 없어 임의 URL을 넣지 않는다(§ 정보 정확성 원칙).
-// 계정이 개설되면 각 항목에 href를 채워 <Link>로 교체할 것.
-const SNS_LABELS = ["네이버 카페", "페이스북", "유튜브", "인스타그램", "틱톡"];
-
+// 소셜 채널은 관리자 SNS 관리 화면(site_settings.sns_links)에서 url·enabled를 설정하며,
+// 계정이 아직 없거나 비활성 상태인 채널은 임의 URL 없이 "오픈 예정" 텍스트로 표시한다
+// (§ 정보 정확성 원칙 — 가짜 URL 금지).
 // 가이드 §12-2 Footer 구성: 메뉴 링크 + 상단 고정 문구 + 카테고리별 법적 고지 영역 + 법적 문서 링크.
-export function Footer() {
+export async function Footer() {
+  const snsLinks = await getSnsLinks();
+
   return (
     <footer className="mt-16 border-t border-gray-800 bg-[var(--brand-navy-dark)] text-sm text-gray-300">
       <div className="mx-auto max-w-5xl px-4 py-10">
@@ -63,9 +65,21 @@ export function Footer() {
         </div>
 
         <div className="mt-6 flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500">
-          {SNS_LABELS.map((label) => (
-            <span key={label}>{label} (오픈 예정)</span>
-          ))}
+          {snsLinks.map((sns) =>
+            sns.enabled && sns.url ? (
+              <a
+                key={sns.platform}
+                href={sns.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-white"
+              >
+                {sns.label}
+              </a>
+            ) : (
+              <span key={sns.platform}>{sns.label} (오픈 예정)</span>
+            ),
+          )}
         </div>
 
         <div className="mt-6 flex flex-wrap gap-x-4 gap-y-2 border-t border-gray-800 pt-6 text-xs">

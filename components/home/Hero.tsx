@@ -1,25 +1,32 @@
 import Link from "next/link";
+import { DEFAULT_HOME_PAGE_SETTINGS } from "@/lib/design/site-settings";
+
+interface HeroProps {
+  tagline?: string;
+  headline?: string;
+  subcopy?: string;
+}
 
 // 벤치마킹 캡처(밝은 화이트 배경 + 블루 액센트 + 상단 민트 포인트)를 컨셉 컬러로 반영.
 // 실제 인물 사진 에셋이 없으므로 원형 자리표시자 도형으로 대체 — 사진 확보 후 교체.
-export function Hero() {
+// 카피는 관리자 "페이지관리"(site_settings.home_page)에서 편집 가능 — props 미전달 시
+// 기본값(DEFAULT_HOME_PAGE_SETTINGS)으로 폴백.
+export function Hero({
+  tagline = DEFAULT_HOME_PAGE_SETTINGS.heroTagline,
+  headline = DEFAULT_HOME_PAGE_SETTINGS.heroHeadline,
+  subcopy = DEFAULT_HOME_PAGE_SETTINGS.heroSubcopy,
+}: HeroProps) {
   return (
     <section className="relative overflow-hidden bg-white">
       <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-[var(--brand-mint)] to-[var(--brand-blue)]" />
 
       <div className="mx-auto flex max-w-5xl flex-col-reverse items-center gap-10 px-4 py-16 md:flex-row md:justify-between md:py-24">
         <div className="text-center md:text-left">
-          <p className="text-sm font-semibold text-[var(--brand-blue)]">
-            비교하지 않으면 놓치는 혜택
-          </p>
-          <h1 className="mt-3 text-3xl font-bold leading-snug text-[var(--brand-navy)] sm:text-4xl">
-            대신 비교하고,
-            <br />
-            더 유리한 조건을 찾아드려요
+          <p className="text-sm font-semibold text-[var(--brand-blue)]">{tagline}</p>
+          <h1 className="mt-3 whitespace-pre-line text-3xl font-bold leading-snug text-[var(--brand-navy)] sm:text-4xl">
+            {headline}
           </h1>
-          <p className="mt-4 text-gray-500">
-            인터넷·휴대폰·가전렌탈·보험·상조, 다섯 개 카테고리를 한 곳에서 비교하세요.
-          </p>
+          <p className="mt-4 text-gray-500">{subcopy}</p>
           <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:justify-center md:justify-start">
             <Link
               href="/quiz/internet"

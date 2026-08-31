@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CATEGORIES } from "@/lib/categories";
+import type { CategoryConfig } from "@/lib/categories";
 import { CategoryIcon } from "@/components/shared/CategoryIcon";
 import { CategoryDropdown } from "@/components/shared/CategoryDropdown";
 
@@ -12,11 +12,12 @@ const TONE: Record<string, string> = {
   funeral: "bg-slate-100 text-slate-600",
 };
 
-export function CategoryQuickNav() {
+// categories는 관리자 "카테고리 진열순서" 설정이 반영된 순서로 상위(홈페이지)에서 내려준다.
+export function CategoryQuickNav({ categories }: { categories: CategoryConfig[] }) {
   return (
     <section className="mx-auto max-w-5xl px-4 py-12">
       <div className="grid grid-cols-3 gap-3 sm:grid-cols-6">
-        {CATEGORIES.map((category) => (
+        {categories.map((category) => (
           <div key={category.slug} className="group relative">
             <Link
               href={`/${category.slug}`}

@@ -49,3 +49,12 @@ export const CATEGORIES: CategoryConfig[] = [
 export function getCategory(slug: string): CategoryConfig | undefined {
   return CATEGORIES.find((c) => c.slug === slug);
 }
+
+// 관리자 "카테고리 진열순서" 설정(site_settings.category_order)을 반영해 정렬한다.
+// order에 없는(추가되었지만 아직 설정에 반영 안 된) 카테고리는 원래 순서 그대로 뒤에 붙인다.
+export function getOrderedCategories(order: string[]): CategoryConfig[] {
+  const bySlug = new Map(CATEGORIES.map((c) => [c.slug, c]));
+  const ordered = order.map((slug) => bySlug.get(slug)).filter((c): c is CategoryConfig => !!c);
+  const remaining = CATEGORIES.filter((c) => !order.includes(c.slug));
+  return [...ordered, ...remaining];
+}

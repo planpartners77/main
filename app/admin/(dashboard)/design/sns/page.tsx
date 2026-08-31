@@ -1,5 +1,7 @@
-import { DesignPlaceholder } from "@/components/admin/design/DesignPlaceholder";
+import { getSnsLinks } from "@/lib/design/site-settings";
+import { SnsLinksManager } from "@/components/admin/design/SnsLinksManager";
 
-export default function DesignSnsPage() {
-  return <DesignPlaceholder title="SNS 관리" description="푸터/헤더에 노출되는 SNS 링크를 관리합니다." />;
+export default async function DesignSnsPage() {
+  const links = await getSnsLinks();
+  return <SnsLinksManager links={links} />;
 }

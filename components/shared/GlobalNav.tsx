@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { CATEGORIES } from "@/lib/categories";
+import type { CategoryConfig } from "@/lib/categories";
 import { createClient } from "@/lib/supabase/client";
 import { CategoryDropdown } from "@/components/shared/CategoryDropdown";
 
@@ -16,7 +16,8 @@ function ConsultTag() {
 }
 
 // 가이드 §12-2: 상단 GNB(데스크톱) + 하단 고정 탭바(모바일)로 전환되는 반응형 네비게이션.
-export function GlobalNav() {
+// categories는 관리자 "카테고리 진열순서" 설정이 반영된 순서로 상위(레이아웃)에서 내려준다.
+export function GlobalNav({ categories }: { categories: CategoryConfig[] }) {
   const pathname = usePathname();
   const router = useRouter();
   const [loggedIn, setLoggedIn] = useState(false);
@@ -47,7 +48,7 @@ export function GlobalNav() {
           </Link>
 
           <ul className="flex items-center gap-5 text-sm">
-            {CATEGORIES.map((category) => {
+            {categories.map((category) => {
               const href = `/${category.slug}`;
               const isActive = pathname === href;
               return (

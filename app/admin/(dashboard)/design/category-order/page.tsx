@@ -1,10 +1,9 @@
-import { DesignPlaceholder } from "@/components/admin/design/DesignPlaceholder";
+import { getCategoryOrder } from "@/lib/design/site-settings";
+import { getOrderedCategories } from "@/lib/categories";
+import { CategoryOrderManager } from "@/components/admin/design/CategoryOrderManager";
 
-export default function DesignCategoryOrderPage() {
-  return (
-    <DesignPlaceholder
-      title="카테고리 진열"
-      description="홈 화면 카테고리 카드의 노출 순서와 노출 여부를 관리합니다."
-    />
-  );
+export default async function DesignCategoryOrderPage() {
+  const order = await getCategoryOrder();
+  const categories = getOrderedCategories(order).map((c) => ({ slug: c.slug, name: c.name }));
+  return <CategoryOrderManager categories={categories} />;
 }
