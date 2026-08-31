@@ -54,7 +54,7 @@ export function SignupForm() {
 
     setLoading(true);
     const supabase = createClient();
-    const { error: signUpError } = await supabase.auth.signUp({
+    const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -74,6 +74,14 @@ export function SignupForm() {
           : "회원가입 중 문제가 발생했습니다. 잠시 후 다시 시도해 주세요.",
       );
       return;
+    }
+
+    if (signUpData.user) {
+      fetch("/api/notify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: "signup", id: signUpData.user.id }),
+      }).catch(() => {});
     }
 
     setDone(true);

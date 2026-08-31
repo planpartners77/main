@@ -217,7 +217,13 @@ export function TravelApplyForm() {
 
       const sessionLabel = SESSIONS.find((s) => s.id === form.session)?.label ?? form.session;
 
+      // 비회원(guest) 신청은 RLS select 정책상 insert 직후 .select()로 행을 되읽을 수 없어
+      // (leads_select_own_or_admin이 auth.uid()=user_id를 요구, guest는 둘 다 null이라 불일치)
+      // id를 클라이언트에서 미리 생성해 넘긴다 — 알림 API 호출에 그대로 재사용.
+      const leadId = crypto.randomUUID();
+
       const { error } = await supabase.from("leads").insert({
+        id: leadId,
         category_id: category?.id ?? null,
         status: "received",
         guest_contact: {
@@ -246,6 +252,13 @@ export function TravelApplyForm() {
       });
 
       if (error) throw error;
+
+      fetch("/api/notify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: "travel_lead", id: leadId }),
+      }).catch(() => {});
+
       setSubmitted(true);
     } catch {
       setSubmitError("신청서 접수 중 문제가 발생했습니다. 잠시 후 다시 시도해 주시거나 고객센터로 문의해 주세요.");
