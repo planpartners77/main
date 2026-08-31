@@ -50,7 +50,7 @@ export function GlobalNav() {
               const href = `/${category.slug}`;
               const isActive = pathname === href;
               return (
-                <li key={category.slug}>
+                <li key={category.slug} className="group relative">
                   <Link
                     href={href}
                     className={
@@ -62,6 +62,23 @@ export function GlobalNav() {
                     {category.name}
                     {category.trackType === "consult_required" && <ConsultTag />}
                   </Link>
+
+                  {category.subcategories && (
+                    <div className="pointer-events-none absolute left-1/2 top-full z-20 -translate-x-1/2 pt-3 opacity-0 translate-y-1 transition-all duration-200 ease-out group-hover:pointer-events-auto group-hover:translate-y-0 group-hover:opacity-100">
+                      <div className="w-[7.5rem] overflow-hidden rounded-xl border border-gray-100 bg-white shadow-lg shadow-gray-200/70 ring-1 ring-black/5">
+                        {category.subcategories.map((sub) => (
+                          <Link
+                            key={sub.slug}
+                            href={sub.href}
+                            className="group/item relative block px-4 py-2.5 text-sm text-gray-600 transition-colors hover:bg-[var(--surface-tint)] hover:text-[var(--brand-blue-dark)]"
+                          >
+                            <span className="absolute inset-y-0 left-0 w-0.5 scale-y-0 bg-[var(--brand-blue)] transition-transform duration-200 group-hover/item:scale-y-100" />
+                            {sub.name}
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </li>
               );
             })}
