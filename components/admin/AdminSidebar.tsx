@@ -39,6 +39,7 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { title: "회원 관리", href: "/admin/members", icon: "member" },
       { title: "추천인 코드", href: "/admin/referrals", icon: "referral" },
+      { title: "쿠폰 관리", href: "/admin/coupons", icon: "coupon" },
     ],
   },
   {

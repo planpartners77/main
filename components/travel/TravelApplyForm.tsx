@@ -112,6 +112,7 @@ interface FormState {
   notes: string[];
   notesDetail: string;
   mediaConsent: string;
+  couponCode: string;
   consentProgram: boolean;
   consentPrivacy: boolean;
   consentUniqueId: boolean;
@@ -132,11 +133,22 @@ const INITIAL_STATE: FormState = {
   notes: [],
   notesDetail: "",
   mediaConsent: "",
+  couponCode: "",
   consentProgram: false,
   consentPrivacy: false,
   consentUniqueId: false,
   consentFinal: false,
 };
+
+interface CouponCheck {
+  valid: true;
+  discount_type: "fixed" | "percent";
+  discount_value: number;
+}
+
+function couponDiscountLabel(c: CouponCheck) {
+  return c.discount_type === "percent" ? `${c.discount_value}% 할인` : `${c.discount_value.toLocaleString("ko-KR")}원 할인`;
+}
 
 function FieldLabel({ children }: { children: React.ReactNode }) {
   return <p className="text-sm font-bold text-[var(--brand-navy)]">{children}</p>;
@@ -154,6 +166,10 @@ export function TravelApplyForm() {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
+  const [couponChecking, setCouponChecking] = useState(false);
+  const [couponResult, setCouponResult] = useState<CouponCheck | null>(null);
+  const [couponError, setCouponError] = useState<string | null>(null);
+  const [couponFinalWarning, setCouponFinalWarning] = useState<string | null>(null);
   const fieldRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   function update<K extends keyof FormState>(key: K, value: FormState[K]) {
@@ -169,6 +185,35 @@ export function TravelApplyForm() {
       const has = withoutNone.includes(option);
       return { ...prev, notes: has ? withoutNone.filter((n) => n !== option) : [...withoutNone, option] };
     });
+  }
+
+  async function checkCoupon() {
+    const code = form.couponCode.trim().toUpperCase();
+    if (!code) return;
+    setCouponChecking(true);
+    setCouponError(null);
+    setCouponResult(null);
+    try {
+      const supabase = createClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      const { data: category } = await supabase.from("categories").select("id").eq("slug", "travel").maybeSingle();
+
+      const { data, error } = await supabase.rpc("fn_validate_coupon", {
+        p_code: code,
+        p_profile_id: user?.id ?? null,
+        p_category_id: category?.id ?? null,
+      });
+
+      if (error || !data?.valid) {
+        setCouponError(data?.error ?? "쿠폰 확인 중 문제가 발생했습니다.");
+        return;
+      }
+      setCouponResult(data as CouponCheck);
+    } finally {
+      setCouponChecking(false);
+    }
   }
 
   function validate(): Record<string, string> {
@@ -255,6 +300,25 @@ export function TravelApplyForm() {
       });
 
       if (error) throw error;
+
+      if (couponResult && form.couponCode.trim()) {
+        try {
+          const {
+            data: { user },
+          } = await supabase.auth.getUser();
+          const { data } = await supabase.rpc("fn_redeem_coupon", {
+            p_code: form.couponCode.trim().toUpperCase(),
+            p_lead_id: leadId,
+            p_profile_id: user?.id ?? null,
+            p_category_id: category?.id ?? null,
+          });
+          if (!data?.valid) {
+            setCouponFinalWarning(`쿠폰 최종 적용에 실패했습니다(${data?.error ?? "알 수 없는 오류"}). 신청서는 정상 접수되었습니다.`);
+          }
+        } catch {
+          setCouponFinalWarning("쿠폰 최종 적용 확인 중 문제가 발생했습니다. 신청서는 정상 접수되었습니다.");
+        }
+      }
 
       fetch("/api/notify", {
         method: "POST",
@@ -352,6 +416,11 @@ export function TravelApplyForm() {
             <p className="mt-2 text-sm text-gray-500">
               남겨주신 연락처로 담당자가 확인 후 빠르게 안내드리겠습니다.
             </p>
+            {couponFinalWarning && (
+              <p className="mt-4 rounded-lg bg-orange-50 px-4 py-3 text-xs font-medium text-orange-600">
+                {couponFinalWarning}
+              </p>
+            )}
           </div>
         ) : (
           <form onSubmit={handleSubmit} noValidate className="mt-8 space-y-6">
@@ -642,6 +711,37 @@ export function TravelApplyForm() {
                 </label>
                 <FieldError message={errors.consentFinal} />
               </div>
+            </div>
+
+            <div>
+              <FieldLabel>쿠폰 코드 (선택)</FieldLabel>
+              <div className="mt-2 flex gap-2">
+                <input
+                  type="text"
+                  placeholder="보유하신 쿠폰 코드를 입력해 주세요"
+                  value={form.couponCode}
+                  onChange={(e) => {
+                    update("couponCode", e.target.value);
+                    setCouponResult(null);
+                    setCouponError(null);
+                  }}
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm uppercase focus:border-[var(--brand-blue)] focus:outline-none"
+                />
+                <button
+                  type="button"
+                  onClick={checkCoupon}
+                  disabled={couponChecking || !form.couponCode.trim()}
+                  className="shrink-0 rounded-lg border border-[var(--brand-blue)] px-4 text-xs font-semibold text-[var(--brand-blue)] disabled:opacity-50"
+                >
+                  {couponChecking ? "확인 중..." : "적용"}
+                </button>
+              </div>
+              {couponResult && (
+                <p className="mt-1.5 text-xs font-semibold text-[var(--brand-mint)]">
+                  쿠폰이 적용되었습니다 · {couponDiscountLabel(couponResult)}
+                </p>
+              )}
+              <FieldError message={couponError ?? undefined} />
             </div>
 
             {submitError && (

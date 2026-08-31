@@ -15,6 +15,17 @@ interface PointTransaction {
   created_at: string;
 }
 
+interface CouponRedemption {
+  id: string;
+  redeemed_at: string;
+  coupons: { code: string; discount_type: "fixed" | "percent"; discount_value: number } | null;
+}
+
+function couponDiscountLabel(c: CouponRedemption["coupons"]) {
+  if (!c) return "-";
+  return c.discount_type === "percent" ? `${c.discount_value}% 할인` : `${c.discount_value.toLocaleString("ko-KR")}원 할인`;
+}
+
 interface LeadRow {
   id: string;
   status: string;
@@ -85,6 +96,14 @@ export default async function MyPage() {
 
   const pointTransactions = (pointsData ?? []) as PointTransaction[];
   const pointBalance = pointTransactions.reduce((sum, t) => sum + t.amount, 0);
+
+  const { data: couponData } = await supabase
+    .from("coupon_redemptions")
+    .select("id, redeemed_at, coupons(code, discount_type, discount_value)")
+    .eq("profile_id", user.id)
+    .order("redeemed_at", { ascending: false });
+
+  const couponRedemptions = (couponData ?? []) as unknown as CouponRedemption[];
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-14">
@@ -218,6 +237,29 @@ export default async function MyPage() {
                   {t.amount >= 0 ? "+" : ""}
                   {t.amount.toLocaleString("ko-KR")}P
                 </p>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
+      <section className="mt-10">
+        <h2 className="text-sm font-semibold text-gray-500">쿠폰 사용 내역</h2>
+        {couponRedemptions.length === 0 ? (
+          <p className="mt-3 rounded-xl border border-gray-200 bg-white p-8 text-center text-sm text-gray-500">
+            사용한 쿠폰이 없습니다. 신청서 작성 시 쿠폰 코드를 입력하면 적용됩니다.
+          </p>
+        ) : (
+          <div className="mt-3 space-y-2">
+            {couponRedemptions.map((r) => (
+              <div key={r.id} className="flex items-center justify-between rounded-xl border border-gray-200 bg-white p-4">
+                <div>
+                  <p className="text-sm font-semibold">{r.coupons?.code ?? "-"}</p>
+                  <p className="text-xs text-gray-400">{new Date(r.redeemed_at).toLocaleDateString("ko-KR")} 사용</p>
+                </div>
+                <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-700">
+                  {couponDiscountLabel(r.coupons)}
+                </span>
               </div>
             ))}
           </div>
