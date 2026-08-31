@@ -2,7 +2,7 @@ import Link from "next/link";
 import { getAdminSession } from "@/lib/admin/session";
 
 const MODULES = [
-  { title: "리드 관리", desc: "카테고리별 신청/상담 리드 목록", href: "#" },
+  { title: "리드 관리", desc: "카테고리별 신청/상담 리드 목록", href: "/admin/leads" },
   { title: "상품·파트너 관리", desc: "제휴사·상품·요율 관리", href: "#" },
   { title: "추천인 코드", desc: "다단계 추천인 트리·정산 조건", href: "#" },
   { title: "정산", desc: "파트너별 정산 내역", href: "#" },
