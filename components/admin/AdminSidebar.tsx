@@ -45,7 +45,7 @@ const NAV_GROUPS: NavGroup[] = [
     label: "콘텐츠·CS",
     items: [
       { title: "디자인관리", href: "/admin/design", icon: "content" },
-      { title: "고객 CS", href: "#", icon: "cs" },
+      { title: "고객 CS", href: "/admin/consultations", icon: "cs" },
     ],
   },
   { label: "운영", items: [{ title: "사이트 설정", href: "#", icon: "settings" }] },
