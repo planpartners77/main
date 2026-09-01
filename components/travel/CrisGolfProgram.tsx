@@ -50,7 +50,10 @@ const COST_SELF_PAY = [
   { title: "왕복 항공료", desc: "참가자 개별 부담" },
   { title: "입학 신청비 30만원", desc: "보호자는 신청비 없음 · 성수기 추가비용은 신청 상세 참조" },
   { title: "캐디피 · 캐디팁", desc: "650바트(약 3만원), 학생 라운딩 시 현지 지불" },
-  { title: "보호자 1:1 골프 레슨", desc: "1,500바트(약 65,000원), 보호자만 해당" },
+  {
+    title: "보호자 1:1 골프 레슨(선택 사항으로 강습을 원하는분만 신청)",
+    desc: "1,500바트(약 65,000원), 보호자만 해당",
+  },
 ];
 
 const ESSENTIALS = ["골프장갑", "운동화"];
@@ -132,7 +135,15 @@ export function CrisGolfProgram() {
           </div>
 
           <div className="mt-5 flex flex-wrap gap-2">
-            {["골프 · 영어 · 기숙사 체험", "초4 ~ 고2 대상", "학부모 동반 가능"].map((pill) => (
+            {[
+              "콘도형 리조트",
+              "식사 제공",
+              "원어민 영어수업",
+              "PGA 골프레슨",
+              "골프장 그린비",
+              "초4 ~ 고2 대상",
+              "학부모 동반 가능",
+            ].map((pill) => (
               <span
                 key={pill}
                 className="rounded-full border border-gray-200 px-3 py-1.5 text-xs font-medium text-[var(--brand-navy)]"
