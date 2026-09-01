@@ -56,7 +56,19 @@ const COST_SELF_PAY = [
   },
 ];
 
-const ESSENTIALS = ["골프장갑", "운동화"];
+const ESSENTIALS = [
+  "골프장갑",
+  "운동화",
+  "수영용품(튜브, 물안경 등)",
+  "슬리퍼",
+  "상비약",
+  "여행자보험(선택)",
+];
+
+const FLIGHT_NOTES = [
+  "입출국 수하물 규정을 사전에 확인하여 초과되지 않도록 체크해 주세요.",
+  "기내 수하물 10kg, 위탁 수하물 15kg — 골프클럽·여행가방 포함 초과 여부를 미리 확인해야 합니다.",
+];
 
 const ETC_NOTES = [
   "골프텔(콘도) 내에서 환전 가능 — 센트럴 백화점 환전소가 환율 우대",
@@ -308,6 +320,20 @@ export function CrisGolfProgram() {
                 ))}
               </ul>
             </div>
+          </div>
+
+          <div className="mt-4 rounded-2xl border border-[var(--brand-urgent)]/30 bg-[var(--brand-urgent)]/5 p-6">
+            <h3 className="text-sm font-bold text-[var(--brand-navy)]">✈️ 항공 예약 필수 사항</h3>
+            <ul className="mt-3 space-y-2.5">
+              {FLIGHT_NOTES.map((item) => (
+                <li key={item} className="flex items-start gap-2.5 text-sm leading-relaxed text-gray-600">
+                  <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[var(--brand-urgent)] text-[10px] font-bold text-white">
+                    !
+                  </span>
+                  {item}
+                </li>
+              ))}
+            </ul>
           </div>
         </div>
       </section>
