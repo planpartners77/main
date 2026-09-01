@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { getAdminSession } from "@/lib/admin/session";
 import { LEAD_STATUS_OPTIONS } from "@/components/admin/leads/LeadStatusSelect";
 import { MemberEditForm } from "@/components/admin/members/MemberEditForm";
@@ -34,7 +35,7 @@ interface MemberLead {
   products: { title: string } | null;
 }
 
-const ACCESSED_FIELDS = ["display_name", "phone", "tier_id", "marketing_opt_in", "referral_role"];
+const ACCESSED_FIELDS = ["display_name", "phone", "tier_id", "marketing_opt_in", "referral_role", "email"];
 
 export default async function AdminMemberDetailPage({
   params,
@@ -62,6 +63,10 @@ export default async function AdminMemberDetailPage({
     .order("created_at", { ascending: false });
 
   const { data: tiersData } = await supabase.from("customer_tiers").select("id, name");
+
+  // 이메일은 profiles가 아닌 auth.users에만 있어 Admin API로 실시간 조회(목록 페이지와 동일 원칙).
+  const { data: authUserData } = await createAdminClient().auth.admin.getUserById(id);
+  const email = authUserData?.user?.email ?? null;
 
   // 회원 본인 추천코드 현황 — 관리자는 fn_get_my_referral_summary 내부의 admin_users 체크를
   // 통과하므로 다른 회원의 요약도 그대로 조회할 수 있다(0017 마이그레이션 참고).
@@ -102,12 +107,17 @@ export default async function AdminMemberDetailPage({
               <dt className="text-gray-500">가입일</dt>
               <dd>{new Date(detail.created_at).toLocaleDateString("ko-KR")}</dd>
             </div>
+            <div className="flex justify-between">
+              <dt className="text-gray-500">이메일</dt>
+              <dd>{email ?? "-"}</dd>
+            </div>
           </dl>
         </div>
         {session && (
           <MemberEditForm
             memberId={detail.id}
             actorId={session.userId}
+            email={email}
             initialDisplayName={detail.display_name ?? ""}
             initialPhone={detail.phone ?? ""}
             initialTierId={detail.tier_id ?? ""}

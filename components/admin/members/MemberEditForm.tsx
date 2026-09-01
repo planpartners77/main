@@ -14,6 +14,7 @@ const ACCESSED_FIELDS = ["display_name", "phone", "tier_id", "marketing_opt_in",
 export function MemberEditForm({
   memberId,
   actorId,
+  email,
   initialDisplayName,
   initialPhone,
   initialTierId,
@@ -23,6 +24,7 @@ export function MemberEditForm({
 }: {
   memberId: string;
   actorId: string;
+  email: string | null;
   initialDisplayName: string;
   initialPhone: string;
   initialTierId: string;
@@ -39,6 +41,9 @@ export function MemberEditForm({
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [resetSending, setResetSending] = useState(false);
+  const [resetMessage, setResetMessage] = useState<string | null>(null);
+  const [resetError, setResetError] = useState<string | null>(null);
 
   async function handleSave() {
     setSaving(true);
@@ -77,10 +82,49 @@ export function MemberEditForm({
     router.refresh();
   }
 
+  async function handleSendResetEmail() {
+    if (!email) return;
+    setResetSending(true);
+    setResetError(null);
+    setResetMessage(null);
+
+    const supabase = createClient();
+    const { error: resetErr } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+
+    if (resetErr) {
+      setResetSending(false);
+      setResetError(resetErr.message);
+      return;
+    }
+
+    // §9-1 개인정보 처리 로그: 실제 비밀번호는 다루지 않지만, 관리자가 재설정 메일
+    // 발송을 트리거한 사실 자체를 별도 action으로 남긴다.
+    await supabase.from("audit_logs").insert({
+      actor_id: actorId,
+      action: "password_reset_request",
+      target_table: "auth.users",
+      target_id: memberId,
+      accessed_fields: ["email"],
+    });
+
+    setResetSending(false);
+    setResetMessage(`${email}로 재설정 메일을 발송했습니다.`);
+  }
+
   return (
     <div className="rounded-2xl border border-gray-200 bg-white p-5">
       <p className="text-sm font-semibold text-[var(--brand-navy)]">회원 정보 수정 (관리자)</p>
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
+        <div>
+          <label className="text-xs text-gray-500">이메일</label>
+          <input
+            value={email ?? "-"}
+            disabled
+            className="mt-1 w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-500"
+          />
+        </div>
         <div>
           <label className="text-xs text-gray-500">이름</label>
           <input
@@ -145,6 +189,25 @@ export function MemberEditForm({
       >
         {saving ? "저장 중..." : "저장"}
       </button>
+
+      <div className="mt-6 border-t border-gray-100 pt-4">
+        <p className="text-xs font-semibold text-gray-600">비밀번호 관리</p>
+        <p className="mt-1 text-xs text-gray-400">
+          관리자가 직접 비밀번호를 지정할 수는 없으며, 회원 본인 이메일로 재설정 링크를 보냅니다.
+        </p>
+
+        {resetError && <p className="mt-2 text-xs text-red-600">{resetError}</p>}
+        {resetMessage && !resetError && <p className="mt-2 text-xs text-green-600">{resetMessage}</p>}
+
+        <button
+          type="button"
+          onClick={handleSendResetEmail}
+          disabled={resetSending || !email}
+          className="mt-3 rounded-full border border-gray-300 px-5 py-2 text-xs font-semibold text-gray-700 disabled:opacity-50"
+        >
+          {resetSending ? "발송 중..." : "비밀번호 재설정 메일 발송"}
+        </button>
+      </div>
     </div>
   );
 }

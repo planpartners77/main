@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 interface MemberRow {
   id: string;
@@ -20,6 +21,19 @@ export default async function AdminMembersPage() {
     .limit(200);
 
   const members = (data ?? []) as unknown as MemberRow[];
+
+  // profiles엔 email 컬럼이 없음(auth.users 전용) — 목록에 노출하되 DB에 복제 저장하지
+  // 않고 매번 Admin API로 실시간 조회(이중장부 방지 원칙, point_transactions와 동일 패턴).
+  // listUsers는 최대 1000명까지 한 번에 반환 — 위 profiles 조회의 limit(200)과 마찬가지로
+  // 회원 수가 이보다 많아지면 페이지네이션 루프 추가 필요.
+  let emailById = new Map<string, string>();
+  if (members.length > 0) {
+    const { data: usersData } = await createAdminClient().auth.admin.listUsers({
+      page: 1,
+      perPage: 1000,
+    });
+    emailById = new Map((usersData?.users ?? []).map((u) => [u.id, u.email ?? "-"]));
+  }
 
   return (
     <div>
@@ -50,6 +64,7 @@ export default async function AdminMembersPage() {
               <tr className="border-b border-gray-100 text-left text-xs font-semibold text-gray-400">
                 <th className="px-4 py-3">가입일</th>
                 <th className="px-4 py-3">이름</th>
+                <th className="px-4 py-3">이메일</th>
                 <th className="px-4 py-3">연락처</th>
                 <th className="px-4 py-3">구분</th>
                 <th className="px-4 py-3">등급</th>
@@ -64,6 +79,7 @@ export default async function AdminMembersPage() {
                     {new Date(member.created_at).toLocaleDateString("ko-KR")}
                   </td>
                   <td className="px-4 py-3 font-medium">{member.display_name ?? "-"}</td>
+                  <td className="px-4 py-3 text-gray-500">{emailById.get(member.id) ?? "-"}</td>
                   <td className="px-4 py-3 text-gray-500">{member.phone ?? "-"}</td>
                   <td className="px-4 py-3 text-gray-500">
                     {member.referral_role === "partner" ? (
