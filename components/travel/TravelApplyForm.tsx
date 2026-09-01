@@ -115,9 +115,9 @@ const SESSIONS = [
   { id: "s1", label: "1차 · 9/5(토)~9/12(토)", badge: null },
   { id: "s2", label: "2차 · 9/12(일)~9/19(토)", badge: null },
   { id: "s3", label: "3차 · 9/19(토)~9/26(토) 추석", badge: "peak" },
-  { id: "s4", label: "4차 · 9/26(토)~10/3(토)", badge: "promo" },
+  { id: "s4", label: "4차 · 9/26(토)~10/3(토)", badge: null },
   { id: "s5", label: "5차 · 10/3(토)~10/10(토) 연휴", badge: "peak" },
-  { id: "s6", label: "6차 · 10/10(토)~10/17(토)", badge: "promo" },
+  { id: "s6", label: "6차 · 10/10(토)~10/17(토)", badge: null },
   { id: "s7", label: "7차 · 10/17(토)~10/24(토)", badge: "promo" },
   { id: "s8", label: "8차 · 10/24(토)~10/31(토)", badge: "promo" },
   { id: "s9", label: "9차 · 10/31(토)~11/7(토)", badge: "promo" },
@@ -595,11 +595,11 @@ export function TravelApplyForm() {
               <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-gray-500">
                 <span className="flex items-center gap-1.5">
                   <span className="h-2 w-2 rounded-full bg-[var(--brand-mint)]" />
-                  프로모션 요금 · 입학금 외 30만원
+                  프로모션 요금 · 입학금 외 10만원
                 </span>
                 <span className="flex items-center gap-1.5">
                   <span className="h-2 w-2 rounded-full bg-[var(--brand-urgent)]" />
-                  성수기 요금 · 입학금 외 60만원
+                  성수기 요금 · 입학금 외 30만원
                 </span>
               </div>
               <select
@@ -613,7 +613,7 @@ export function TravelApplyForm() {
                 {SESSIONS.map((s) => (
                   <option key={s.id} value={s.id}>
                     {s.label}
-                    {s.badge ? ` — ${s.badge === "peak" ? "성수기 · +60만원" : "프로모션 · +30만원"}` : ""}
+                    {s.badge ? ` — ${s.badge === "peak" ? "성수기 · +30만원" : "프로모션 · +10만원"}` : ""}
                   </option>
                 ))}
               </select>
@@ -628,7 +628,7 @@ export function TravelApplyForm() {
                         : "bg-[var(--brand-mint)]/15 text-[var(--brand-mint)]"
                     }`}
                   >
-                    {selected.badge === "peak" ? "성수기 · +60만원" : "프로모션 · +30만원"}
+                    {selected.badge === "peak" ? "성수기 · +30만원" : "프로모션 · +10만원"}
                   </span>
                 );
               })()}
