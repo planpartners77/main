@@ -33,17 +33,42 @@ const FACILITIES = [
 const BENEFITS = [
   { icon: "🛏️", title: "숙박 제공", desc: "콘도형 기숙사 숙박" },
   { icon: "🍽️", title: "식사 제공", desc: "건강하고 균형 잡힌 식사" },
-  { icon: "📖", title: "영어 수업", desc: "원어민 교사와 함께하는 수업" },
-  { icon: "⛳", title: "골프 레슨", desc: "PGA 프로의 전문 레슨" },
+  { icon: "📖", title: "영어 수업", desc: "원어민 교사와 함께하는 수업 (보호자 제외)" },
+  { icon: "⛳", title: "골프 레슨", desc: "PGA 프로의 전문 레슨 (보호자 제외)" },
   { icon: "🏌️", title: "그린피 포함", desc: "해피시티 골프장 라운딩" },
+];
+
+const COST_INCLUDED = [
+  "콘도형 리조트 숙박",
+  "식사 제공",
+  "원어민 영어수업 (보호자 제외)",
+  "PGA 골프레슨 (보호자 제외)",
+  "골프장 그린피",
+];
+
+const COST_SELF_PAY = [
+  { title: "왕복 항공료", desc: "참가자 개별 부담" },
+  { title: "입학 신청비 30만원", desc: "보호자는 신청비 없음 · 성수기 추가비용은 신청 상세 참조" },
+  { title: "캐디피 · 캐디팁", desc: "650바트(약 3만원), 학생 라운딩 시 현지 지불" },
+  { title: "보호자 1:1 골프 레슨", desc: "1,500바트(약 65,000원), 보호자만 해당" },
+];
+
+const ESSENTIALS = ["골프장갑", "운동화"];
+
+const ETC_NOTES = [
+  "골프텔(콘도) 내에서 환전 가능 — 센트럴 백화점 환전소가 환율 우대",
+  "식사 시간: 조식 6시~8시 · 중식 11:30~13:30 · 석식 17:30~19:00",
+  "수영장 이용 시 비치타올은 제공되지 않으며 콘도 비치 타올을 사용",
+  "학생 라운딩 시 캐디피·캐디팁(650바트)은 현지에서 별도 지불 — 주 1회(금요일), 라운딩 가능자에 한함 (초보자 제외)",
+  "정규 수업 중 태국어 수업은 한국의 국어 수업에 해당하며 전원 함께 참여",
 ];
 
 const APPLY_INFO = [
   { k: "신청 기간", v: "현재 ~ 11월 말" },
   { k: "참가 대상", v: "초등 4학년 ~ 고등 2학년" },
   { k: "진행 장소", v: "CRIS · 해피시티 골프&리조트 (태국 치앙라이)" },
-  { k: "지원 항목", v: "숙박·식사·영어수업·골프레슨·그린피" },
-  { k: "별도 부담", v: "입학금(30만원)·항공료·캐디피·팁" },
+  { k: "지원 항목", v: "숙박·식사·영어수업·골프레슨·그린피 (영어수업·골프레슨은 보호자 제외)" },
+  { k: "별도 부담", v: "입학금 30만원(성수기 추가)·항공료·캐디피/캐디팁·보호자 1:1 레슨" },
   { k: "신청 접수", v: "파트너사 여기캠프" },
 ];
 
@@ -121,7 +146,9 @@ export function CrisGolfProgram() {
             <p className="text-sm font-bold text-[var(--brand-navy)]">
               숙박·식사·수업·레슨·그린피 전액 지원
             </p>
-            <p className="mt-1 text-sm text-gray-600">입학금(신청비)만 부담 — 30만원</p>
+            <p className="mt-1 text-sm text-gray-600">
+              입학금(신청비) 30만원 + 캐디피 등 일부 비용은 본인 부담 (자세히 보기 ↓)
+            </p>
           </div>
 
           <Link
@@ -195,14 +222,81 @@ export function CrisGolfProgram() {
               <span className="text-xl">✈️</span>
               <div>
                 <p className="text-sm font-bold text-white">
-                  항공료와 입학금만 제외, 나머지는 전액 지원
+                  항공료·입학금 등 일부 항목만 본인 부담, 나머지는 전액 지원
                 </p>
                 <p className="mt-1 text-xs text-white/70">
-                  숙박·식사·영어수업·골프레슨·그린피 포함 (캐디피 및 팁 약 3만원은 개인 부담)
+                  숙박·식사·영어수업·골프레슨·그린피 포함 (캐디피·팁 약 3만원, 보호자 1:1 골프레슨은
+                  개별 부담)
                 </p>
               </div>
             </div>
-            <p className="text-xs text-white/50">신청비 30만원 외 별도 비용 없음</p>
+            <p className="text-xs text-white/50">자세한 비용은 아래 COST 안내 참고</p>
+          </div>
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-5xl px-4 py-14">
+        <SectionHead
+          eyebrow="COST"
+          title="비용 안내"
+          desc="숙박부터 레슨까지 대부분 무료로 지원되며, 아래 항목만 별도로 부담하시면 됩니다."
+        />
+        <div className="grid gap-4 md:grid-cols-2">
+          <div className="rounded-2xl border border-[var(--brand-mint)]/30 bg-[var(--brand-mint)]/5 p-6">
+            <h3 className="text-sm font-bold text-[var(--brand-navy)]">✅ 무료 지원 (보호자 포함 제공)</h3>
+            <ul className="mt-3 space-y-2.5">
+              {COST_INCLUDED.map((item) => (
+                <li key={item} className="flex items-start gap-2.5 text-sm text-gray-600">
+                  <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[var(--brand-mint)] text-[10px] font-bold text-white">
+                    ✓
+                  </span>
+                  {item}
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="rounded-2xl border border-[var(--brand-urgent)]/20 bg-[var(--brand-urgent)]/5 p-6">
+            <h3 className="text-sm font-bold text-[var(--brand-navy)]">💳 본인 부담 항목</h3>
+            <ul className="mt-3 space-y-3">
+              {COST_SELF_PAY.map((item) => (
+                <li key={item.title} className="text-sm">
+                  <p className="font-semibold text-[var(--brand-navy)]">{item.title}</p>
+                  <p className="mt-0.5 text-xs text-gray-500">{item.desc}</p>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section className="bg-gray-50 py-14">
+        <div className="mx-auto max-w-5xl px-4">
+          <SectionHead eyebrow="GUIDE" title="준비물 및 생활 안내" desc="출국 전 꼭 확인해 주세요." />
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
+              <h3 className="text-sm font-bold text-[var(--brand-navy)]">🎒 필수 준비물</h3>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {ESSENTIALS.map((item) => (
+                  <span
+                    key={item}
+                    className="rounded-full bg-[var(--surface-tint)] px-3 py-1.5 text-xs font-semibold text-[var(--brand-navy)]"
+                  >
+                    {item}
+                  </span>
+                ))}
+              </div>
+            </div>
+            <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
+              <h3 className="text-sm font-bold text-[var(--brand-navy)]">ℹ️ 기타 안내</h3>
+              <ul className="mt-3 space-y-2.5">
+                {ETC_NOTES.map((item) => (
+                  <li key={item} className="flex items-start gap-2.5 text-sm leading-relaxed text-gray-600">
+                    <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--brand-blue)]" />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
         </div>
       </section>
@@ -231,7 +325,7 @@ export function CrisGolfProgram() {
               </thead>
               <tbody className="bg-white">
                 <tr className="border-b border-gray-100">
-                  <td className="bg-[var(--brand-mint)]/20 p-3 font-semibold text-[var(--brand-navy)]">7시</td>
+                  <td className="bg-[var(--brand-mint)]/20 p-3 font-semibold text-[var(--brand-navy)]">6시–8시</td>
                   <td className="border-r border-gray-100 bg-[var(--surface-tint)] p-3 font-semibold text-[var(--brand-navy)]" rowSpan={7}>
                     치앙마이 도착
                     <br />
@@ -256,7 +350,7 @@ export function CrisGolfProgram() {
                   <td className="p-3 text-gray-600">수업</td>
                 </tr>
                 <tr className="border-b border-gray-100">
-                  <td className="bg-[var(--brand-mint)]/20 p-3 font-semibold text-[var(--brand-navy)]">12시–13시</td>
+                  <td className="bg-[var(--brand-mint)]/20 p-3 font-semibold text-[var(--brand-navy)]">11:30–13:30</td>
                   <td className="bg-[var(--surface-tint-strong)] p-3 font-semibold text-[var(--brand-navy)]" colSpan={5}>
                     점심 식사
                   </td>
@@ -267,19 +361,19 @@ export function CrisGolfProgram() {
                   </td>
                 </tr>
                 <tr className="border-b border-gray-100">
-                  <td className="bg-[var(--brand-mint)]/20 p-3 font-semibold text-[var(--brand-navy)]">13시–15시</td>
+                  <td className="bg-[var(--brand-mint)]/20 p-3 font-semibold text-[var(--brand-navy)]">13:30–15시</td>
                   <td className="p-3 text-gray-600" colSpan={5}>
                     골프 레슨 및 라운딩
                   </td>
                 </tr>
                 <tr className="border-b border-gray-100">
-                  <td className="bg-[var(--brand-mint)]/20 p-3 font-semibold text-[var(--brand-navy)]">15시–18시</td>
+                  <td className="bg-[var(--brand-mint)]/20 p-3 font-semibold text-[var(--brand-navy)]">15시–17:30</td>
                   <td className="p-3 text-gray-600" colSpan={5}>
                     자유 수영
                   </td>
                 </tr>
                 <tr className="border-b border-gray-100">
-                  <td className="bg-[var(--brand-mint)]/20 p-3 font-semibold text-[var(--brand-navy)]">18시–19시</td>
+                  <td className="bg-[var(--brand-mint)]/20 p-3 font-semibold text-[var(--brand-navy)]">17:30–19시</td>
                   <td className="p-3 text-gray-600" colSpan={5}>
                     저녁식사 및 휴식
                   </td>
@@ -294,7 +388,8 @@ export function CrisGolfProgram() {
             </table>
           </div>
           <div className="bg-[var(--surface-tint)] p-3 text-center text-xs text-gray-500">
-            ※ 정규 주간 일과표이며, 1주 체험 프로그램은 도착일 기준으로 조정되어 적용됩니다.
+            ※ 정규 주간 일과표이며, 1주 체험 프로그램은 도착일 기준으로 조정되어 적용됩니다. 캐디피·수영장
+            타올 등 세부 안내는 위 준비물 및 생활 안내를 참고해 주세요.
           </div>
         </div>
       </section>

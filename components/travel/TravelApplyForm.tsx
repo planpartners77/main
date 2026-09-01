@@ -25,8 +25,19 @@ const PROCEDURE_STEPS = [
     body: [
       "여권 유효기간이 6개월 이상 남아 있는지 확인해 주세요. 미소지 시 사전에 발급을 진행해야 합니다.",
       "왕복 항공권은 참가자가 개별 예약합니다 — 배정된 회차의 입소일(토요일)에 맞춰 예약해 주세요.",
-      "골프화, 편한 복장, 개인 상비약, 여벌 옷 등을 준비물로 안내드리며 상세 목록은 접수 확정 후 별도 안내드립니다.",
+      "필수 준비물은 골프장갑과 운동화이며, 편한 복장·개인 상비약·여벌 옷 등도 함께 준비해 주세요.",
       "복용 중인 약이나 지병이 있는 경우 신청서 9번 항목에 반드시 기재해 주세요.",
+    ],
+  },
+  {
+    id: "camp-life",
+    label: "현지 생활 안내",
+    body: [
+      "환전은 골프텔(콘도) 내에서 가능하며, 센트럴 백화점 환전소가 환율 우대를 제공합니다.",
+      "식사 시간은 조식 6시~8시, 중식 11:30~13:30, 석식 17:30~19:00입니다.",
+      "수영장 이용 시 비치타올은 별도 제공되지 않으며, 콘도에 비치된 타올을 사용합니다.",
+      "학생 라운딩 시 캐디피·캐디팁(650바트)은 현지에서 직접 지불하며, 주 1회(금요일) 라운딩이 가능한 학생에 한해 진행됩니다 (초보자 제외).",
+      "정규 수업 중 태국어 수업은 한국의 국어 수업에 해당하며, 모든 학생이 함께 참여합니다.",
     ],
   },
   {
@@ -361,7 +372,7 @@ export function TravelApplyForm() {
 
       <section className="mx-auto max-w-3xl px-4 pt-10">
         <p className="text-xs font-bold tracking-wider text-[var(--brand-blue)]">진행 절차</p>
-        <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-5">
+        <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
           {PROCEDURE_STEPS.map((step, i) => (
             <button
               key={step.id}
