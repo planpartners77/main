@@ -405,7 +405,7 @@ export function TravelApplyForm() {
           <div className="flex items-center justify-between gap-3">
             <h2 className="text-sm font-bold text-[var(--brand-navy)]">{activeGuide.label}</h2>
             <span className="shrink-0 rounded-full bg-[var(--surface-tint)] px-2.5 py-1 text-[10px] font-semibold text-[var(--brand-blue-dark)]">
-              초안 · 확인 중
+              필수 안내
             </span>
           </div>
           <ul className="mt-4 space-y-2.5">
