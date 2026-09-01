@@ -92,12 +92,20 @@ const EXPERIENCE_OPTIONS = [
 ] as const;
 
 const HEARD_FROM_OPTIONS = [
-  "여기캠프",
+  "KT 임직원",
+  "LGU+ 임직원",
+  "SKT 임직원",
+  "삼성 임직원",
+  "단무지(주) 제휴",
   "iphone.kr",
-  "세상에 없는 요금 YOGEUM.COM",
-  "지인추천",
-  "기타",
+  "하이닉스 임직원",
+  "플랜파트너스",
+  "HandlerOne(인플루언서)",
+  "체리포인트",
+  "기타 지인 추천인",
 ] as const;
+
+const HEARD_FROM_ETC = HEARD_FROM_OPTIONS[HEARD_FROM_OPTIONS.length - 1];
 
 const NOTE_OPTIONS = ["복용약", "병력", "없음", "기타"] as const;
 
@@ -140,7 +148,7 @@ const INITIAL_STATE: FormState = {
   session: "",
   experience: "",
   experienceDetail: "",
-  heardFrom: "",
+  heardFrom: HEARD_FROM_ETC,
   heardFromDetail: "",
   notes: [],
   notesDetail: "",
@@ -239,8 +247,6 @@ export function TravelApplyForm() {
     if (!form.experience) next.experience = "캠프 경험을 선택해 주세요.";
     if (form.experience === "타 캠프 참가" && !form.experienceDetail.trim())
       next.experienceDetail = "캠프명 및 지역을 입력해 주세요.";
-    if (form.heardFrom === "기타" && !form.heardFromDetail.trim())
-      next.heardFromDetail = "내용을 입력해 주세요.";
     if (form.notes.length === 0) next.notes = "해당 사항을 선택해 주세요.";
     if (form.notes.some((n) => n !== "없음") && !form.notesDetail.trim())
       next.notesDetail = "상세 내용을 입력해 주세요.";
@@ -571,31 +577,27 @@ export function TravelApplyForm() {
             </div>
 
             <div ref={(el) => { fieldRefs.current.heardFrom = el; }}>
-              <FieldLabel>8. 여기캠프에 대해 어디서 정보를 얻으셨나요? (선택)</FieldLabel>
-              <div className="mt-2 space-y-2">
+              <FieldLabel>8. 추천인(선택)</FieldLabel>
+              <select
+                value={form.heardFrom}
+                onChange={(e) => update("heardFrom", e.target.value)}
+                className="mt-3 w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-[var(--brand-navy)] focus:border-[var(--brand-blue)] focus:outline-none"
+              >
                 {HEARD_FROM_OPTIONS.map((opt) => (
-                  <label key={opt} className="flex items-center gap-2.5 text-sm text-gray-600">
-                    <input
-                      type="radio"
-                      name="heardFrom"
-                      checked={form.heardFrom === opt}
-                      onChange={() => update("heardFrom", opt)}
-                      className="h-4 w-4 accent-[var(--brand-blue)]"
-                    />
+                  <option key={opt} value={opt}>
                     {opt}
-                  </label>
+                  </option>
                 ))}
-              </div>
-              {form.heardFrom === "기타" && (
+              </select>
+              {form.heardFrom === HEARD_FROM_ETC && (
                 <div ref={(el) => { fieldRefs.current.heardFromDetail = el; }}>
                   <input
                     type="text"
-                    placeholder="내용을 입력해 주세요"
+                    placeholder="추천인 성함을 입력해 주세요"
                     value={form.heardFromDetail}
                     onChange={(e) => update("heardFromDetail", e.target.value)}
                     className="mt-2 w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-[var(--brand-blue)] focus:outline-none"
                   />
-                  <FieldError message={errors.heardFromDetail} />
                 </div>
               )}
             </div>

@@ -52,7 +52,9 @@ export async function POST(request: Request) {
         `보호자: ${c.guardianName ?? "-"}`,
         `연락처: ${c.phone ?? "-"}`,
         `참가 회차: ${c.session ?? "-"}`,
-        c.heardFrom ? `유입 경로: ${c.heardFrom}` : null,
+        c.heardFrom
+          ? `추천인: ${c.heardFrom}${c.heardFromDetail ? ` (${c.heardFromDetail})` : ""}`
+          : null,
       ]
         .filter(Boolean)
         .join("\n"),
