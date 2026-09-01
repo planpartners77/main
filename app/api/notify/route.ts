@@ -44,17 +44,23 @@ export async function POST(request: Request) {
       .maybeSingle();
     if (!data) return NextResponse.json({ ok: false }, { status: 404 });
 
-    const c = (data.guest_contact ?? {}) as Record<string, string | null | undefined>;
+    const c = (data.guest_contact ?? {}) as Record<string, unknown>;
+    const notes = Array.isArray(c.notes) ? (c.notes as string[]).join(", ") : null;
     await sendTelegramMessage(
       [
         "✈️ <b>여행 신청서 접수</b> (CRIS 골프캠프)",
         `아이 정보: ${c.childInfo ?? "-"}`,
+        `영어 닉네임: ${c.nickname ?? "-"}`,
         `보호자: ${c.guardianName ?? "-"}${c.guardianNameEn ? ` (${c.guardianNameEn})` : ""}`,
         `연락처: ${c.phone ?? "-"}`,
+        `집 주소: ${c.address ?? "-"}`,
         `참가 회차: ${c.session ?? "-"}`,
+        `캠프 경험: ${c.experience ?? "-"}${c.experienceDetail ? ` (${c.experienceDetail})` : ""}`,
         c.heardFrom
           ? `추천인: ${c.heardFrom}${c.heardFromDetail ? ` (${c.heardFromDetail})` : ""}`
           : null,
+        notes ? `학생 특이사항: ${notes}${c.notesDetail ? ` (${c.notesDetail})` : ""}` : null,
+        `사진/영상 촬영 동의: ${c.mediaConsent ?? "-"}`,
       ]
         .filter(Boolean)
         .join("\n"),
