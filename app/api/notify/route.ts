@@ -49,7 +49,7 @@ export async function POST(request: Request) {
       [
         "✈️ <b>여행 신청서 접수</b> (CRIS 골프캠프)",
         `아이 정보: ${c.childInfo ?? "-"}`,
-        `보호자: ${c.guardianName ?? "-"}`,
+        `보호자: ${c.guardianName ?? "-"}${c.guardianNameEn ? ` (${c.guardianNameEn})` : ""}`,
         `연락처: ${c.phone ?? "-"}`,
         `참가 회차: ${c.session ?? "-"}`,
         c.heardFrom

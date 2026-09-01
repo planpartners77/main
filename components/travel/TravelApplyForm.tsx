@@ -122,6 +122,7 @@ interface FormState {
   childInfo: string;
   nickname: string;
   guardianName: string;
+  guardianNameEn: string;
   phone: string;
   address: string;
   session: string;
@@ -143,6 +144,7 @@ const INITIAL_STATE: FormState = {
   childInfo: "",
   nickname: "",
   guardianName: "",
+  guardianNameEn: "",
   phone: "",
   address: "",
   session: "",
@@ -240,7 +242,8 @@ export function TravelApplyForm() {
     const next: Record<string, string> = {};
     if (!form.childInfo.trim()) next.childInfo = "아이 이름 / 성별 / 학년을 입력해 주세요.";
     if (!form.nickname.trim()) next.nickname = "영어 닉네임을 입력해 주세요.";
-    if (!form.guardianName.trim()) next.guardianName = "보호자 이름을 입력해 주세요.";
+    if (!form.guardianName.trim()) next.guardianName = "보호자 이름 / 관계를 입력해 주세요.";
+    if (!form.guardianNameEn.trim()) next.guardianNameEn = "보호자 영문이름을 입력해 주세요.";
     if (!RE_PHONE.test(form.phone)) next.phone = "010-0000-0000 형식으로 입력해 주세요.";
     if (!form.address.trim()) next.address = "집 주소를 입력해 주세요.";
     if (!form.session) next.session = "참가 차수를 선택해 주세요.";
@@ -297,6 +300,7 @@ export function TravelApplyForm() {
           childInfo: form.childInfo,
           nickname: form.nickname,
           guardianName: form.guardianName,
+          guardianNameEn: form.guardianNameEn,
           phone: form.phone,
           address: form.address,
           session: sessionLabel,
@@ -369,7 +373,7 @@ export function TravelApplyForm() {
         <div className="mx-auto max-w-3xl px-4 pt-10">
           <p className="text-sm font-semibold text-[var(--brand-blue)]">여행 · 유학 체험 프로그램</p>
           <h1 className="mt-2 text-2xl font-bold leading-snug text-[var(--brand-navy)] sm:text-3xl">
-            CRIS 국제학교 골프 체험 신청
+            CRIS 국제학교 원어민 영어 및 골프 체험 신청
           </h1>
           <p className="mt-3 text-sm text-gray-500">
             대상자 선정부터 입국 안내까지, 진행 절차를 먼저 확인하고 아래 신청서를 작성해 주세요.
@@ -467,14 +471,26 @@ export function TravelApplyForm() {
             </div>
 
             <div ref={(el) => { fieldRefs.current.guardianName = el; }}>
-              <FieldLabel>3. 보호자 이름 *</FieldLabel>
+              <FieldLabel>3. 보호자 이름 / 관계 *</FieldLabel>
               <input
                 type="text"
+                placeholder="예: 홍길동 / 아빠"
                 value={form.guardianName}
                 onChange={(e) => update("guardianName", e.target.value)}
                 className="mt-2 w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-[var(--brand-blue)] focus:outline-none"
               />
               <FieldError message={errors.guardianName} />
+              <div ref={(el) => { fieldRefs.current.guardianNameEn = el; }} className="mt-3">
+                <label className="text-xs font-semibold text-gray-500">보호자 영문이름 *</label>
+                <input
+                  type="text"
+                  placeholder="예: HONG GILDONG"
+                  value={form.guardianNameEn}
+                  onChange={(e) => update("guardianNameEn", e.target.value)}
+                  className="mt-1.5 w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-[var(--brand-blue)] focus:outline-none"
+                />
+                <FieldError message={errors.guardianNameEn} />
+              </div>
             </div>
 
             <div ref={(el) => { fieldRefs.current.phone = el; }}>
