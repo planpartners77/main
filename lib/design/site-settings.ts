@@ -36,8 +36,6 @@ export const DEFAULT_SNS_LINKS: SnsLink[] = [
   { platform: "tiktok", label: "틱톡", url: null, enabled: false },
 ];
 
-export const DEFAULT_CATEGORY_ORDER = ["travel", "internet", "mobile", "rental", "insurance", "funeral"];
-
 async function getSettingValue(key: string): Promise<unknown | null> {
   const supabase = await createClient();
   const { data } = await supabase.from("site_settings").select("value").eq("key", key).maybeSingle();
@@ -57,9 +55,4 @@ export async function getHomePageSettings(): Promise<HomePageSettings> {
 export async function getSnsLinks(): Promise<SnsLink[]> {
   const value = (await getSettingValue("sns_links")) as { links?: SnsLink[] } | null;
   return value?.links ?? DEFAULT_SNS_LINKS;
-}
-
-export async function getCategoryOrder(): Promise<string[]> {
-  const value = (await getSettingValue("category_order")) as { order?: string[] } | null;
-  return value?.order ?? DEFAULT_CATEGORY_ORDER;
 }

@@ -8,7 +8,11 @@ const TABS = [
   { href: "/admin/design/banners", label: "배너" },
   { href: "/admin/design/popups", label: "팝업" },
   { href: "/admin/design/pages", label: "페이지" },
-  { href: "/admin/design/category-order", label: "카테고리 진열" },
+  { href: "/admin/design/categories", label: "카테고리관리" },
+  { href: "/admin/design/notices", label: "공지사항" },
+  { href: "/admin/design/events", label: "이벤트" },
+  { href: "/admin/design/legal", label: "약관" },
+  { href: "/admin/design/reviews", label: "후기" },
   { href: "/admin/design/sns", label: "SNS" },
 ];
 

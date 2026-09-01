@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { getLegalDoc, LEGAL_NAV } from "@/lib/legal-content";
+import { getLegalDoc, LEGAL_NAV, type LegalSection } from "@/lib/legal-content";
+import { createClient } from "@/lib/supabase/server";
 
 export default async function LegalDocPage({
   params,
@@ -8,8 +9,20 @@ export default async function LegalDocPage({
   params: Promise<{ doc: string }>;
 }) {
   const { doc: slug } = await params;
-  const doc = getLegalDoc(slug);
-  if (!doc) notFound();
+  const fallback = getLegalDoc(slug);
+  if (!fallback) notFound();
+
+  // legal_docs에 관리자가 등록한 확정본이 있으면 그것으로 덮어쓰고, 없으면 초안(lib/legal-content.ts)을 보여준다.
+  const supabase = await createClient();
+  const { data: override } = await supabase
+    .from("legal_docs")
+    .select("title, intro, sections, updated_at")
+    .eq("slug", slug)
+    .maybeSingle();
+
+  const doc = override
+    ? { title: override.title, intro: override.intro, sections: override.sections as LegalSection[] }
+    : fallback;
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-14">
@@ -30,9 +43,12 @@ export default async function LegalDocPage({
       </div>
 
       <h1 className="mt-6 text-2xl font-bold text-[var(--brand-navy)]">{doc.title}</h1>
-      <p className="mt-2 text-xs text-gray-400">
-        본 문서는 초안이며, 법률 검토를 거쳐 확정됩니다.
-      </p>
+      {!override && (
+        <p className="mt-2 text-xs text-gray-400">본 문서는 초안이며, 법률 검토를 거쳐 확정됩니다.</p>
+      )}
+      {override?.updated_at && (
+        <p className="mt-2 text-xs text-gray-400">최종 개정일: {new Date(override.updated_at).toLocaleDateString("ko-KR")}</p>
+      )}
       <p className="mt-4 text-sm leading-relaxed text-gray-600">{doc.intro}</p>
 
       <div className="mt-8 space-y-8">
