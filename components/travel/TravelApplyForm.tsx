@@ -6,10 +6,43 @@ import { getStoredReferral } from "@/lib/referral/client";
 
 // CRIS 골프 체험 프로그램 신청 페이지. 원본(vscode_pplan/index.html, ppartners 배포본)의
 // 신청서 항목·검증 로직·회차 일정을 그대로 유지하되 PlanPartners 블루 컨셉으로 재구성했다.
-// 상단 "진행 절차" 5단계 안내는 원본/여기캠프 자료 어디에도 실제 본문이 없어 이번에 초안으로
-// 작성했다 — 출입국·캠프 규칙 등 사실관계가 걸린 내용이라 파트너사 확인 전까지는 초안임을
-// 화면에 명시한다.
-const PROCEDURE_STEPS = [
+// 상단 "진행 절차" 단계 안내 중 준비물 표(PREPARATION_TABLE)와 "현지 생활 안내" 단계의
+// 일정변동/귀중품/세탁/위생/복약/비상연락망 항목은 여기캠프가 제공한 공식 안내장을 그대로 반영했다.
+// 나머지 항목은 아직 자체 작성 초안이므로 추가 사실관계 확인이 필요할 수 있다.
+type ProcedureStep = {
+  id: string;
+  label: string;
+  body: string[];
+  table?: { group: string; item: string; note: string }[];
+};
+
+// 준비물 표는 여기캠프에서 받은 공식 안내장(구분/품목/비고)을 그대로 옮긴 것 — 금지품목까지 포함.
+const PREPARATION_TABLE: NonNullable<ProcedureStep["table"]> = [
+  { group: "필수 준비물", item: "세면도구", note: "개인 샴푸, 린스, 바디워시, 세안제, 치약, 칫솔 등 (호텔 구비: 샴푸, 바디워시, 치약, 칫솔)" },
+  { group: "필수 준비물", item: "골프", note: "골프장갑, 골프채(지참 가능 시)" },
+  { group: "필수 준비물", item: "모자", note: "자외선 차단 가능한 것" },
+  { group: "필수 준비물", item: "신발", note: "운동화, 슬리퍼(실외 슬리퍼), 아쿠아슈즈" },
+  { group: "필수 준비물", item: "상비약", note: "감기약(해열제·콧물감기약 등 평소 복용약), 멀미약, 버물리, 모기퇴치제, 후시딘, 밴드, 소화제 등" },
+  { group: "필수 준비물", item: "용돈", note: "개인 간식비 - 하루 약 50~100바트" },
+  { group: "필수 준비물", item: "텀블러", note: "잘 깨지지 않는 물병 또는 텀블러" },
+  { group: "필수 준비물", item: "썬크림", note: "자외선 차단지수 높은 것" },
+  { group: "필수 준비물", item: "수영복 / 물안경", note: "물안경 필수, 수영모자는 선택" },
+  { group: "필수 준비물", item: "가방", note: "물통, 필기도구 등 개인 물품을 넣을 가방" },
+  { group: "필수 준비물", item: "필기도구", note: "연필, 지우개, 노트 1권" },
+  { group: "필수 준비물", item: "위생용품", note: "손톱깎기, 여성용 위생용품" },
+  { group: "필수 준비물", item: "의복", note: "반팔/반바지, 긴팔 또는 가디건, 얇은 긴바지 1벌, 속옷·양말 등 (골프텔 내 개별 세탁기 있음)" },
+  { group: "필수 준비물", item: "우산", note: "가방에 넣을 수 있는 접는 우산 또는 우비" },
+  { group: "선택 준비물", item: "샤워 헤드", note: "필터형 샤워헤드" },
+  { group: "선택 준비물", item: "스마트폰", note: "랩탑·태블릿 등은 이용 허용 시간에만 사용 가능" },
+  { group: "선택 준비물", item: "보조배터리", note: "기내에만 반입 가능 (위탁 수하물 절대 금지)" },
+  { group: "선택 준비물", item: "도서류", note: "본인이 읽고 싶은 책" },
+  { group: "선택 준비물", item: "화장품류", note: "스킨, 로션 등" },
+  { group: "금지 품목", item: "주류, 담배류", note: "전자담배 포함 모든 종류" },
+  { group: "금지 품목", item: "무기류", note: "무기가 될 수 있는 모든 품목" },
+  { group: "금지 품목", item: "향정신성 약물", note: "치료 목적의 약은 사전에 반드시 알려주세요" },
+];
+
+const PROCEDURE_STEPS: ProcedureStep[] = [
   {
     id: "selection",
     label: "대상자 선정",
@@ -26,9 +59,10 @@ const PROCEDURE_STEPS = [
       "여권 유효기간이 6개월 이상 남아 있는지 확인해 주세요. 미소지 시 사전에 발급을 진행해야 합니다.",
       "왕복 항공권은 참가자가 개별 예약합니다 — 배정된 회차의 입소일(토요일)에 맞춰 예약해 주세요.",
       "항공 예약 시 수하물 규정을 꼭 확인해 주세요 — 기내 수하물 10kg, 위탁 수하물 15kg이며 골프클럽·여행가방 포함 초과되지 않도록 사전 체크가 필요합니다.",
-      "필수 준비물은 골프장갑·운동화·수영용품(튜브, 물안경 등)·슬리퍼·상비약이며, 여행자보험은 선택 사항입니다.",
+      "여행자보험은 선택 사항이며, 준비물(필수·선택·금지 품목)은 아래 표를 참고해 주세요.",
       "복용 중인 약이나 지병이 있는 경우 신청서 9번 항목에 반드시 기재해 주세요.",
     ],
+    table: PREPARATION_TABLE,
   },
   {
     id: "camp-life",
@@ -39,6 +73,12 @@ const PROCEDURE_STEPS = [
       "수영장 이용 시 비치타올은 별도 제공되지 않으며, 콘도에 비치된 타올을 사용합니다.",
       "학생 라운딩 시 캐디피·캐디팁(650바트)은 현지에서 직접 지불하며, 주 1회(금요일) 라운딩이 가능한 학생에 한해 진행됩니다 (초보자 제외).",
       "정규 수업 중 태국어 수업은 한국의 국어 수업에 해당하며, 모든 학생이 함께 참여합니다.",
+      "캠프는 다양한 체험 활동 중심으로 구성되어 있어 날씨나 현지 상황에 따라 일정이 일부 변경될 수 있으며, 변경 시 실시간으로 안내드립니다.",
+      "골프텔 내에서도 브랜드 의류·귀금속 등 고가품은 분실 위험이 있어 지참하지 않도록 아이들을 지도해 주시고, 꼭 필요한 경우에도 잘 관리할 수 있도록 사전에 안내해 주세요.",
+      "골프텔 내에 세탁기가 비치되어 있어 별도 세탁 서비스 없이 이용 가능합니다.",
+      "기본 세면도구·위생용품은 개인 준비가 필요하며, 썬크림·모자·물병·여벌 옷 등 건강·위생 용품도 함께 챙겨 주세요.",
+      "복용 중인 약이 있을 경우 출국 전 반드시 챙겨 주시고, 현지에서도 건강 상태를 수시로 체크해 필요 시 보호자님께 신속히 연락드립니다.",
+      "카카오톡 공지방을 통해 모든 안내와 실시간 사진·캠프 상황을 공유하며 보호자님과 소통합니다.",
     ],
   },
   {
@@ -69,7 +109,7 @@ const PROCEDURE_STEPS = [
       "입국 심사 관련 상세 요건은 신청 확정 후 최신 태국 출입국 규정 기준으로 별도 안내드립니다.",
     ],
   },
-] as const;
+];
 
 const SESSIONS = [
   { id: "s1", label: "1차 · 9/5(토)~9/12(토)", badge: null },
@@ -416,9 +456,43 @@ export function TravelApplyForm() {
               </li>
             ))}
           </ul>
-          <p className="mt-4 text-xs leading-relaxed text-gray-400">
-            ※ 본 안내는 최종 확정 전 초안이며, 파트너사(여기캠프) 확인 후 정식 안내문으로 교체될 수 있습니다.
-          </p>
+          {activeGuide.table && (
+            <div className="mt-4 overflow-x-auto rounded-xl border border-gray-100">
+              <table className="w-full min-w-[480px] border-collapse text-left text-xs">
+                <thead className="bg-gray-50 text-gray-500">
+                  <tr>
+                    <th className="px-3 py-2 font-semibold">구분</th>
+                    <th className="px-3 py-2 font-semibold">품목</th>
+                    <th className="px-3 py-2 font-semibold">비고</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(() => {
+                    const table = activeGuide.table!;
+                    let lastGroup = "";
+                    return table.map((row, i) => {
+                      const isNewGroup = row.group !== lastGroup;
+                      lastGroup = row.group;
+                      return (
+                        <tr key={`${row.group}-${row.item}-${i}`} className="border-t border-gray-100 align-top">
+                          {isNewGroup && (
+                            <td
+                              rowSpan={table.filter((r) => r.group === row.group).length}
+                              className="border-r border-gray-100 px-3 py-2 font-semibold text-[var(--brand-navy)]"
+                            >
+                              {row.group}
+                            </td>
+                          )}
+                          <td className="px-3 py-2 font-medium text-gray-700">{row.item}</td>
+                          <td className="px-3 py-2 leading-relaxed text-gray-500">{row.note}</td>
+                        </tr>
+                      );
+                    });
+                  })()}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       </section>
 
