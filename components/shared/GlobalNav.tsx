@@ -51,7 +51,7 @@ export function GlobalNav({ categories }: { categories: CategoryConfig[] }) {
               width={483}
               height={258}
               priority
-              className="h-11 w-auto"
+              className="h-16 w-auto"
             />
           </Link>
 
@@ -108,6 +108,19 @@ export function GlobalNav({ categories }: { categories: CategoryConfig[] }) {
             )}
           </div>
         </nav>
+      </header>
+
+      <header className="flex items-center border-b border-gray-200 bg-white px-4 py-2 md:hidden">
+        <Link href="/" className="flex items-center">
+          <Image
+            src="/images/logo.jpg"
+            alt="플랜파트너스"
+            width={483}
+            height={258}
+            priority
+            className="h-9 w-auto"
+          />
+        </Link>
       </header>
 
       <nav className="fixed inset-x-0 bottom-0 z-40 flex border-t border-gray-200 bg-white md:hidden">
