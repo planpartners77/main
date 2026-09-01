@@ -39,7 +39,7 @@ export default async function Home() {
           reviews={(reviews ?? []) as ReviewRow[]}
         />
       )}
-      {sections.popular && <PopularProducts />}
+      {sections.popular && <PopularProducts categories={categories} />}
       {sections.why && <WhyPossible />}
       {sections.cta && <BottomCta />}
     </>
