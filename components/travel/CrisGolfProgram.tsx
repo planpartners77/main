@@ -91,7 +91,7 @@ export function CrisGolfProgram() {
           <h1 className="mt-2 text-2xl font-bold leading-snug text-[var(--brand-navy)] sm:text-3xl">
             국제학교 골프유학,
             <br />
-            1주일간의 무료 체험 초대장
+            1주일간의 <span className="text-[var(--brand-urgent)]">무료 체험</span> 초대장
           </h1>
           <p className="mt-3 max-w-xl text-sm text-gray-500">
             골프·영어·기숙사 생활을 실제로 체험하는 1주 프로그램. 미국 대학 진학을 준비하는
