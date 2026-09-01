@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import type { CategoryConfig } from "@/lib/categories";
 import { createClient } from "@/lib/supabase/client";
@@ -43,8 +44,15 @@ export function GlobalNav({ categories }: { categories: CategoryConfig[] }) {
     <>
       <header className="hidden border-b border-gray-200 bg-white md:block">
         <nav className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
-          <Link href="/" className="text-lg font-bold text-[var(--brand-navy)]">
-            플랜파트너스
+          <Link href="/" className="flex items-center">
+            <Image
+              src="/images/logo.jpg"
+              alt="플랜파트너스"
+              width={483}
+              height={258}
+              priority
+              className="h-11 w-auto"
+            />
           </Link>
 
           <ul className="flex items-center gap-5 text-sm">
