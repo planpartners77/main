@@ -129,7 +129,7 @@ export function CrisGolfProgram() {
         <div className="mx-auto max-w-5xl px-4 pt-10">
           <p className="text-sm font-semibold text-[var(--brand-blue)]">여행 · 유학 체험 프로그램</p>
           <h1 className="mt-2 text-2xl font-bold leading-snug text-[var(--brand-navy)] sm:text-3xl">
-            국제학교 골프유학,
+            CRIS 국제학교 원어민 영어 및 골프 체험 신청
             <br />
             1주일간의 <span className="text-[var(--brand-urgent)]">무료 체험</span> 초대장
           </h1>
