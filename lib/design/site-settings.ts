@@ -21,6 +21,13 @@ export interface SnsLink {
   enabled: boolean;
 }
 
+export interface SeoSettings {
+  googleSiteVerification: string | null;
+  naverSiteVerification: string | null;
+  metaDescription: string | null;
+  indexable: boolean;
+}
+
 export const DEFAULT_HOME_PAGE_SETTINGS: HomePageSettings = {
   heroTagline: "비교하지 않으면 놓치는 혜택",
   heroHeadline: "대신 비교하고,\n더 유리한 조건을 찾아드려요",
@@ -35,6 +42,13 @@ export const DEFAULT_SNS_LINKS: SnsLink[] = [
   { platform: "instagram", label: "인스타그램", url: null, enabled: false },
   { platform: "tiktok", label: "틱톡", url: null, enabled: false },
 ];
+
+export const DEFAULT_SEO_SETTINGS: SeoSettings = {
+  googleSiteVerification: null,
+  naverSiteVerification: null,
+  metaDescription: null,
+  indexable: true,
+};
 
 async function getSettingValue(key: string): Promise<unknown | null> {
   const supabase = await createClient();
@@ -55,4 +69,10 @@ export async function getHomePageSettings(): Promise<HomePageSettings> {
 export async function getSnsLinks(): Promise<SnsLink[]> {
   const value = (await getSettingValue("sns_links")) as { links?: SnsLink[] } | null;
   return value?.links ?? DEFAULT_SNS_LINKS;
+}
+
+export async function getSeoSettings(): Promise<SeoSettings> {
+  const value = (await getSettingValue("seo")) as Partial<SeoSettings> | null;
+  if (!value) return DEFAULT_SEO_SETTINGS;
+  return { ...DEFAULT_SEO_SETTINGS, ...value };
 }

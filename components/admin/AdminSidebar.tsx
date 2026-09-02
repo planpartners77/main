@@ -51,6 +51,7 @@ const NAV_GROUPS: NavGroup[] = [
     ],
   },
   { label: "운영", items: [{ title: "매장 관리", href: "/admin/stores", icon: "settings" }] },
+  { label: "SEO", items: [{ title: "SEO 관리", href: "/admin/seo", icon: "seo" }] },
 ];
 
 const ROLE_LABELS: Record<string, string> = {
