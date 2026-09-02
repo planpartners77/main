@@ -20,6 +20,7 @@ interface NavGroup {
 // 자리만 잡아두고, 실제 구현되는 대로 여기 href만 바꾸면 된다.
 const NAV_GROUPS: NavGroup[] = [
   { label: null, items: [{ title: "대시보드", href: "/admin", icon: "dashboard" }] },
+  { label: "통계", items: [{ title: "통계", href: "/admin/statistics", icon: "stats" }] },
   {
     label: "상품·파트너",
     items: [
