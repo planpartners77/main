@@ -2,7 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getAdminSession } from "@/lib/admin/session";
 import { AdminIcon } from "@/components/admin/AdminIcon";
-import { LEAD_STATUS_OPTIONS } from "@/components/admin/leads/LeadStatusSelect";
+import { LEAD_STATUS_OPTIONS } from "@/lib/admin/lead-status";
 
 const QUICK_LINKS = [
   { title: "리드 확인", href: "/admin/leads", icon: "leads" },

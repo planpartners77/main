@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { ProfileEditForm } from "@/components/mypage/ProfileEditForm";
 import { ReferralShareLink } from "@/components/mypage/ReferralShareLink";
-import { LEAD_STATUS_OPTIONS } from "@/components/admin/leads/LeadStatusSelect";
+import { LEAD_STATUS_OPTIONS } from "@/lib/admin/lead-status";
 import { CONSULTATION_STATUS_OPTIONS } from "@/components/admin/consultations/ConsultationManager";
 
 // §12-10 마이페이지: 회원정보 수정 / 신청 내역(비대면) / 상담 내역(상담필수) / 사은품·지원금 현황.

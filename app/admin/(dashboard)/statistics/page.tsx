@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { createClient } from "@/lib/supabase/server";
-import { LEAD_STATUS_OPTIONS } from "@/components/admin/leads/LeadStatusSelect";
+import { LEAD_STATUS_OPTIONS } from "@/lib/admin/lead-status";
 
 // 대시보드와 동일한 원칙: leads/profiles/settlements/coupons/referral_*/products/partners/reviews
 // 등 실제 DB 집계만 사용한다. 방문자 수 등 추적 인프라가 없는 지표는 지어내지 않는다.

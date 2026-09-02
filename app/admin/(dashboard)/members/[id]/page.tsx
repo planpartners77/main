@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getAdminSession } from "@/lib/admin/session";
-import { LEAD_STATUS_OPTIONS } from "@/components/admin/leads/LeadStatusSelect";
+import { LEAD_STATUS_OPTIONS } from "@/lib/admin/lead-status";
 import { MemberEditForm } from "@/components/admin/members/MemberEditForm";
 
 interface MemberDetail {

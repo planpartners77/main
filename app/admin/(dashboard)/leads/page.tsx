@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { LeadStatusSelect, LEAD_STATUS_OPTIONS } from "@/components/admin/leads/LeadStatusSelect";
+import { LeadStatusSelect } from "@/components/admin/leads/LeadStatusSelect";
+import { LEAD_STATUS_OPTIONS } from "@/lib/admin/lead-status";
 
 interface LeadRow {
   id: string;

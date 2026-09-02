@@ -3,13 +3,7 @@
 import { useState, type ChangeEvent } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-
-export const LEAD_STATUS_OPTIONS = [
-  { value: "received", label: "접수" },
-  { value: "in_progress", label: "상담중" },
-  { value: "completed", label: "완료" },
-  { value: "canceled", label: "취소" },
-] as const;
+import { LEAD_STATUS_OPTIONS } from "@/lib/admin/lead-status";
 
 export function LeadStatusSelect({ leadId, status }: { leadId: string; status: string }) {
   const router = useRouter();
