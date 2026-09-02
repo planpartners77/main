@@ -142,7 +142,7 @@ export function CrisGolfProgram() {
             <img
               src="/travel/hero.jpg"
               alt="치앙라이 국제학교 골프 프로그램"
-              className="h-56 w-full object-cover sm:h-80"
+              className="aspect-[1343/727] w-full object-cover"
             />
           </div>
 
