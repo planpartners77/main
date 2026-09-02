@@ -138,6 +138,16 @@ export function CrisGolfProgram() {
             국제학교의 커리큘럼과 훈련 환경을 파트너사 &quot;여기캠프&quot;가 안내합니다.
           </p>
 
+          <a
+            href="https://golf.cris.ac.th/ko/residence"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-[var(--brand-blue)] hover:text-[var(--brand-blue-dark)]"
+          >
+            CRIS 국제학교 공식 홈페이지에서 학교 정보 확인하기
+            <span aria-hidden="true">↗</span>
+          </a>
+
           <div className="mt-6 overflow-hidden rounded-2xl">
             <img
               src="/travel/hero.jpg"
@@ -198,6 +208,15 @@ export function CrisGolfProgram() {
               훈련을 1주간 그대로 체험합니다. 캘리포니아 학제 기반 커리큘럼과 영어 몰입
               환경에서 진학 가능성을 직접 가늠해볼 수 있습니다.
             </p>
+            <a
+              href="https://golf.cris.ac.th/ko/residence"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-[var(--brand-blue)]/30 px-4 py-2 text-xs font-semibold text-[var(--brand-blue)] transition hover:bg-[var(--surface-tint)]"
+            >
+              CRIS 국제학교 공식 홈페이지 바로가기
+              <span aria-hidden="true">↗</span>
+            </a>
           </div>
           <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
             <h3 className="text-sm font-bold text-[var(--brand-navy)]">👥 참가 대상</h3>
