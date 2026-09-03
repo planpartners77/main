@@ -2,9 +2,10 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { LEAD_STATUS_OPTIONS } from "@/lib/admin/lead-status";
+import { parseUserAgent } from "@/lib/admin/visitor-parse";
 
-// 대시보드와 동일한 원칙: leads/profiles/settlements/coupons/referral_*/products/partners/reviews
-// 등 실제 DB 집계만 사용한다. 방문자 수 등 추적 인프라가 없는 지표는 지어내지 않는다.
+// 대시보드와 동일한 원칙: leads/profiles/settlements/coupons/referral_*/products/partners/reviews/
+// visitor_logs 등 실제 DB 집계만 사용한다.
 // 집계는 각 관리 페이지(referrals/settlements/coupons)와 동일하게 원본 row를 fetch한 뒤
 // JS에서 Map으로 직접 계산하는 방식을 따른다(SQL GROUP BY/RPC 미사용).
 
@@ -64,6 +65,20 @@ interface ReviewStatRow {
   categories: { name: string } | null;
 }
 
+interface VisitorLogRow {
+  visitor_id: string;
+  ip: string | null;
+  user_agent: string | null;
+  path: string | null;
+  created_at: string;
+  profiles: { display_name: string | null } | null;
+}
+
+interface DailyVisitorRow {
+  visitor_id: string;
+  created_at: string;
+}
+
 function monthKey(d: Date) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
 }
@@ -92,6 +107,38 @@ function bucketSumByMonth(months: { key: string; label: string }[], rows: { crea
     if (sums.has(key)) sums.set(key, (sums.get(key) ?? 0) + row.amount);
   }
   return months.map((m) => ({ label: m.label, value: sums.get(m.key) ?? 0 }));
+}
+
+function dayKey(d: Date) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+function lastNDays(n: number) {
+  const now = new Date();
+  return Array.from({ length: n }, (_, i) => {
+    const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - (n - 1 - i));
+    return { key: dayKey(d), label: `${d.getMonth() + 1}/${d.getDate()}` };
+  });
+}
+
+function bucketUniqueVisitorsByDay(
+  days: { key: string; label: string }[],
+  rows: { created_at: string; visitor_id: string }[],
+) {
+  const sets = new Map(days.map((d) => [d.key, new Set<string>()]));
+  for (const row of rows) {
+    sets.get(dayKey(new Date(row.created_at)))?.add(row.visitor_id);
+  }
+  return days.map((d) => ({ label: d.label, value: sets.get(d.key)?.size ?? 0 }));
+}
+
+function bucketCountByDay(days: { key: string; label: string }[], rows: { created_at: string }[]) {
+  const counts = new Map(days.map((d) => [d.key, 0]));
+  for (const row of rows) {
+    const key = dayKey(new Date(row.created_at));
+    if (counts.has(key)) counts.set(key, (counts.get(key) ?? 0) + 1);
+  }
+  return days.map((d) => ({ label: d.label, value: counts.get(d.key) ?? 0 }));
 }
 
 function countBy<T>(rows: T[], keyFn: (row: T) => string): Map<string, number> {
@@ -239,6 +286,10 @@ function BarList({
 export default async function AdminStatisticsPage() {
   const supabase = await createClient();
 
+  const fourteenDaysAgo = new Date();
+  fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 13);
+  fourteenDaysAgo.setHours(0, 0, 0, 0);
+
   const [
     { data: leadsData },
     { data: profilesData },
@@ -251,6 +302,8 @@ export default async function AdminStatisticsPage() {
     { data: productsData },
     { data: partnersData },
     { data: reviewsData },
+    { data: recentVisitorLogsData },
+    { data: dailyVisitorLogsData },
   ] = await Promise.all([
     supabase.from("leads").select("id, status, created_at, categories(name)"),
     supabase.from("profiles").select("id, created_at, marketing_opt_in, customer_tiers(name)"),
@@ -263,6 +316,15 @@ export default async function AdminStatisticsPage() {
     supabase.from("products").select("id, is_active, categories(name)"),
     supabase.from("partners").select("id, contract_status, categories(name)"),
     supabase.from("reviews").select("id, rating, is_active, categories(name)"),
+    supabase
+      .from("visitor_logs")
+      .select("visitor_id, ip, user_agent, path, created_at, profiles(display_name)")
+      .order("created_at", { ascending: false })
+      .limit(50),
+    supabase
+      .from("visitor_logs")
+      .select("visitor_id, created_at")
+      .gte("created_at", fourteenDaysAgo.toISOString()),
   ]);
 
   const leads = (leadsData ?? []) as unknown as LeadStatRow[];
@@ -273,6 +335,8 @@ export default async function AdminStatisticsPage() {
   const products = (productsData ?? []) as unknown as ProductStatRow[];
   const partners = (partnersData ?? []) as unknown as PartnerStatRow[];
   const reviews = (reviewsData ?? []) as unknown as ReviewStatRow[];
+  const recentVisitorLogs = (recentVisitorLogsData ?? []) as unknown as VisitorLogRow[];
+  const dailyVisitorLogs = (dailyVisitorLogsData ?? []) as unknown as DailyVisitorRow[];
 
   const MONTHS = lastNMonths(6);
 
@@ -395,13 +459,28 @@ export default async function AdminStatisticsPage() {
     .slice(0, 8);
   const reviewCategoryCountItems = toItems(countBy(reviews, (r) => r.categories?.name ?? "미분류"), 8);
 
+  // 8. 접속자 현황 (proxy.ts가 waitUntil로 기록하는 visitor_logs 기반)
+  const DAYS = lastNDays(14);
+  const dailyUniqueItems = bucketUniqueVisitorsByDay(DAYS, dailyVisitorLogs);
+  const dailyPageviewItems = bucketCountByDay(DAYS, dailyVisitorLogs);
+  const todayKey = dayKey(new Date());
+  const todayVisitorLogs = dailyVisitorLogs.filter((r) => dayKey(new Date(r.created_at)) === todayKey);
+  const todayUniqueCount = new Set(todayVisitorLogs.map((r) => r.visitor_id)).size;
+  const periodUniqueCount = new Set(dailyVisitorLogs.map((r) => r.visitor_id)).size;
+  const recentVisitorItems = recentVisitorLogs.map((row) => ({
+    ...row,
+    ...parseUserAgent(row.user_agent),
+  }));
+
   return (
     <div>
       <Link href="/admin" className="text-sm text-gray-500 hover:text-[var(--brand-navy)]">
         ← 대시보드
       </Link>
       <h1 className="mt-2 text-xl font-bold text-[var(--brand-navy)]">통계</h1>
-      <p className="mt-1 text-sm text-gray-500">리드·회원·정산·쿠폰·추천인·상품·리뷰 지표를 한눈에 모아보는 화면입니다.</p>
+      <p className="mt-1 text-sm text-gray-500">
+        리드·회원·정산·쿠폰·추천인·상품·리뷰·접속자 지표를 한눈에 모아보는 화면입니다.
+      </p>
 
       <Section title="리드 현황" description="상태별 처리 현황과 카테고리·월별 유입 추이">
         <div className="grid gap-3 sm:grid-cols-3">
@@ -565,6 +644,61 @@ export default async function AdminStatisticsPage() {
         <div className="mt-2">
           <BarList items={reviewCategoryCountItems} valueFormatter={(v) => `${v}건`} />
         </div>
+      </Section>
+
+      <Section title="일 접속자 현황" description="쿠키(pp_visitor_id) 기준 순 방문자·페이지뷰 추이 (최근 14일)">
+        <div className="grid gap-3 sm:grid-cols-3">
+          <StatTile label="오늘 순 방문자" value={`${todayUniqueCount.toLocaleString("ko-KR")}명`} />
+          <StatTile label="오늘 페이지뷰" value={`${todayVisitorLogs.length.toLocaleString("ko-KR")}건`} />
+          <StatTile label="최근 14일 순 방문자" value={`${periodUniqueCount.toLocaleString("ko-KR")}명`} />
+        </div>
+        <p className="mt-5 text-xs font-semibold text-gray-400">일별 순 방문자</p>
+        <div className="mt-2">
+          <BarList items={dailyUniqueItems} valueFormatter={(v) => `${v}명`} />
+        </div>
+        <p className="mt-5 text-xs font-semibold text-gray-400">일별 페이지뷰</p>
+        <div className="mt-2">
+          <BarList items={dailyPageviewItems} valueFormatter={(v) => `${v}건`} />
+        </div>
+      </Section>
+
+      <Section title="접속자 현황" description="최근 접속 기록 (이름/IP/기기/브라우저/접속 경로)">
+        {recentVisitorItems.length === 0 ? (
+          <p className="py-6 text-center text-sm text-gray-400">접속 기록이 없습니다.</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[720px] text-sm">
+              <thead>
+                <tr className="border-b border-gray-100 text-left text-xs font-semibold text-gray-400">
+                  <th className="px-3 py-2">시간</th>
+                  <th className="px-3 py-2">이름</th>
+                  <th className="px-3 py-2">IP 주소</th>
+                  <th className="px-3 py-2">기기</th>
+                  <th className="px-3 py-2">브라우저</th>
+                  <th className="px-3 py-2">접속 경로</th>
+                </tr>
+              </thead>
+              <tbody>
+                {recentVisitorItems.map((row, i) => (
+                  <tr key={i} className="border-b border-gray-50 last:border-0">
+                    <td className="whitespace-nowrap px-3 py-3 text-gray-500">
+                      {new Date(row.created_at).toLocaleString("ko-KR", { dateStyle: "short", timeStyle: "short" })}
+                    </td>
+                    <td className="whitespace-nowrap px-3 py-3 font-medium">
+                      {row.profiles?.display_name ?? "비회원"}
+                    </td>
+                    <td className="whitespace-nowrap px-3 py-3 text-gray-500">{row.ip ?? "-"}</td>
+                    <td className="whitespace-nowrap px-3 py-3 text-gray-500">
+                      {row.deviceModel} ({row.osName})
+                    </td>
+                    <td className="whitespace-nowrap px-3 py-3 text-gray-500">{row.browser}</td>
+                    <td className="px-3 py-3 text-gray-500">{row.path ?? "-"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </Section>
     </div>
   );
