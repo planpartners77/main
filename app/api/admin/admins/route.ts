@@ -61,8 +61,10 @@ export async function POST(request: Request) {
     .insert({ id: targetUser.id, role, managed_categories: [] });
 
   if (error) {
-    const status = error.code === "23505" ? 409 : 500;
-    return NextResponse.json({ error: error.message }, { status });
+    if (error.code === "23505") {
+      return NextResponse.json({ error: "already_admin" }, { status: 409 });
+    }
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
   return NextResponse.json({ ok: true });

@@ -20,18 +20,23 @@ export default async function AdminAccountsPage() {
   }
 
   const supabase = await createClient();
-  const { data: adminUsersData } = await supabase
+  // admin_users의 select 정책(admin_users_select_own, 0003)은 "자기 자신의 행만" 허용한다 —
+  // 다른 관리자가 임의로 관리자 명단을 조회하지 못하게 막는 의도적 제한이다. 이 화면은 이미
+  // super_admin임을 위에서 확인했으므로, 전체 명단 조회를 위해 서비스 롤 클라이언트를 쓴다
+  // (일반 클라이언트로 조회하면 본인 행만 보여 다른 관리자가 이미 등록돼 있어도 누락되고,
+  // "관리자 추가"에서 같은 이메일을 다시 등록하려다 duplicate key 오류만 보게 되는 버그가 있었다).
+  const admin = createAdminClient();
+  const { data: adminUsersData } = await admin
     .from("admin_users")
     .select("id, role, managed_categories");
   const adminUsers = (adminUsersData ?? []) as AdminUserRow[];
 
   const { data: categoriesData } = await supabase.from("categories").select("id, name").order("name");
 
-  const admin = createAdminClient();
   const { data: usersData } = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 });
   const emailById = new Map((usersData?.users ?? []).map((u) => [u.id, u.email ?? "-"]));
 
-  const { data: profilesData } = await supabase
+  const { data: profilesData } = await admin
     .from("profiles")
     .select("id, display_name")
     .in("id", adminUsers.map((a) => a.id));

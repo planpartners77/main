@@ -29,6 +29,7 @@ async function callApi(method: "POST" | "PATCH" | "DELETE", body: unknown) {
 
 const ERROR_MESSAGES: Record<string, string> = {
   user_not_found: "해당 이메일로 가입한 회원을 찾을 수 없습니다. 먼저 일반 회원가입이 필요합니다.",
+  already_admin: "이미 등록된 관리자입니다. 아래 목록에서 등급을 변경해 주세요.",
   last_super_admin: "마지막 남은 최고 관리자는 등급을 낮추거나 해제할 수 없습니다.",
   forbidden: "권한이 없습니다.",
   invalid_input: "입력값을 확인해 주세요.",
