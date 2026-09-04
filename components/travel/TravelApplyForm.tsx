@@ -397,6 +397,7 @@ export function TravelApplyForm() {
       }
 
       setSubmitted(true);
+      window.open("https://pf.kakao.com/_xappsG", "_blank", "noopener,noreferrer");
     } catch {
       setSubmitError("신청서 접수 중 문제가 발생했습니다. 잠시 후 다시 시도해 주시거나 고객센터로 문의해 주세요.");
     } finally {
