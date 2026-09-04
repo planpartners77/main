@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { AdminIcon } from "./AdminIcon";
 import { SignOutButton } from "./SignOutButton";
+import { ADMIN_ROLE_LABELS, canAccessMenu, isAdminRole, menuKeyForPath } from "@/lib/admin/permissions";
 
 interface NavItem {
   title: string;
@@ -52,21 +53,31 @@ const NAV_GROUPS: NavGroup[] = [
   },
   { label: "운영", items: [{ title: "매장 관리", href: "/admin/stores", icon: "settings" }] },
   { label: "SEO", items: [{ title: "SEO 관리", href: "/admin/seo", icon: "seo" }] },
+  { label: "시스템", items: [{ title: "관리자 관리", href: "/admin/admins", icon: "settings" }] },
 ];
 
-const ROLE_LABELS: Record<string, string> = {
-  super_admin: "최고 관리자",
-  category_manager: "카테고리 매니저",
-  cs_agent: "CS 상담사",
-  settlement_manager: "정산 담당",
-  content_manager: "콘텐츠 담당",
-};
+function roleLabel(role: string): string {
+  return isAdminRole(role) ? ADMIN_ROLE_LABELS[role] : role;
+}
 
-function NavLinks() {
+// 등급별 접근 불가 메뉴는 아예 숨긴다(lib/admin/permissions.ts). 대시보드처럼 메뉴 키가
+// 없는 항목(menuKeyForPath가 null)은 모든 등급에 항상 노출된다.
+function visibleNavGroups(role: string): NavGroup[] {
+  return NAV_GROUPS.map((group) => ({
+    ...group,
+    items: group.items.filter((item) => {
+      const menu = menuKeyForPath(item.href);
+      return !menu || canAccessMenu(role, menu);
+    }),
+  })).filter((group) => group.items.length > 0);
+}
+
+function NavLinks({ role }: { role: string }) {
   const pathname = usePathname();
+  const groups = visibleNavGroups(role);
   return (
     <>
-      {NAV_GROUPS.map((group) => (
+      {groups.map((group) => (
         <div key={group.label ?? "root"}>
           {group.label && (
             <p className="px-3 pb-1.5 text-[11px] font-semibold tracking-wider text-white/30">
@@ -119,11 +130,11 @@ export function AdminSidebar({
           </Link>
         </div>
         <nav className="flex-1 space-y-5 overflow-y-auto px-3 pb-6">
-          <NavLinks />
+          <NavLinks role={role} />
         </nav>
         <div className="border-t border-white/10 px-4 py-4">
           <p className="text-sm font-medium">{displayName}</p>
-          <p className="text-xs text-white/40">{ROLE_LABELS[role] ?? role}</p>
+          <p className="text-xs text-white/40">{roleLabel(role)}</p>
           <div className="mt-3">
             <SignOutButton />
           </div>
@@ -136,13 +147,13 @@ export function AdminSidebar({
           <div className="flex items-center gap-3">
             <span className="font-bold">플랜파트너스 관리자</span>
             <span className="rounded-full bg-white/10 px-2.5 py-0.5 text-xs">
-              {ROLE_LABELS[role] ?? role}
+              {roleLabel(role)}
             </span>
           </div>
           <SignOutButton />
         </div>
         <nav className="flex gap-1 overflow-x-auto border-t border-white/10 px-3 py-2">
-          {NAV_GROUPS.flatMap((g) => g.items).map((item) => (
+          {visibleNavGroups(role).flatMap((g) => g.items).map((item) => (
             <Link
               key={item.title}
               href={item.href}

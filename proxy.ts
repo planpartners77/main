@@ -1,9 +1,11 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest, type NextFetchEvent } from "next/server";
+import { menuKeyForPath, canAccessMenu } from "@/lib/admin/permissions";
 
 // 관리자페이지 보안 경계: 서브도메인 대신 /admin 경로 + 미들웨어로 분리하기로 결정(§9 원칙의 변형).
 // admin_users 테이블에 role이 없는 사용자는 /admin 어디에도 접근할 수 없다.
 const ADMIN_LOGIN_PATH = "/admin/login";
+const SUSPENDED_PATH = "/account-suspended";
 const VISITOR_ID_COOKIE = "pp_visitor_id";
 const VISITOR_ID_MAX_AGE = 60 * 60 * 24 * 365 * 2; // 2년
 
@@ -59,6 +61,32 @@ export async function proxy(request: NextRequest, event: NextFetchEvent) {
 
     if (!adminUser) {
       return NextResponse.redirect(new URL(ADMIN_LOGIN_PATH, request.url));
+    }
+
+    // 관리자 등급별 메뉴 접근 제한(lib/admin/permissions.ts). 대시보드(/admin) 자체는
+    // 메뉴 키가 없어(menuKeyForPath가 null 반환) 모든 등급이 통과한다.
+    const menu = menuKeyForPath(request.nextUrl.pathname);
+    if (menu && !canAccessMenu(adminUser.role, menu)) {
+      return NextResponse.redirect(new URL("/admin", request.url));
+    }
+  } else if (!isAdminPath && request.nextUrl.pathname !== SUSPENDED_PATH) {
+    // 일반 회원 정지/탈퇴 차단(0022_member_management.sql의 profiles.status).
+    // 관리자 경로가 아닐 때만 확인해 관리자 요청에는 쿼리를 추가하지 않는다.
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (user) {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("status")
+        .eq("id", user.id)
+        .single();
+
+      if (profile && profile.status !== "active") {
+        await supabase.auth.signOut();
+        return NextResponse.redirect(new URL(SUSPENDED_PATH, request.url));
+      }
     }
   }
 
