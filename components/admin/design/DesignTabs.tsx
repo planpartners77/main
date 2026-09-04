@@ -21,7 +21,8 @@ export function DesignTabs() {
   return (
     <div className="flex flex-wrap gap-1.5 border-b border-gray-200 pb-3">
       {TABS.map((tab) => {
-        const active = pathname === tab.href;
+        const active =
+          pathname === tab.href || (tab.href !== "/admin/design" && pathname.startsWith(`${tab.href}/`));
         return (
           <Link
             key={tab.href}

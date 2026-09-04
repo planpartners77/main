@@ -1,7 +1,7 @@
-import { getHomePageSettings } from "@/lib/design/site-settings";
-import { HomePageManager } from "@/components/admin/design/HomePageManager";
+import { listPages } from "@/lib/design/pages-query";
+import { PageListManager } from "@/components/admin/design/PageListManager";
 
-export default async function DesignPagesPage() {
-  const settings = await getHomePageSettings();
-  return <HomePageManager settings={settings} />;
+export default async function AdminPagesPage() {
+  const pages = await listPages();
+  return <PageListManager pages={pages} />;
 }
