@@ -1,12 +1,23 @@
 import Link from "next/link";
 import { LoginForm } from "@/components/auth/LoginForm";
 
-export default function LoginPage() {
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ confirmed?: string }>;
+}) {
+  const { confirmed } = await searchParams;
+
   return (
     <main className="mx-auto max-w-md px-4 py-14">
       <p className="text-xs font-bold tracking-wider text-[var(--brand-blue)]">LOG IN</p>
       <h1 className="mt-2 text-2xl font-bold text-[var(--brand-navy)]">로그인</h1>
       <p className="mt-2 text-sm text-gray-500">가입하신 이메일과 비밀번호로 로그인해 주세요.</p>
+      {confirmed === "1" && (
+        <p className="mt-3 rounded-lg bg-[var(--brand-mint)]/10 px-3 py-2 text-sm font-medium text-[var(--brand-mint)]">
+          이메일 인증이 완료되었습니다. 로그인해 주세요.
+        </p>
+      )}
       <LoginForm />
       <p className="mt-6 text-center text-sm text-gray-500">
         아직 회원이 아니신가요?{" "}

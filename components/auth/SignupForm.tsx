@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
@@ -33,6 +33,8 @@ export function SignupForm() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
+  const [resendState, setResendState] = useState<"idle" | "sending" | "sent" | "error">("idle");
+  const [resendCooldown, setResendCooldown] = useState(0);
 
   const allRequiredAgreed = termsAgree && privacyAgree;
   const allAgreed = allRequiredAgreed && marketingAgree;
@@ -41,6 +43,28 @@ export function SignupForm() {
     setTermsAgree(checked);
     setPrivacyAgree(checked);
     setMarketingAgree(checked);
+  }
+
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const timer = setInterval(() => setResendCooldown((s) => Math.max(0, s - 1)), 1000);
+    return () => clearInterval(timer);
+  }, [resendCooldown]);
+
+  async function handleResend() {
+    setResendState("sending");
+    const supabase = createClient();
+    const { error: resendError } = await supabase.auth.resend({
+      type: "signup",
+      email,
+      options: { emailRedirectTo: `${window.location.origin}/login?confirmed=1` },
+    });
+    if (resendError) {
+      setResendState("error");
+      return;
+    }
+    setResendState("sent");
+    setResendCooldown(60);
   }
 
   async function handleSubmit(event: FormEvent) {
@@ -60,6 +84,7 @@ export function SignupForm() {
       email,
       password,
       options: {
+        emailRedirectTo: `${window.location.origin}/login?confirmed=1`,
         data: {
           display_name: displayName,
           phone,
@@ -98,8 +123,37 @@ export function SignupForm() {
         </div>
         <p className="mt-4 text-base font-bold text-[var(--brand-navy)]">회원가입 신청이 완료되었습니다</p>
         <p className="mt-2 text-sm text-gray-500">
-          입력하신 이메일로 인증 메일을 보내드렸습니다. 메일함에서 인증을 완료한 뒤 로그인해 주세요.
+          {email}로 인증 메일을 보내드렸습니다. 메일함에서 인증을 완료한 뒤 로그인해 주세요.
         </p>
+        <p className="mt-1 text-xs text-gray-400">
+          메일이 보이지 않으면 스팸(정크) 메일함도 확인해 주세요. 도착까지 몇 분 걸릴 수 있어요.
+        </p>
+
+        <div className="mt-4 rounded-xl bg-gray-50 p-4 text-xs text-gray-500">
+          {resendState === "sent" ? (
+            <p className="text-[var(--brand-mint)]">인증 메일을 다시 보내드렸습니다.</p>
+          ) : (
+            <>
+              <p>인증 메일을 못 받으셨나요?</p>
+              <button
+                type="button"
+                onClick={handleResend}
+                disabled={resendState === "sending" || resendCooldown > 0}
+                className="mt-1.5 font-semibold text-[var(--brand-blue)] underline disabled:text-gray-300 disabled:no-underline"
+              >
+                {resendCooldown > 0
+                  ? `${resendCooldown}초 후 재전송 가능`
+                  : resendState === "sending"
+                    ? "재전송 중..."
+                    : "인증 메일 다시 보내기"}
+              </button>
+              {resendState === "error" && (
+                <p className="mt-1 text-[var(--brand-urgent)]">재전송에 실패했습니다. 잠시 후 다시 시도해 주세요.</p>
+              )}
+            </>
+          )}
+        </div>
+
         <button
           type="button"
           onClick={() => router.push("/")}
@@ -249,6 +303,10 @@ export function SignupForm() {
           </label>
         </div>
       </div>
+
+      <p className="text-xs text-gray-400">
+        가입 후 입력하신 이메일로 인증 메일이 발송됩니다. 인증을 완료해야 로그인할 수 있어요.
+      </p>
 
       {error && <p className="text-sm text-[var(--brand-urgent)]">{error}</p>}
 
