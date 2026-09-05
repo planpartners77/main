@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { getStoredReferral } from "@/lib/referral/client";
 
@@ -112,17 +112,21 @@ const PROCEDURE_STEPS: ProcedureStep[] = [
 ];
 
 const SESSIONS = [
-  { id: "s1", label: "1차 · 9/5(토)~9/12(토)", badge: null },
-  { id: "s2", label: "2차 · 9/12(일)~9/19(토)", badge: null },
-  { id: "s3", label: "3차 · 9/19(토)~9/26(토) 추석", badge: "peak" },
-  { id: "s4", label: "4차 · 9/26(토)~10/3(토)", badge: null },
-  { id: "s5", label: "5차 · 10/3(토)~10/10(토) 연휴", badge: "peak" },
-  { id: "s6", label: "6차 · 10/10(토)~10/17(토)", badge: null },
-  { id: "s7", label: "7차 · 10/17(토)~10/24(토)", badge: "promo" },
-  { id: "s8", label: "8차 · 10/24(토)~10/31(토)", badge: "promo" },
-  { id: "s9", label: "9차 · 10/31(토)~11/7(토)", badge: "promo" },
-  { id: "s10", label: "10차 · 11/7(토)~11/14(토)", badge: "promo" },
+  { id: "s1", label: "1차 · 9/5(토)~9/12(토)", badge: null, ended: true },
+  { id: "s2", label: "2차 · 9/12(일)~9/19(토)", badge: null, ended: true },
+  { id: "s3", label: "3차 · 9/19(토)~9/26(토) 추석", badge: "peak", ended: true },
+  { id: "s4", label: "4차 · 9/26(토)~10/3(토)", badge: null, ended: false },
+  { id: "s5", label: "5차 · 10/3(토)~10/10(토) 연휴", badge: "peak", ended: false },
+  { id: "s6", label: "6차 · 10/10(토)~10/17(토)", badge: null, ended: false },
+  { id: "s7", label: "7차 · 10/17(토)~10/24(토)", badge: "promo", ended: false },
+  { id: "s8", label: "8차 · 10/24(토)~10/31(토)", badge: "promo", ended: false },
+  { id: "s9", label: "9차 · 10/31(토)~11/7(토)", badge: "promo", ended: false },
+  { id: "s10", label: "10차 · 11/7(토)~11/14(토)", badge: "promo", ended: false },
 ] as const;
+
+function sessionLabelWithBadge(s: (typeof SESSIONS)[number]) {
+  return `${s.label}${s.badge ? ` — ${s.badge === "peak" ? "성수기 · +30만원" : "프로모션 · +10만원"}` : ""}`;
+}
 
 const EXPERIENCE_OPTIONS = [
   "처음 참가",
@@ -232,7 +236,20 @@ export function TravelApplyForm() {
   const [couponResult, setCouponResult] = useState<CouponCheck | null>(null);
   const [couponError, setCouponError] = useState<string | null>(null);
   const [couponFinalWarning, setCouponFinalWarning] = useState<string | null>(null);
+  const [sessionOpen, setSessionOpen] = useState(false);
   const fieldRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const sessionRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!sessionOpen) return;
+    function onClickOutside(e: MouseEvent) {
+      if (sessionRef.current && !sessionRef.current.contains(e.target as Node)) {
+        setSessionOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", onClickOutside);
+    return () => document.removeEventListener("mousedown", onClickOutside);
+  }, [sessionOpen]);
 
   function update<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -603,21 +620,50 @@ export function TravelApplyForm() {
                   성수기 요금 · 입학금 외 30만원
                 </span>
               </div>
-              <select
-                value={form.session}
-                onChange={(e) => update("session", e.target.value)}
-                className="mt-3 w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-[var(--brand-navy)] focus:border-[var(--brand-blue)] focus:outline-none"
-              >
-                <option value="" disabled>
-                  참가 차수를 선택해 주세요
-                </option>
-                {SESSIONS.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.label}
-                    {s.badge ? ` — ${s.badge === "peak" ? "성수기 · +30만원" : "프로모션 · +10만원"}` : ""}
-                  </option>
-                ))}
-              </select>
+              <div ref={sessionRef} className="relative mt-3">
+                <button
+                  type="button"
+                  aria-haspopup="listbox"
+                  aria-expanded={sessionOpen}
+                  onClick={() => setSessionOpen((v) => !v)}
+                  className="flex w-full items-center justify-between rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-left text-sm focus:border-[var(--brand-blue)] focus:outline-none"
+                >
+                  <span className={form.session ? "text-[var(--brand-navy)]" : "text-gray-400"}>
+                    {(() => {
+                      const selected = SESSIONS.find((s) => s.id === form.session);
+                      return selected ? sessionLabelWithBadge(selected) : "참가 차수를 선택해 주세요";
+                    })()}
+                  </span>
+                  <span className="text-gray-400">▾</span>
+                </button>
+                {sessionOpen && (
+                  <ul
+                    role="listbox"
+                    className="absolute z-10 mt-1 max-h-72 w-full overflow-y-auto rounded-lg border border-gray-200 bg-white py-1 shadow-lg"
+                  >
+                    {SESSIONS.map((s) => (
+                      <li key={s.id} role="option" aria-selected={form.session === s.id} aria-disabled={s.ended}>
+                        <button
+                          type="button"
+                          disabled={s.ended}
+                          onClick={() => {
+                            update("session", s.id);
+                            setSessionOpen(false);
+                          }}
+                          className={`flex w-full items-baseline gap-1.5 px-3 py-2 text-left text-sm ${
+                            s.ended
+                              ? "cursor-not-allowed text-[var(--brand-urgent)]"
+                              : "text-[var(--brand-navy)] hover:bg-[var(--surface-tint)]"
+                          }`}
+                        >
+                          {s.ended && <span className="shrink-0 text-xs font-bold">[종료]</span>}
+                          <span className={s.ended ? "line-through" : ""}>{sessionLabelWithBadge(s)}</span>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
               {(() => {
                 const selected = SESSIONS.find((s) => s.id === form.session);
                 if (!selected?.badge) return null;
