@@ -3,7 +3,7 @@ import type { SubCategoryConfig } from "@/lib/categories";
 import { getCategoryTree } from "@/lib/design/category-tree";
 import { getSeoSettings } from "@/lib/design/site-settings";
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://planpartners77.vercel.app";
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://planpartner.co.kr";
 
 // 카테고리 화면과 무관한 정적 페이지. 로그인/마이페이지/비밀번호재설정 등 개인화·인증
 // 페이지는 검색엔진에 노출할 가치가 없어 제외한다.

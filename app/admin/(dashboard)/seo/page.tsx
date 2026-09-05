@@ -2,7 +2,7 @@ import Link from "next/link";
 import { getSeoSettings } from "@/lib/design/site-settings";
 import { SeoSettingsManager } from "@/components/admin/seo/SeoSettingsManager";
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://planpartners77.vercel.app";
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://planpartner.co.kr";
 
 function GuideStep({
   title,
