@@ -128,6 +128,10 @@ export function SignupForm() {
         <p className="mt-1 text-xs text-gray-400">
           메일이 보이지 않으면 스팸(정크) 메일함도 확인해 주세요. 도착까지 몇 분 걸릴 수 있어요.
         </p>
+        <p className="mt-3 rounded-lg bg-blue-50 px-3 py-2 text-xs text-gray-500">
+          메일 발신자가 낯선 시스템 주소로 표시되고 내용이 영어로 되어 있을 수 있어요. 저희 인증
+          시스템에서 정상적으로 보낸 메일이니 안심하고 인증을 진행해 주세요.
+        </p>
 
         <div className="mt-4 rounded-xl bg-gray-50 p-4 text-xs text-gray-500">
           {resendState === "sent" ? (
