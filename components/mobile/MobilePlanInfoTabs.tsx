@@ -72,7 +72,7 @@ export function MobilePlanInfoTabs({ extra }: { extra: MobilePlanExtra }) {
       id: "hotspot",
       icon: "📡",
       label: "모바일 핫스팟",
-      available: extra.hotspot_gb != null,
+      available: extra.features.includes("핫스팟"),
       detail: extra.hotspot_gb != null ? `월 ${extra.hotspot_gb}GB 제공` : null,
     },
     {
@@ -107,7 +107,7 @@ export function MobilePlanInfoTabs({ extra }: { extra: MobilePlanExtra }) {
       id: "esim",
       icon: "💠",
       label: "eSIM",
-      available: extra.sim_type !== "usim",
+      available: extra.features.includes("eSIM"),
       detail: null,
     },
     {

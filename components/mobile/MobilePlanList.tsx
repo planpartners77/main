@@ -235,7 +235,7 @@ export function MobilePlanList({ items }: { items: MobilePlanListItem[] }) {
             placeholder="요금제 이름 또는 통신사로 검색"
             value={searchDraft}
             onChange={(e) => setSearchDraft(e.target.value)}
-            className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-[var(--brand-blue)] focus:outline-none sm:max-w-sm"
+            className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-[var(--brand-blue)] focus:outline-none"
           />
         </div>
 

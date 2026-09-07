@@ -5,6 +5,7 @@ import { callLabel, dataLabel, smsLabel } from "@/lib/mobile/plan-spec";
 import { effectiveMonthlyPrice, isLifetimePromotion, promotionDurationMonths } from "@/lib/mobile/filters";
 import { MobilePlanPriceCard } from "@/components/mobile/MobilePlanPriceCard";
 import { MobilePlanInfoTabs } from "@/components/mobile/MobilePlanInfoTabs";
+import { PartnerBadge } from "@/components/mobile/PartnerBadge";
 import { RecordRecentView } from "@/components/mobile/RecordRecentView";
 
 const ACTIVATION_STEPS = [
@@ -37,7 +38,9 @@ export default async function MobilePlanDetailPage({ params }: { params: Promise
         ← 요금제 목록
       </Link>
 
-      <p className="mt-4 text-xs font-semibold text-gray-500">{item.partner_name ?? "통신사 미지정"}</p>
+      <div className="mt-4">
+        <PartnerBadge name={item.partner_name} logoUrl={item.partner_logo_url} />
+      </div>
       <h1 className="mt-1 text-2xl font-bold text-[var(--brand-navy)] sm:text-3xl">{item.title}</h1>
       <p className="mt-1 text-lg font-semibold text-gray-600">
         월 {dataLabel(item.extra.data_gb)}
@@ -88,12 +91,23 @@ export default async function MobilePlanDetailPage({ params }: { params: Promise
       </div>
 
       <div className="fixed inset-x-0 bottom-0 border-t border-gray-100 bg-white p-4 sm:static sm:mt-10 sm:border-0 sm:p-0">
-        <Link
-          href={`/apply/mobile?planId=${item.id}`}
-          className="block w-full rounded-full bg-[var(--brand-blue)] py-3.5 text-center text-sm font-semibold text-white shadow-sm shadow-blue-200 hover:bg-[var(--brand-blue-dark)]"
-        >
-          신청하기
-        </Link>
+        {item.apply_url ? (
+          <a
+            href={item.apply_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="block w-full rounded-full bg-[var(--brand-blue)] py-3.5 text-center text-sm font-semibold text-white shadow-sm shadow-blue-200 hover:bg-[var(--brand-blue-dark)]"
+          >
+            신청하기
+          </a>
+        ) : (
+          <Link
+            href={`/apply/mobile?planId=${item.id}`}
+            className="block w-full rounded-full bg-[var(--brand-blue)] py-3.5 text-center text-sm font-semibold text-white shadow-sm shadow-blue-200 hover:bg-[var(--brand-blue-dark)]"
+          >
+            신청하기
+          </Link>
+        )}
       </div>
     </main>
   );

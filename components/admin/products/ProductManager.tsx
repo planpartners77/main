@@ -16,6 +16,7 @@ export interface ProductRow {
   incentive_max: number | null;
   incentive_exact: number | null;
   image_url: string | null;
+  apply_url: string | null;
   extra: Record<string, unknown>;
   is_active: boolean;
   categories: { name: string } | null;
@@ -43,6 +44,7 @@ const EMPTY_FORM = {
   incentive_max: "",
   incentive_exact: "",
   image_url: "",
+  apply_url: "",
   is_active: true,
   extra: "{}",
 };
@@ -91,6 +93,7 @@ export function ProductManager({
       incentive_max: product.incentive_max != null ? String(product.incentive_max) : "",
       incentive_exact: product.incentive_exact != null ? String(product.incentive_exact) : "",
       image_url: product.image_url ?? "",
+      apply_url: product.apply_url ?? "",
       is_active: product.is_active,
       extra: JSON.stringify(product.extra ?? {}, null, 2),
     });
@@ -135,6 +138,7 @@ export function ProductManager({
       incentive_max: form.incentive_max ? Number(form.incentive_max) : null,
       incentive_exact: form.incentive_exact ? Number(form.incentive_exact) : null,
       image_url: form.image_url.trim() || null,
+      apply_url: form.apply_url.trim() || null,
       is_active: form.is_active,
       extra: extraParsed,
     };
@@ -241,6 +245,15 @@ export function ProductManager({
               value={form.image_url}
               onChange={(e) => setForm({ ...form, image_url: e.target.value })}
               placeholder="https://..."
+              className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+            />
+          </label>
+          <label className="text-sm">
+            신청하기 URL (선택)
+            <input
+              value={form.apply_url}
+              onChange={(e) => setForm({ ...form, apply_url: e.target.value })}
+              placeholder="비워두면 사이트 내 신청폼으로 연결돼요"
               className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
             />
           </label>

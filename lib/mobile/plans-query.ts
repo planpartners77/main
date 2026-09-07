@@ -18,10 +18,11 @@ interface RawProduct {
   id: string;
   title: string;
   image_url: string | null;
+  apply_url: string | null;
   base_price: number | null;
   extra: Record<string, unknown>;
   partner_id: string | null;
-  partners: { name: string } | null;
+  partners: { name: string; logo_url: string | null } | null;
   plan_promotions: RawPromotion[] | null;
 }
 
@@ -56,16 +57,18 @@ function toListItem(row: RawProduct, leadCount: number): MobilePlanListItem {
     id: row.id,
     title: row.title,
     image_url: row.image_url,
+    apply_url: row.apply_url,
     base_price: row.base_price,
     extra: { ...extra, selected_count: leadCount },
     partner_id: row.partner_id,
     partner_name: row.partners?.name ?? null,
+    partner_logo_url: row.partners?.logo_url ?? null,
     promotion: pickActivePromotion(row.plan_promotions),
   };
 }
 
 const SELECT_COLUMNS =
-  "id, title, image_url, base_price, extra, partner_id, partners(name), plan_promotions(id, label, type, total_amount, schedule, valid_from, valid_until, is_active, created_at)";
+  "id, title, image_url, apply_url, base_price, extra, partner_id, partners(name, logo_url), plan_promotions(id, label, type, total_amount, schedule, valid_from, valid_until, is_active, created_at)";
 
 // "n명 선택" 표시는 관리자 수동 입력이 아니라 실제 leads 건수를 집계한 값이어야 하므로,
 // leads 테이블을 직접 읽을 수 없는 공개 페이지에서도 상품별 집계만 안전하게 가져온다.

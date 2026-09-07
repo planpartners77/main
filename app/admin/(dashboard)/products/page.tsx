@@ -8,7 +8,7 @@ export default async function AdminProductsPage() {
     supabase
       .from("products")
       .select(
-        "id, category_id, partner_id, title, base_price, incentive_min, incentive_max, incentive_exact, image_url, extra, is_active, categories(name), partners(name)",
+        "id, category_id, partner_id, title, base_price, incentive_min, incentive_max, incentive_exact, image_url, apply_url, extra, is_active, categories(name), partners(name)",
       )
       .order("title"),
     supabase.from("categories").select("id, name, slug").eq("is_active", true).order("name"),

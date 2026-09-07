@@ -31,10 +31,12 @@ export interface MobilePlanListItem {
   id: string;
   title: string;
   image_url: string | null;
+  apply_url: string | null;
   base_price: number | null;
   extra: MobilePlanExtra;
   partner_id: string | null;
   partner_name: string | null;
+  partner_logo_url: string | null;
   promotion: MobilePlanPromotion | null;
 }
 

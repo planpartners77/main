@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { callLabel, dataLabel, smsLabel } from "@/lib/mobile/plan-spec";
 import { effectiveMonthlyPrice, promotionDurationMonths, type MobilePlanListItem } from "@/lib/mobile/filters";
+import { PartnerBadge } from "./PartnerBadge";
 
 function formatWon(value: number) {
   return `${Math.round(value).toLocaleString("ko-KR")}원`;
@@ -17,7 +18,7 @@ export function MobilePlanCard({ item }: { item: MobilePlanListItem }) {
       className="block rounded-2xl border border-gray-200 bg-white p-5 transition hover:border-[var(--brand-blue)]/50 hover:shadow-sm"
     >
       <div className="flex items-center justify-between">
-        <p className="text-xs font-semibold text-gray-500">{item.partner_name ?? "통신사 미지정"}</p>
+        <PartnerBadge name={item.partner_name} logoUrl={item.partner_logo_url} />
         {hasPromo && (
           <span className="rounded-full bg-[var(--surface-tint)] px-2 py-0.5 text-[10px] font-semibold text-[var(--brand-blue-dark)]">
             페이백 포함
