@@ -117,12 +117,12 @@ export function ProductManager({
     setError(null);
   }
 
-  function startEdit(product: ProductRow) {
+  function loadProductIntoForm(product: ProductRow, title: string) {
     const category = categories.find((c) => c.id === product.category_id);
     setForm({
       category_id: product.category_id ?? "",
       partner_id: product.partner_id ?? "",
-      title: product.title,
+      title,
       base_price: product.base_price != null ? String(product.base_price) : "",
       incentive_min: product.incentive_min != null ? String(product.incentive_min) : "",
       incentive_max: product.incentive_max != null ? String(product.incentive_max) : "",
@@ -137,9 +137,18 @@ export function ProductManager({
     } else {
       setUsimExtra(EMPTY_USIM_PLAN_EXTRA);
     }
-    setEditingId(product.id);
     setShowForm(true);
     setError(null);
+  }
+
+  function startEdit(product: ProductRow) {
+    loadProductIntoForm(product, product.title);
+    setEditingId(product.id);
+  }
+
+  function startCopy(product: ProductRow) {
+    loadProductIntoForm(product, `${product.title} (복사)`);
+    setEditingId(null);
   }
 
   async function handleSubmit(event: FormEvent) {
@@ -443,6 +452,9 @@ export function ProductManager({
                     <div className="flex justify-end gap-3 text-xs font-semibold">
                       <button onClick={() => startEdit(product)} className="text-gray-500 hover:text-[var(--brand-navy)]">
                         수정
+                      </button>
+                      <button onClick={() => startCopy(product)} className="text-[var(--brand-blue)] hover:opacity-70">
+                        복사
                       </button>
                       <button onClick={() => handleDelete(product)} className="text-red-500 hover:text-red-700">
                         삭제

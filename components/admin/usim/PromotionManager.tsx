@@ -65,10 +65,10 @@ export function PromotionManager({ promotions, products }: { promotions: Promoti
     setError(null);
   }
 
-  function startEdit(promo: PromotionRow) {
+  function loadPromotionIntoForm(promo: PromotionRow, label: string) {
     setForm({
       product_id: promo.product_id,
-      label: promo.label,
+      label,
       type: promo.type,
       valid_from: promo.valid_from ?? "",
       valid_until: promo.valid_until ?? "",
@@ -84,9 +84,18 @@ export function PromotionManager({ promotions, products }: { promotions: Promoti
       setSchedule(promo.schedule.length > 0 ? promo.schedule : [{ month: 1, amount: 0 }]);
       setLifetimeAmount("");
     }
-    setEditingId(promo.id);
     setShowForm(true);
     setError(null);
+  }
+
+  function startEdit(promo: PromotionRow) {
+    loadPromotionIntoForm(promo, promo.label);
+    setEditingId(promo.id);
+  }
+
+  function startCopy(promo: PromotionRow) {
+    loadPromotionIntoForm(promo, `${promo.label} (복사)`);
+    setEditingId(null);
   }
 
   function addScheduleRow() {
@@ -375,6 +384,9 @@ export function PromotionManager({ promotions, products }: { promotions: Promoti
                       <div className="flex justify-end gap-3 text-xs font-semibold">
                         <button onClick={() => startEdit(promo)} className="text-gray-500 hover:text-[var(--brand-navy)]">
                           수정
+                        </button>
+                        <button onClick={() => startCopy(promo)} className="text-[var(--brand-blue)] hover:opacity-70">
+                          복사
                         </button>
                         <button onClick={() => handleDelete(promo.id)} className="text-red-500 hover:text-red-700">
                           삭제
