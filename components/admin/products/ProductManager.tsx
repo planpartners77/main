@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useMemo, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { UsimPlanSpecFields, parseUsimExtra } from "./UsimPlanSpecFields";
@@ -53,6 +53,32 @@ function formatWon(value: number | null) {
   return value != null ? `${value.toLocaleString("ko-KR")}원` : "-";
 }
 
+type SortKey = "title" | "category" | "price_asc" | "price_desc";
+
+const SORT_OPTIONS: { value: SortKey; label: string }[] = [
+  { value: "category", label: "카테고리순" },
+  { value: "title", label: "상품명순" },
+  { value: "price_asc", label: "기본가 낮은순" },
+  { value: "price_desc", label: "기본가 높은순" },
+];
+
+function sortProducts(products: ProductRow[], sortKey: SortKey): ProductRow[] {
+  const sorted = [...products];
+  switch (sortKey) {
+    case "title":
+      return sorted.sort((a, b) => a.title.localeCompare(b.title, "ko"));
+    case "category":
+      return sorted.sort((a, b) =>
+        (a.categories?.name ?? "").localeCompare(b.categories?.name ?? "", "ko") ||
+        a.title.localeCompare(b.title, "ko"),
+      );
+    case "price_asc":
+      return sorted.sort((a, b) => (a.base_price ?? Infinity) - (b.base_price ?? Infinity));
+    case "price_desc":
+      return sorted.sort((a, b) => (b.base_price ?? -Infinity) - (a.base_price ?? -Infinity));
+  }
+}
+
 export function ProductManager({
   products,
   categories,
@@ -69,10 +95,19 @@ export function ProductManager({
   const [usimExtra, setUsimExtra] = useState<UsimPlanExtra>(EMPTY_USIM_PLAN_EXTRA);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [categoryFilter, setCategoryFilter] = useState("");
+  const [sortKey, setSortKey] = useState<SortKey>("category");
 
   const visiblePartners = partners.filter((p) => !form.category_id || p.category_id === form.category_id);
   const selectedCategory = categories.find((c) => c.id === form.category_id);
   const isUsimCategory = selectedCategory?.slug === "usim";
+
+  const displayedProducts = useMemo(() => {
+    const filtered = categoryFilter
+      ? products.filter((p) => p.category_id === categoryFilter)
+      : products;
+    return sortProducts(filtered, sortKey);
+  }, [products, categoryFilter, sortKey]);
 
   function startCreate() {
     setForm(EMPTY_FORM);
@@ -326,7 +361,41 @@ export function ProductManager({
           등록된 상품이 없습니다.
         </p>
       ) : (
-        <div className="mt-4 overflow-x-auto rounded-2xl border border-gray-200 bg-white">
+        <>
+          <div className="mt-6 flex flex-wrap items-center gap-3">
+            <label className="text-sm text-gray-500">
+              카테고리{" "}
+              <select
+                value={categoryFilter}
+                onChange={(e) => setCategoryFilter(e.target.value)}
+                className="ml-1 rounded-lg border border-gray-300 px-2.5 py-1.5 text-sm"
+              >
+                <option value="">전체</option>
+                {categories.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="text-sm text-gray-500">
+              정렬{" "}
+              <select
+                value={sortKey}
+                onChange={(e) => setSortKey(e.target.value as SortKey)}
+                className="ml-1 rounded-lg border border-gray-300 px-2.5 py-1.5 text-sm"
+              >
+                {SORT_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <span className="text-xs text-gray-400">{displayedProducts.length}개 상품</span>
+          </div>
+
+          <div className="mt-3 overflow-x-auto rounded-2xl border border-gray-200 bg-white">
           <table className="w-full min-w-[900px] text-sm">
             <thead>
               <tr className="border-b border-gray-100 text-left text-xs font-semibold text-gray-400">
@@ -341,7 +410,7 @@ export function ProductManager({
               </tr>
             </thead>
             <tbody>
-              {products.map((product) => (
+              {displayedProducts.map((product) => (
                 <tr key={product.id} className="border-b border-gray-50 last:border-0">
                   <td className="px-4 py-3">
                     {product.image_url ? (
@@ -384,7 +453,8 @@ export function ProductManager({
               ))}
             </tbody>
           </table>
-        </div>
+          </div>
+        </>
       )}
     </div>
   );
