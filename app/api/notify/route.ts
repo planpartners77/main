@@ -68,6 +68,31 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true });
   }
 
+  if (type === "mobile_lead") {
+    const { data } = await supabase
+      .from("leads")
+      .select("guest_contact, created_at, products(title)")
+      .eq("id", id)
+      .maybeSingle();
+    if (!data) return NextResponse.json({ ok: false }, { status: 404 });
+
+    const c = (data.guest_contact ?? {}) as Record<string, unknown>;
+    const planTitle = (data.products as unknown as { title: string } | null)?.title ?? "-";
+    await sendTelegramMessage(
+      [
+        "📱 <b>휴대폰 요금제 신청</b>",
+        `요금제: ${planTitle}`,
+        `신청자: ${c.applicantName ?? "-"}`,
+        `생년월일: ${c.birthDate ?? "-"}`,
+        `연락처: ${c.phone ?? "-"}`,
+        `개통방식: ${c.activationTypeLabel ?? "-"}`,
+        `유심타입: ${c.simTypeLabel ?? "-"}`,
+        `희망 개통일: ${c.preferredDate ?? "-"}`,
+      ].join("\n"),
+    );
+    return NextResponse.json({ ok: true });
+  }
+
   if (type === "consult_lead") {
     const { data } = await supabase
       .from("leads")

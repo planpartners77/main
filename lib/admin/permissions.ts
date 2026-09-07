@@ -81,6 +81,7 @@ export function menusForRole(role: string): MenuKey[] {
 const PATH_TO_MENU_ENTRIES: [string, MenuKey][] = [
   ["/admin/statistics", "statistics"],
   ["/admin/products", "products"],
+  ["/admin/mobile-promotions", "products"],
   ["/admin/partners", "partners"],
   ["/admin/leads", "leads"],
   ["/admin/settlements", "settlements"],

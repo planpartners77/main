@@ -3,6 +3,8 @@
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { MobilePlanSpecFields, parseMobileExtra } from "./MobilePlanSpecFields";
+import { EMPTY_MOBILE_PLAN_EXTRA, type MobilePlanExtra } from "@/lib/mobile/plan-spec";
 
 export interface ProductRow {
   id: string;
@@ -23,6 +25,7 @@ export interface ProductRow {
 interface CategoryOption {
   id: string;
   name: string;
+  slug: string;
 }
 
 interface PartnerOption {
@@ -61,19 +64,24 @@ export function ProductManager({
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState(EMPTY_FORM);
+  const [mobileExtra, setMobileExtra] = useState<MobilePlanExtra>(EMPTY_MOBILE_PLAN_EXTRA);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const visiblePartners = partners.filter((p) => !form.category_id || p.category_id === form.category_id);
+  const selectedCategory = categories.find((c) => c.id === form.category_id);
+  const isMobileCategory = selectedCategory?.slug === "mobile";
 
   function startCreate() {
     setForm(EMPTY_FORM);
+    setMobileExtra(EMPTY_MOBILE_PLAN_EXTRA);
     setEditingId(null);
     setShowForm(true);
     setError(null);
   }
 
   function startEdit(product: ProductRow) {
+    const category = categories.find((c) => c.id === product.category_id);
     setForm({
       category_id: product.category_id ?? "",
       partner_id: product.partner_id ?? "",
@@ -86,6 +94,11 @@ export function ProductManager({
       is_active: product.is_active,
       extra: JSON.stringify(product.extra ?? {}, null, 2),
     });
+    if (category?.slug === "mobile") {
+      setMobileExtra(parseMobileExtra(JSON.stringify(product.extra ?? {})));
+    } else {
+      setMobileExtra(EMPTY_MOBILE_PLAN_EXTRA);
+    }
     setEditingId(product.id);
     setShowForm(true);
     setError(null);
@@ -99,11 +112,15 @@ export function ProductManager({
     }
 
     let extraParsed: Record<string, unknown>;
-    try {
-      extraParsed = form.extra.trim() ? JSON.parse(form.extra) : {};
-    } catch {
-      setError("추가 정보(extra)는 올바른 JSON 형식이어야 합니다.");
-      return;
+    if (isMobileCategory) {
+      extraParsed = mobileExtra as unknown as Record<string, unknown>;
+    } else {
+      try {
+        extraParsed = form.extra.trim() ? JSON.parse(form.extra) : {};
+      } catch {
+        setError("추가 정보(extra)는 올바른 JSON 형식이어야 합니다.");
+        return;
+      }
     }
 
     setSaving(true);
@@ -262,16 +279,20 @@ export function ProductManager({
             />
             활성화
           </label>
-          <label className="text-sm sm:col-span-2">
-            추가 정보(JSON, 선택 — 카테고리별 상이한 스펙)
-            <textarea
-              value={form.extra}
-              onChange={(e) => setForm({ ...form, extra: e.target.value })}
-              rows={4}
-              spellCheck={false}
-              className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 font-mono text-xs"
-            />
-          </label>
+          {isMobileCategory ? (
+            <MobilePlanSpecFields value={mobileExtra} onChange={setMobileExtra} />
+          ) : (
+            <label className="text-sm sm:col-span-2">
+              추가 정보(JSON, 선택 — 카테고리별 상이한 스펙)
+              <textarea
+                value={form.extra}
+                onChange={(e) => setForm({ ...form, extra: e.target.value })}
+                rows={4}
+                spellCheck={false}
+                className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 font-mono text-xs"
+              />
+            </label>
+          )}
 
           {error && <p className="text-sm text-red-600 sm:col-span-2">{error}</p>}
 
