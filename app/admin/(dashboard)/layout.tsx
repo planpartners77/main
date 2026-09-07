@@ -16,7 +16,7 @@ export default async function AdminDashboardLayout({
   }
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex min-h-screen flex-col bg-gray-50 md:flex-row">
       <AdminSidebar role={session.role} displayName={session.displayName ?? session.email ?? "관리자"} />
       <div className="min-w-0 flex-1 px-4 py-6 sm:px-8 sm:py-8">{children}</div>
     </div>
