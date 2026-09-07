@@ -3,8 +3,8 @@
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { MobilePlanSpecFields, parseMobileExtra } from "./MobilePlanSpecFields";
-import { EMPTY_MOBILE_PLAN_EXTRA, type MobilePlanExtra } from "@/lib/mobile/plan-spec";
+import { UsimPlanSpecFields, parseUsimExtra } from "./UsimPlanSpecFields";
+import { EMPTY_USIM_PLAN_EXTRA, type UsimPlanExtra } from "@/lib/usim/plan-spec";
 
 export interface ProductRow {
   id: string;
@@ -66,17 +66,17 @@ export function ProductManager({
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState(EMPTY_FORM);
-  const [mobileExtra, setMobileExtra] = useState<MobilePlanExtra>(EMPTY_MOBILE_PLAN_EXTRA);
+  const [usimExtra, setUsimExtra] = useState<UsimPlanExtra>(EMPTY_USIM_PLAN_EXTRA);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const visiblePartners = partners.filter((p) => !form.category_id || p.category_id === form.category_id);
   const selectedCategory = categories.find((c) => c.id === form.category_id);
-  const isMobileCategory = selectedCategory?.slug === "mobile";
+  const isUsimCategory = selectedCategory?.slug === "usim";
 
   function startCreate() {
     setForm(EMPTY_FORM);
-    setMobileExtra(EMPTY_MOBILE_PLAN_EXTRA);
+    setUsimExtra(EMPTY_USIM_PLAN_EXTRA);
     setEditingId(null);
     setShowForm(true);
     setError(null);
@@ -97,10 +97,10 @@ export function ProductManager({
       is_active: product.is_active,
       extra: JSON.stringify(product.extra ?? {}, null, 2),
     });
-    if (category?.slug === "mobile") {
-      setMobileExtra(parseMobileExtra(JSON.stringify(product.extra ?? {})));
+    if (category?.slug === "usim") {
+      setUsimExtra(parseUsimExtra(JSON.stringify(product.extra ?? {})));
     } else {
-      setMobileExtra(EMPTY_MOBILE_PLAN_EXTRA);
+      setUsimExtra(EMPTY_USIM_PLAN_EXTRA);
     }
     setEditingId(product.id);
     setShowForm(true);
@@ -115,8 +115,8 @@ export function ProductManager({
     }
 
     let extraParsed: Record<string, unknown>;
-    if (isMobileCategory) {
-      extraParsed = mobileExtra as unknown as Record<string, unknown>;
+    if (isUsimCategory) {
+      extraParsed = usimExtra as unknown as Record<string, unknown>;
     } else {
       try {
         extraParsed = form.extra.trim() ? JSON.parse(form.extra) : {};
@@ -292,8 +292,8 @@ export function ProductManager({
             />
             활성화
           </label>
-          {isMobileCategory ? (
-            <MobilePlanSpecFields value={mobileExtra} onChange={setMobileExtra} />
+          {isUsimCategory ? (
+            <UsimPlanSpecFields value={usimExtra} onChange={setUsimExtra} />
           ) : (
             <label className="text-sm sm:col-span-2">
               추가 정보(JSON, 선택 — 카테고리별 상이한 스펙)

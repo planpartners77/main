@@ -75,7 +75,7 @@ export function SeoSettingsManager({ settings }: { settings: SeoSettings }) {
         <textarea
           value={form.metaDescription ?? ""}
           onChange={(e) => setForm((prev) => ({ ...prev, metaDescription: e.target.value }))}
-          placeholder="인터넷·휴대폰·가전렌탈·보험·상조를 비교해드리는 비교·중개 전문 플랫폼"
+          placeholder="인터넷·유심·가전렌탈·보험·상조를 비교해드리는 비교·중개 전문 플랫폼"
           rows={3}
           maxLength={160}
           className="mt-1.5 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"

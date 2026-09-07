@@ -15,7 +15,7 @@ export default function CompanyPage() {
       <p className="text-xs font-bold tracking-wider text-[var(--brand-blue)]">COMPANY</p>
       <h1 className="mt-2 text-2xl font-bold text-[var(--brand-navy)]">회사소개</h1>
       <p className="mt-4 text-sm leading-relaxed text-gray-600">
-        {BUSINESS_INFO.companyName}는 인터넷·휴대폰·가전렌탈·여행·보험·상조 등 생활 밀착형 상품을
+        {BUSINESS_INFO.companyName}는 인터넷·유심·가전렌탈·여행·보험·상조 등 생활 밀착형 상품을
         한 곳에서 비교하고, 이용자에게 가장 유리한 조건을 찾아드리는 비교·중개 전문 플랫폼입니다.
       </p>
       <p className="mt-4 text-sm leading-relaxed text-gray-600">

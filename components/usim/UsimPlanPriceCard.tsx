@@ -6,7 +6,7 @@ function formatWon(value: number) {
   return `${Math.round(value).toLocaleString("ko-KR")}원`;
 }
 
-export function MobilePlanPriceCard({
+export function UsimPlanPriceCard({
   basePrice,
   effectivePrice,
   promotionLabel,

@@ -31,7 +31,7 @@ export interface SeoSettings {
 export const DEFAULT_HOME_PAGE_SETTINGS: HomePageSettings = {
   heroTagline: "비교하지 않으면 놓치는 혜택",
   heroHeadline: "대신 비교하고,\n더 유리한 조건을 찾아드려요",
-  heroSubcopy: "인터넷·휴대폰·가전렌탈·보험·상조, 다섯 개 카테고리를 한 곳에서 비교하세요.",
+  heroSubcopy: "인터넷·유심·가전렌탈·보험·상조, 다섯 개 카테고리를 한 곳에서 비교하세요.",
   sections: { incentive: true, trust: true, reviews: true, popular: true, why: true, cta: true },
 };
 

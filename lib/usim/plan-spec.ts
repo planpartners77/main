@@ -1,4 +1,4 @@
-// 휴대폰(mobile) 카테고리 요금제 스펙 — products.extra jsonb에 이 형태로 저장한다.
+// 유심(usim) 카테고리 요금제 스펙 — products.extra jsonb에 이 형태로 저장한다.
 // §12-11 결정(카테고리별 동적 스키마는 실제 필요해질 때 도입) — 지금이 그 시점이라
 // products 테이블에 컬럼을 추가하지 않고 고정 TS 타입으로 extra jsonb 계약을 정의한다.
 
@@ -40,24 +40,27 @@ export type DedicatedTag = (typeof DEDICATED_TAGS)[number];
 export const PLAN_FEATURES = ["NFC", "소액결제", "유심무료", "해외로밍", "핫스팟", "eSIM", "데이터쉐어링"] as const;
 export type PlanFeature = (typeof PLAN_FEATURES)[number];
 
-export interface MobilePlanExtraCost {
+export interface UsimPlanExtraCost {
   label: string;
   amount: number; // 0 = 무료
 }
 
-export interface MobilePlanExtra {
+export interface UsimPlanExtra {
   carrier_network: CarrierNetwork;
   network_tech: NetworkTech;
   data_gb: number | null; // null = 무제한
   data_throttle_speed: ThrottleSpeed;
   call_minutes: number | null; // null = 무제한, 0 = 없음
+  video_call_minutes: number | null; // null = 무제한, 0 = 없음
   sms_count: number | null; // null = 무제한, 0 = 없음
   contract_months: number; // 0 = 무약정
   sim_type: SimType;
   internet_bundle: boolean;
   bundle_benefit: string | null; // 결합 혜택 설명 (예: "인터넷 결합 시 13,200원 할인")
   hotspot_gb: number | null; // null = 해당 없음
-  extra_costs: MobilePlanExtraCost[]; // 기타비용 (유심비, 가입비 등)
+  wifi_provided: boolean;
+  extra_costs: UsimPlanExtraCost[]; // 기타비용 (유심비, 가입비 등)
+  partner_benefits: string[]; // 제휴/프로모션 혜택 (예: "밀리의서재 구독 무료")
   tags: DedicatedTag[];
   features: PlanFeature[];
   eligibility_minor: boolean;
@@ -65,19 +68,22 @@ export interface MobilePlanExtra {
   selected_count: number;
 }
 
-export const EMPTY_MOBILE_PLAN_EXTRA: MobilePlanExtra = {
+export const EMPTY_USIM_PLAN_EXTRA: UsimPlanExtra = {
   carrier_network: "SKT",
   network_tech: "5G",
   data_gb: null,
   data_throttle_speed: "none",
   call_minutes: null,
+  video_call_minutes: null,
   sms_count: null,
   contract_months: 0,
   sim_type: "usim",
   internet_bundle: false,
   bundle_benefit: null,
   hotspot_gb: null,
+  wifi_provided: false,
   extra_costs: [],
+  partner_benefits: [],
   tags: [],
   features: [],
   eligibility_minor: false,
@@ -85,9 +91,9 @@ export const EMPTY_MOBILE_PLAN_EXTRA: MobilePlanExtra = {
   selected_count: 0,
 };
 
-// DB에서 읽은 extra(Record<string, unknown>)를 안전하게 MobilePlanExtra로 정규화한다.
+// DB에서 읽은 extra(Record<string, unknown>)를 안전하게 UsimPlanExtra로 정규화한다.
 // 관리자가 아직 구조화 폼을 쓰기 전 값이거나 필드 누락이 있어도 리스트/상세 페이지가 깨지지 않도록.
-export function normalizeMobilePlanExtra(raw: Record<string, unknown> | null | undefined): MobilePlanExtra {
+export function normalizeUsimPlanExtra(raw: Record<string, unknown> | null | undefined): UsimPlanExtra {
   const r = raw ?? {};
   const asStringArray = (v: unknown): string[] => (Array.isArray(v) ? v.filter((x): x is string => typeof x === "string") : []);
   return {
@@ -100,18 +106,21 @@ export function normalizeMobilePlanExtra(raw: Record<string, unknown> | null | u
       ? (r.data_throttle_speed as ThrottleSpeed)
       : "none",
     call_minutes: typeof r.call_minutes === "number" ? r.call_minutes : null,
+    video_call_minutes: typeof r.video_call_minutes === "number" ? r.video_call_minutes : null,
     sms_count: typeof r.sms_count === "number" ? r.sms_count : null,
     contract_months: typeof r.contract_months === "number" ? r.contract_months : 0,
     sim_type: SIM_TYPES.some((o) => o.value === r.sim_type) ? (r.sim_type as SimType) : "usim",
     internet_bundle: r.internet_bundle === true,
     bundle_benefit: typeof r.bundle_benefit === "string" && r.bundle_benefit.trim() ? r.bundle_benefit : null,
     hotspot_gb: typeof r.hotspot_gb === "number" ? r.hotspot_gb : null,
+    wifi_provided: r.wifi_provided === true,
     extra_costs: Array.isArray(r.extra_costs)
       ? r.extra_costs.filter(
-          (c): c is MobilePlanExtraCost =>
-            !!c && typeof c === "object" && typeof (c as MobilePlanExtraCost).label === "string" && typeof (c as MobilePlanExtraCost).amount === "number",
+          (c): c is UsimPlanExtraCost =>
+            !!c && typeof c === "object" && typeof (c as UsimPlanExtraCost).label === "string" && typeof (c as UsimPlanExtraCost).amount === "number",
         )
       : [],
+    partner_benefits: asStringArray(r.partner_benefits),
     tags: asStringArray(r.tags).filter((t): t is DedicatedTag => (DEDICATED_TAGS as readonly string[]).includes(t)),
     features: asStringArray(r.features).filter((f): f is PlanFeature => (PLAN_FEATURES as readonly string[]).includes(f)),
     eligibility_minor: r.eligibility_minor === true,
@@ -128,6 +137,12 @@ export function callLabel(minutes: number | null): string {
   if (minutes == null) return "통화 무제한";
   if (minutes === 0) return "통화 없음";
   return `통화 ${minutes}분`;
+}
+
+export function videoCallLabel(minutes: number | null): string {
+  if (minutes == null) return "영상통화 무제한";
+  if (minutes === 0) return "영상통화 없음";
+  return `영상통화 ${minutes}분`;
 }
 
 export function smsLabel(count: number | null): string {

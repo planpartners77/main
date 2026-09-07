@@ -1,7 +1,7 @@
 // 최근 본 요금제 — 서버에 남기지 않고 방문자 브라우저의 localStorage에만 저장한다.
 // 목록 페이지 새로고침/뒤로가기 시에도 유지되어야 하므로 세션이 아닌 localStorage를 사용.
 
-const STORAGE_KEY = "pp_mobile_recently_viewed";
+const STORAGE_KEY = "pp_usim_recently_viewed";
 const MAX_ITEMS = 5;
 
 export interface RecentlyViewedPlan {

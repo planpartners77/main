@@ -2,13 +2,13 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { getRecentlyViewed, type RecentlyViewedPlan } from "@/lib/mobile/recently-viewed";
+import { getRecentlyViewed, type RecentlyViewedPlan } from "@/lib/usim/recently-viewed";
 
 function formatWon(value: number) {
   return `${Math.round(value).toLocaleString("ko-KR")}원`;
 }
 
-export function MobileRecentlyViewedPanel() {
+export function UsimRecentlyViewedPanel() {
   const [plans, setPlans] = useState<RecentlyViewedPlan[]>([]);
 
   useEffect(() => {
@@ -25,7 +25,7 @@ export function MobileRecentlyViewedPanel() {
       <ul className="mt-3 space-y-3">
         {plans.map((plan) => (
           <li key={plan.id}>
-            <Link href={`/mobile/${plan.id}`} className="block group">
+            <Link href={`/usim/${plan.id}`} className="block group">
               <p className="truncate text-sm font-medium text-gray-700 group-hover:text-[var(--brand-blue)]">{plan.title}</p>
               <p className="mt-0.5 text-xs text-gray-400">
                 {plan.partner_name ?? "통신사 미지정"} · {formatWon(plan.price)}/월

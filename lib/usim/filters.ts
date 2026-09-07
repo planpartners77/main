@@ -6,7 +6,7 @@ import {
   THROTTLE_SPEED_OPTIONS,
   type CarrierNetwork,
   type DedicatedTag,
-  type MobilePlanExtra,
+  type UsimPlanExtra,
   type NetworkTech,
   type PlanFeature,
   type ThrottleSpeed,
@@ -17,7 +17,7 @@ export interface PlanPromotionSchedule {
   amount: number;
 }
 
-export interface MobilePlanPromotion {
+export interface UsimPlanPromotion {
   id: string;
   label: string;
   type: "fixed" | "point";
@@ -27,21 +27,21 @@ export interface MobilePlanPromotion {
   valid_until: string | null;
 }
 
-export interface MobilePlanListItem {
+export interface UsimPlanListItem {
   id: string;
   title: string;
   image_url: string | null;
   apply_url: string | null;
   base_price: number | null;
-  extra: MobilePlanExtra;
+  extra: UsimPlanExtra;
   partner_id: string | null;
   partner_name: string | null;
   partner_logo_url: string | null;
-  promotion: MobilePlanPromotion | null;
+  promotion: UsimPlanPromotion | null;
 }
 
 // 페이백 1개월차 지급액(카드에 강조 표시할 "실질 월 납부액" 계산용). month=0(평생) 스케줄은 그 금액을 매달 적용.
-export function firstMonthPaybackAmount(promotion: MobilePlanPromotion | null): number {
+export function firstMonthPaybackAmount(promotion: UsimPlanPromotion | null): number {
   if (!promotion || promotion.schedule.length === 0) return 0;
   const lifetime = promotion.schedule.find((s) => s.month === 0);
   if (lifetime) return lifetime.amount;
@@ -49,16 +49,16 @@ export function firstMonthPaybackAmount(promotion: MobilePlanPromotion | null): 
   return firstMonth?.amount ?? 0;
 }
 
-export function effectiveMonthlyPrice(item: MobilePlanListItem): number {
+export function effectiveMonthlyPrice(item: UsimPlanListItem): number {
   const base = item.base_price ?? 0;
   return Math.max(0, base - firstMonthPaybackAmount(item.promotion));
 }
 
-export function isLifetimePromotion(promotion: MobilePlanPromotion | null): boolean {
+export function isLifetimePromotion(promotion: UsimPlanPromotion | null): boolean {
   return !!promotion?.schedule.some((s) => s.month === 0);
 }
 
-export function promotionDurationMonths(promotion: MobilePlanPromotion | null): number {
+export function promotionDurationMonths(promotion: UsimPlanPromotion | null): number {
   if (!promotion) return 0;
   if (isLifetimePromotion(promotion)) return Infinity;
   return promotion.schedule.reduce((max, s) => Math.max(max, s.month), 0);
@@ -163,7 +163,7 @@ export type QuickChipId = (typeof QUICK_CHIPS)[number]["id"];
 
 export const HOT_SELECTED_COUNT_THRESHOLD = 100;
 
-export interface MobileFilterState {
+export interface UsimFilterState {
   dataUsage: DataUsagePresetId | null;
   throttleSpeeds: ThrottleSpeed[];
   callPresets: CallPresetId[];
@@ -182,7 +182,7 @@ export interface MobileFilterState {
   search: string;
 }
 
-export const EMPTY_FILTER_STATE: MobileFilterState = {
+export const EMPTY_FILTER_STATE: UsimFilterState = {
   dataUsage: null,
   throttleSpeeds: [],
   callPresets: [],
@@ -201,7 +201,7 @@ export const EMPTY_FILTER_STATE: MobileFilterState = {
   search: "",
 };
 
-export function activeFilterCount(f: MobileFilterState): number {
+export function activeFilterCount(f: UsimFilterState): number {
   let n = 0;
   if (f.dataUsage) n++;
   n += f.throttleSpeeds.length;
@@ -221,7 +221,7 @@ export function activeFilterCount(f: MobileFilterState): number {
   return n;
 }
 
-export function matchesFilter(item: MobilePlanListItem, f: MobileFilterState): boolean {
+export function matchesFilter(item: UsimPlanListItem, f: UsimFilterState): boolean {
   const e = item.extra;
 
   if (f.dataUsage) {
@@ -272,7 +272,7 @@ export function matchesFilter(item: MobilePlanListItem, f: MobileFilterState): b
   return true;
 }
 
-export function matchesQuickChip(item: MobilePlanListItem, chip: QuickChipId): boolean {
+export function matchesQuickChip(item: UsimPlanListItem, chip: QuickChipId): boolean {
   if (chip === "zero") return effectiveMonthlyPrice(item) === 0;
   if (chip === "under10k_lifetime") return isLifetimePromotion(item.promotion) && effectiveMonthlyPrice(item) <= 10000;
   if (chip === "skt") return item.extra.carrier_network === "SKT";
@@ -280,7 +280,7 @@ export function matchesQuickChip(item: MobilePlanListItem, chip: QuickChipId): b
   return item.extra.selected_count >= HOT_SELECTED_COUNT_THRESHOLD;
 }
 
-export function sortPlans(items: MobilePlanListItem[], sort: SortId): MobilePlanListItem[] {
+export function sortPlans(items: UsimPlanListItem[], sort: SortId): UsimPlanListItem[] {
   const arr = [...items];
   switch (sort) {
     case "price_asc":

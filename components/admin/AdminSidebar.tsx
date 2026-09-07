@@ -26,7 +26,7 @@ const NAV_GROUPS: NavGroup[] = [
     label: "상품·파트너",
     items: [
       { title: "상품 관리", href: "/admin/products", icon: "product" },
-      { title: "요금제 프로모션", href: "/admin/mobile-promotions", icon: "product" },
+      { title: "요금제 프로모션", href: "/admin/usim-promotions", icon: "product" },
       { title: "파트너 관리", href: "/admin/partners", icon: "partner" },
     ],
   },

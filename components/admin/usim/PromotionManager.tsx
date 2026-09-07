@@ -173,7 +173,7 @@ export function PromotionManager({ promotions, products }: { promotions: Promoti
 
       {!hasProducts && (
         <p className="mt-4 rounded-xl border border-dashed border-gray-300 bg-gray-50 p-4 text-sm text-gray-500">
-          등록된 휴대폰 요금제가 없어 프로모션을 추가할 수 없습니다.{" "}
+          등록된 유심 요금제가 없어 프로모션을 추가할 수 없습니다.{" "}
           <Link href="/admin/products" className="font-semibold text-[var(--brand-blue)] hover:underline">
             상품 관리에서 요금제를 먼저 등록
           </Link>

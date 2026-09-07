@@ -1,11 +1,11 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { PromotionManager, type PromotionRow } from "@/components/admin/mobile/PromotionManager";
+import { PromotionManager, type PromotionRow } from "@/components/admin/usim/PromotionManager";
 
-export default async function AdminMobilePromotionsPage() {
+export default async function AdminUsimPromotionsPage() {
   const supabase = await createClient();
 
-  const { data: category } = await supabase.from("categories").select("id").eq("slug", "mobile").maybeSingle();
+  const { data: category } = await supabase.from("categories").select("id").eq("slug", "usim").maybeSingle();
 
   const [{ data: promotions }, { data: products }] = await Promise.all([
     category
@@ -28,7 +28,7 @@ export default async function AdminMobilePromotionsPage() {
       <div className="mt-6">
         {!category ? (
           <p className="rounded-xl border border-gray-200 bg-white p-8 text-center text-sm text-gray-500">
-            휴대폰 카테고리가 존재하지 않습니다.
+            유심 카테고리가 존재하지 않습니다.
           </p>
         ) : (
           <PromotionManager

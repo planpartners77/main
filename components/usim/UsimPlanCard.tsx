@@ -1,20 +1,20 @@
 import Link from "next/link";
-import { callLabel, dataLabel, smsLabel } from "@/lib/mobile/plan-spec";
-import { effectiveMonthlyPrice, promotionDurationMonths, type MobilePlanListItem } from "@/lib/mobile/filters";
+import { callLabel, dataLabel, smsLabel } from "@/lib/usim/plan-spec";
+import { effectiveMonthlyPrice, promotionDurationMonths, type UsimPlanListItem } from "@/lib/usim/filters";
 import { PartnerBadge } from "./PartnerBadge";
 
 function formatWon(value: number) {
   return `${Math.round(value).toLocaleString("ko-KR")}원`;
 }
 
-export function MobilePlanCard({ item }: { item: MobilePlanListItem }) {
+export function UsimPlanCard({ item }: { item: UsimPlanListItem }) {
   const price = effectiveMonthlyPrice(item);
   const hasPromo = !!item.promotion;
   const durationMonths = promotionDurationMonths(item.promotion);
 
   return (
     <Link
-      href={`/mobile/${item.id}`}
+      href={`/usim/${item.id}`}
       className="flex flex-col gap-4 rounded-2xl border border-gray-200 bg-white p-5 transition hover:border-[var(--brand-blue)]/50 hover:shadow-sm sm:flex-row sm:items-center sm:justify-between sm:gap-6"
     >
       <div className="min-w-0 flex-1">

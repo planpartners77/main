@@ -25,7 +25,7 @@ export function CategoryTreeManager({ tree }: { tree: CategoryTreeRow[] }) {
     <div>
       <p className="text-sm text-gray-500">
         카테고리를 추가/숨김/순서 변경할 수 있습니다. 새 카테고리 추가는 최고관리자만 가능합니다(권한 부족 시 저장 실패
-        메시지가 표시됩니다). 기존 페이지(여행/인터넷/휴대폰/가전렌탈/보험/상조)와 연결된 카테고리의 슬러그/href는
+        메시지가 표시됩니다). 기존 페이지(여행/인터넷/유심/가전렌탈/보험/상조)와 연결된 카테고리의 슬러그/href는
         실제 라우팅과 연결되어 있으니 변경 시 주의하세요.
       </p>
       <div className="mt-4 rounded-2xl border border-gray-200 bg-white p-4">

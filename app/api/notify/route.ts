@@ -68,7 +68,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true });
   }
 
-  if (type === "mobile_lead") {
+  if (type === "usim_lead") {
     const { data } = await supabase
       .from("leads")
       .select("guest_contact, created_at, products(title)")
@@ -80,7 +80,7 @@ export async function POST(request: Request) {
     const planTitle = (data.products as unknown as { title: string } | null)?.title ?? "-";
     await sendTelegramMessage(
       [
-        "📱 <b>휴대폰 요금제 신청</b>",
+        "📱 <b>유심 요금제 신청</b>",
         `요금제: ${planTitle}`,
         `신청자: ${c.applicantName ?? "-"}`,
         `생년월일: ${c.birthDate ?? "-"}`,

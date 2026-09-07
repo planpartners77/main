@@ -4,7 +4,7 @@ import {
   EMPTY_FILTER_STATE,
   type CallPresetId,
   type DiscountPeriodId,
-  type MobileFilterState,
+  type UsimFilterState,
   type PriceRangeId,
   type QuickChipId,
   type SmsPresetId,
@@ -12,8 +12,8 @@ import {
 } from "./filters";
 import type { CarrierNetwork, DedicatedTag, NetworkTech, PlanFeature, ThrottleSpeed } from "./plan-spec";
 
-export interface MobileUrlState {
-  filters: MobileFilterState;
+export interface UsimUrlState {
+  filters: UsimFilterState;
   sort: SortId;
   chips: QuickChipId[];
 }
@@ -22,10 +22,10 @@ function splitCsv(v: string | null): string[] {
   return v ? v.split(",").filter(Boolean) : [];
 }
 
-export function paramsToState(params: URLSearchParams): MobileUrlState {
-  const filters: MobileFilterState = {
+export function paramsToState(params: URLSearchParams): UsimUrlState {
+  const filters: UsimFilterState = {
     ...EMPTY_FILTER_STATE,
-    dataUsage: (params.get("data") as MobileFilterState["dataUsage"]) || null,
+    dataUsage: (params.get("data") as UsimFilterState["dataUsage"]) || null,
     throttleSpeeds: splitCsv(params.get("throttle")) as ThrottleSpeed[],
     callPresets: splitCsv(params.get("call")) as CallPresetId[],
     priceRanges: splitCsv(params.get("price")) as PriceRangeId[],
@@ -50,7 +50,7 @@ export function paramsToState(params: URLSearchParams): MobileUrlState {
   };
 }
 
-export function stateToParams(state: MobileUrlState): URLSearchParams {
+export function stateToParams(state: UsimUrlState): URLSearchParams {
   const { filters, sort, chips } = state;
   const params = new URLSearchParams();
 

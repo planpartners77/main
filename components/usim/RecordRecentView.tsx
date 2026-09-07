@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { addRecentlyViewed, type RecentlyViewedPlan } from "@/lib/mobile/recently-viewed";
+import { addRecentlyViewed, type RecentlyViewedPlan } from "@/lib/usim/recently-viewed";
 
 export function RecordRecentView({ plan }: { plan: Omit<RecentlyViewedPlan, "viewed_at"> }) {
   useEffect(() => {

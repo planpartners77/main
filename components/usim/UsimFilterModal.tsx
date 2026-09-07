@@ -8,16 +8,16 @@ import {
   PRICE_RANGES,
   SMS_PRESETS,
   matchesFilter,
-  type MobileFilterState,
-  type MobilePlanListItem,
-} from "@/lib/mobile/filters";
+  type UsimFilterState,
+  type UsimPlanListItem,
+} from "@/lib/usim/filters";
 import {
   CARRIER_NETWORKS,
   DEDICATED_TAGS,
   NETWORK_TECHS,
   PLAN_FEATURES,
   THROTTLE_SPEED_OPTIONS,
-} from "@/lib/mobile/plan-spec";
+} from "@/lib/usim/plan-spec";
 
 const TABS = [
   { id: "throttle", label: "소진시속도" },
@@ -52,23 +52,23 @@ function Chip({ active, onClick, children }: { active: boolean; onClick: () => v
   );
 }
 
-export function MobileFilterModal({
+export function UsimFilterModal({
   products,
   value,
   onApply,
   onClose,
 }: {
-  products: MobilePlanListItem[];
-  value: MobileFilterState;
-  onApply: (next: MobileFilterState) => void;
+  products: UsimPlanListItem[];
+  value: UsimFilterState;
+  onApply: (next: UsimFilterState) => void;
   onClose: () => void;
 }) {
-  const [draft, setDraft] = useState<MobileFilterState>(value);
+  const [draft, setDraft] = useState<UsimFilterState>(value);
   const [tab, setTab] = useState<TabId>("throttle");
 
   const resultCount = products.filter((p) => matchesFilter(p, draft)).length;
 
-  function set<K extends keyof MobileFilterState>(key: K, v: MobileFilterState[K]) {
+  function set<K extends keyof UsimFilterState>(key: K, v: UsimFilterState[K]) {
     setDraft((prev) => ({ ...prev, [key]: v }));
   }
 

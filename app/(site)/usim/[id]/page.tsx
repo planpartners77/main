@@ -1,12 +1,12 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getMobilePlanDetail } from "@/lib/mobile/plans-query";
-import { callLabel, dataLabel, smsLabel } from "@/lib/mobile/plan-spec";
-import { effectiveMonthlyPrice, isLifetimePromotion, promotionDurationMonths } from "@/lib/mobile/filters";
-import { MobilePlanPriceCard } from "@/components/mobile/MobilePlanPriceCard";
-import { MobilePlanInfoTabs } from "@/components/mobile/MobilePlanInfoTabs";
-import { PartnerBadge } from "@/components/mobile/PartnerBadge";
-import { RecordRecentView } from "@/components/mobile/RecordRecentView";
+import { getUsimPlanDetail } from "@/lib/usim/plans-query";
+import { callLabel, dataLabel, smsLabel } from "@/lib/usim/plan-spec";
+import { effectiveMonthlyPrice, isLifetimePromotion, promotionDurationMonths } from "@/lib/usim/filters";
+import { UsimPlanPriceCard } from "@/components/usim/UsimPlanPriceCard";
+import { UsimPlanInfoTabs } from "@/components/usim/UsimPlanInfoTabs";
+import { PartnerBadge } from "@/components/usim/PartnerBadge";
+import { RecordRecentView } from "@/components/usim/RecordRecentView";
 
 const ACTIVATION_STEPS = [
   { title: "1. 온라인 신청", desc: "신청하기 버튼을 눌러 본인 확인 정보와 원하는 개통일을 입력해요." },
@@ -20,9 +20,9 @@ function formatWon(value: number) {
   return `${Math.round(value).toLocaleString("ko-KR")}원`;
 }
 
-export default async function MobilePlanDetailPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function UsimPlanDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const item = await getMobilePlanDetail(id);
+  const item = await getUsimPlanDetail(id);
   if (!item) notFound();
 
   const price = effectiveMonthlyPrice(item);
@@ -34,7 +34,7 @@ export default async function MobilePlanDetailPage({ params }: { params: Promise
     <main className="mx-auto max-w-3xl px-4 pb-28 pt-10">
       <RecordRecentView plan={{ id: item.id, title: item.title, partner_name: item.partner_name, price }} />
 
-      <Link href="/mobile" className="text-sm text-gray-500 hover:text-[var(--brand-navy)]">
+      <Link href="/usim" className="text-sm text-gray-500 hover:text-[var(--brand-navy)]">
         ← 요금제 목록
       </Link>
 
@@ -59,7 +59,7 @@ export default async function MobilePlanDetailPage({ params }: { params: Promise
 
       {/* 가격 비교 블록 */}
       {hasPromo && item.base_price != null ? (
-        <MobilePlanPriceCard
+        <UsimPlanPriceCard
           basePrice={item.base_price}
           effectivePrice={price}
           promotionLabel={item.promotion!.label}
@@ -76,7 +76,7 @@ export default async function MobilePlanDetailPage({ params }: { params: Promise
         </div>
       )}
 
-      <MobilePlanInfoTabs extra={item.extra} />
+      <UsimPlanInfoTabs extra={item.extra} />
 
       <div className="mt-6">
         <h2 className="text-sm font-bold text-[var(--brand-navy)]">신청 및 개통 과정</h2>
@@ -102,7 +102,7 @@ export default async function MobilePlanDetailPage({ params }: { params: Promise
           </a>
         ) : (
           <Link
-            href={`/apply/mobile?planId=${item.id}`}
+            href={`/apply/usim?planId=${item.id}`}
             className="block w-full rounded-full bg-[var(--brand-blue)] py-3.5 text-center text-sm font-semibold text-white shadow-sm shadow-blue-200 hover:bg-[var(--brand-blue-dark)]"
           >
             신청하기

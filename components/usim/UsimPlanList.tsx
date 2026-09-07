@@ -11,15 +11,15 @@ import {
   matchesFilter,
   matchesQuickChip,
   sortPlans,
-  type MobileFilterState,
-  type MobilePlanListItem,
+  type UsimFilterState,
+  type UsimPlanListItem,
   type QuickChipId,
   type SortId,
-} from "@/lib/mobile/filters";
-import { paramsToState, stateToParams, type MobileUrlState } from "@/lib/mobile/url-state";
-import { MobilePlanCard } from "./MobilePlanCard";
-import { MobileFilterModal } from "./MobileFilterModal";
-import { MobileRecentlyViewedPanel } from "./MobileRecentlyViewedPanel";
+} from "@/lib/usim/filters";
+import { paramsToState, stateToParams, type UsimUrlState } from "@/lib/usim/url-state";
+import { UsimPlanCard } from "./UsimPlanCard";
+import { UsimFilterModal } from "./UsimFilterModal";
+import { UsimRecentlyViewedPanel } from "./UsimRecentlyViewedPanel";
 
 const PAGE_SIZE = 12;
 
@@ -43,7 +43,7 @@ function useCountdown(targetIso: string | null) {
   return { days, hours, minutes };
 }
 
-function PromoBanner({ items }: { items: MobilePlanListItem[] }) {
+function PromoBanner({ items }: { items: UsimPlanListItem[] }) {
   const withDeadline = items
     .filter((i) => i.promotion?.valid_until)
     .sort((a, b) => new Date(a.promotion!.valid_until!).getTime() - new Date(b.promotion!.valid_until!).getTime());
@@ -53,7 +53,7 @@ function PromoBanner({ items }: { items: MobilePlanListItem[] }) {
 
   return (
     <a
-      href={`/mobile/${featured.id}`}
+      href={`/usim/${featured.id}`}
       className="flex flex-col gap-3 rounded-2xl bg-gradient-to-r from-[var(--brand-navy)] to-[var(--brand-blue)] p-5 text-white sm:flex-row sm:items-center sm:justify-between"
     >
       <div>
@@ -81,7 +81,7 @@ function PromoBanner({ items }: { items: MobilePlanListItem[] }) {
   );
 }
 
-export function MobilePlanList({ items }: { items: MobilePlanListItem[] }) {
+export function UsimPlanList({ items }: { items: UsimPlanListItem[] }) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -104,13 +104,13 @@ export function MobilePlanList({ items }: { items: MobilePlanListItem[] }) {
     setPage(1);
   }
 
-  function updateUrl(patch: Partial<MobileUrlState>) {
-    const next: MobileUrlState = { filters, sort, chips: activeChips, ...patch };
+  function updateUrl(patch: Partial<UsimUrlState>) {
+    const next: UsimUrlState = { filters, sort, chips: activeChips, ...patch };
     const qs = stateToParams(next).toString();
     router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
   }
 
-  function setFilters(updater: (f: MobileFilterState) => MobileFilterState) {
+  function setFilters(updater: (f: UsimFilterState) => UsimFilterState) {
     updateUrl({ filters: updater(filters) });
   }
 
@@ -248,7 +248,7 @@ export function MobilePlanList({ items }: { items: MobilePlanListItem[] }) {
         ) : (
           <div className="mt-3 grid gap-4">
             {paged.map((item) => (
-              <MobilePlanCard key={item.id} item={item} />
+              <UsimPlanCard key={item.id} item={item} />
             ))}
           </div>
         )}
@@ -271,7 +271,7 @@ export function MobilePlanList({ items }: { items: MobilePlanListItem[] }) {
         )}
 
         {modalOpen && (
-          <MobileFilterModal
+          <UsimFilterModal
             products={items}
             value={filters}
             onClose={() => setModalOpen(false)}
@@ -284,7 +284,7 @@ export function MobilePlanList({ items }: { items: MobilePlanListItem[] }) {
       </div>
 
       <aside className="hidden lg:sticky lg:top-6 lg:block">
-        <MobileRecentlyViewedPanel />
+        <UsimRecentlyViewedPanel />
       </aside>
     </div>
   );

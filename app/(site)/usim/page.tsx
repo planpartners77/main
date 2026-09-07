@@ -1,13 +1,13 @@
 import { Suspense } from "react";
-import { getMobilePlanList } from "@/lib/mobile/plans-query";
-import { MobilePlanList } from "@/components/mobile/MobilePlanList";
+import { getUsimPlanList } from "@/lib/usim/plans-query";
+import { UsimPlanList } from "@/components/usim/UsimPlanList";
 
-export default async function MobilePage() {
-  const items = await getMobilePlanList();
+export default async function UsimPage() {
+  const items = await getUsimPlanList();
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-10">
-      <p className="text-xs font-bold tracking-wider text-[var(--brand-blue)]">MOBILE PLAN</p>
+      <p className="text-xs font-bold tracking-wider text-[var(--brand-blue)]">USIM PLAN</p>
       <h1 className="mt-2 text-2xl font-bold text-[var(--brand-navy)] sm:text-3xl">알뜰폰 요금제 비교</h1>
       <p className="mt-2 text-sm text-gray-500">데이터 사용량과 조건에 맞는 요금제를 비교하고 바로 신청해 보세요.</p>
 
@@ -18,7 +18,7 @@ export default async function MobilePage() {
           </p>
         ) : (
           <Suspense>
-            <MobilePlanList items={items} />
+            <UsimPlanList items={items} />
           </Suspense>
         )}
       </div>

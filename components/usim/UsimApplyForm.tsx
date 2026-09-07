@@ -40,7 +40,7 @@ function couponDiscountLabel(c: CouponCheck) {
   return c.discount_type === "percent" ? `${c.discount_value}% 할인` : `${c.discount_value.toLocaleString("ko-KR")}원 할인`;
 }
 
-export function MobileApplyForm({ initialPlanId }: { initialPlanId: string | null }) {
+export function UsimApplyForm({ initialPlanId }: { initialPlanId: string | null }) {
   const [plans, setPlans] = useState<PlanOption[]>([]);
   const [planId, setPlanId] = useState(initialPlanId ?? "");
   const [applicantName, setApplicantName] = useState("");
@@ -64,7 +64,7 @@ export function MobileApplyForm({ initialPlanId }: { initialPlanId: string | nul
   useEffect(() => {
     (async () => {
       const supabase = createClient();
-      const { data: category } = await supabase.from("categories").select("id").eq("slug", "mobile").maybeSingle();
+      const { data: category } = await supabase.from("categories").select("id").eq("slug", "usim").maybeSingle();
       if (!category) return;
       const { data } = await supabase
         .from("products")
@@ -93,7 +93,7 @@ export function MobileApplyForm({ initialPlanId }: { initialPlanId: string | nul
       const {
         data: { user },
       } = await supabase.auth.getUser();
-      const { data: category } = await supabase.from("categories").select("id").eq("slug", "mobile").maybeSingle();
+      const { data: category } = await supabase.from("categories").select("id").eq("slug", "usim").maybeSingle();
       const { data, error } = await supabase.rpc("fn_validate_coupon", {
         p_code: code,
         p_profile_id: user?.id ?? null,
@@ -131,7 +131,7 @@ export function MobileApplyForm({ initialPlanId }: { initialPlanId: string | nul
     setSubmitting(true);
     try {
       const supabase = createClient();
-      const { data: category } = await supabase.from("categories").select("id").eq("slug", "mobile").maybeSingle();
+      const { data: category } = await supabase.from("categories").select("id").eq("slug", "usim").maybeSingle();
       const activationLabel = ACTIVATION_TYPES.find((a) => a.value === activationType)?.label ?? activationType;
       const simTypeLabel = SIM_TYPE_OPTIONS.find((s) => s.value === simType)?.label ?? simType;
 
@@ -178,7 +178,7 @@ export function MobileApplyForm({ initialPlanId }: { initialPlanId: string | nul
       fetch("/api/notify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type: "mobile_lead", id: leadId }),
+        body: JSON.stringify({ type: "usim_lead", id: leadId }),
       }).catch(() => {});
 
       if (referral) {

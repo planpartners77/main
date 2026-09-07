@@ -3,15 +3,15 @@
 import {
   CARRIER_NETWORKS,
   DEDICATED_TAGS,
-  EMPTY_MOBILE_PLAN_EXTRA,
+  EMPTY_USIM_PLAN_EXTRA,
   NETWORK_TECHS,
   PLAN_FEATURES,
   SIM_TYPES,
   THROTTLE_SPEED_OPTIONS,
-  normalizeMobilePlanExtra,
-  type MobilePlanExtra,
-  type MobilePlanExtraCost,
-} from "@/lib/mobile/plan-spec";
+  normalizeUsimPlanExtra,
+  type UsimPlanExtra,
+  type UsimPlanExtraCost,
+} from "@/lib/usim/plan-spec";
 
 function toggleInArray<T>(arr: T[], value: T): T[] {
   return arr.includes(value) ? arr.filter((v) => v !== value) : [...arr, value];
@@ -31,23 +31,23 @@ function numberOrZero(raw: string): number {
   return Number.isFinite(n) && n >= 0 ? n : 0;
 }
 
-export function parseMobileExtra(raw: string): MobilePlanExtra {
-  if (!raw.trim()) return { ...EMPTY_MOBILE_PLAN_EXTRA };
+export function parseUsimExtra(raw: string): UsimPlanExtra {
+  if (!raw.trim()) return { ...EMPTY_USIM_PLAN_EXTRA };
   try {
-    return normalizeMobilePlanExtra(JSON.parse(raw));
+    return normalizeUsimPlanExtra(JSON.parse(raw));
   } catch {
-    return { ...EMPTY_MOBILE_PLAN_EXTRA };
+    return { ...EMPTY_USIM_PLAN_EXTRA };
   }
 }
 
-export function MobilePlanSpecFields({
+export function UsimPlanSpecFields({
   value,
   onChange,
 }: {
-  value: MobilePlanExtra;
-  onChange: (next: MobilePlanExtra) => void;
+  value: UsimPlanExtra;
+  onChange: (next: UsimPlanExtra) => void;
 }) {
-  function set<K extends keyof MobilePlanExtra>(key: K, v: MobilePlanExtra[K]) {
+  function set<K extends keyof UsimPlanExtra>(key: K, v: UsimPlanExtra[K]) {
     onChange({ ...value, [key]: v });
   }
 
@@ -55,7 +55,7 @@ export function MobilePlanSpecFields({
     set("extra_costs", [...value.extra_costs, { label: "", amount: 0 }]);
   }
 
-  function updateExtraCost(index: number, patch: Partial<MobilePlanExtraCost>) {
+  function updateExtraCost(index: number, patch: Partial<UsimPlanExtraCost>) {
     set(
       "extra_costs",
       value.extra_costs.map((c, i) => (i === index ? { ...c, ...patch } : c)),
@@ -69,15 +69,33 @@ export function MobilePlanSpecFields({
     );
   }
 
+  function addPartnerBenefit() {
+    set("partner_benefits", [...value.partner_benefits, ""]);
+  }
+
+  function updatePartnerBenefit(index: number, text: string) {
+    set(
+      "partner_benefits",
+      value.partner_benefits.map((b, i) => (i === index ? text : b)),
+    );
+  }
+
+  function removePartnerBenefit(index: number) {
+    set(
+      "partner_benefits",
+      value.partner_benefits.filter((_, i) => i !== index),
+    );
+  }
+
   return (
     <div className="col-span-1 grid gap-3 rounded-xl border border-dashed border-[var(--brand-blue)]/40 bg-[var(--surface-tint)]/40 p-4 sm:col-span-2 sm:grid-cols-2">
-      <p className="text-xs font-bold text-[var(--brand-blue-dark)] sm:col-span-2">휴대폰 요금제 상세 스펙</p>
+      <p className="text-xs font-bold text-[var(--brand-blue-dark)] sm:col-span-2">유심 요금제 상세 스펙</p>
 
       <label className="text-sm">
         통신망
         <select
           value={value.carrier_network}
-          onChange={(e) => set("carrier_network", e.target.value as MobilePlanExtra["carrier_network"])}
+          onChange={(e) => set("carrier_network", e.target.value as UsimPlanExtra["carrier_network"])}
           className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
         >
           {CARRIER_NETWORKS.map((c) => (
@@ -92,7 +110,7 @@ export function MobilePlanSpecFields({
         네트워크 세대
         <select
           value={value.network_tech}
-          onChange={(e) => set("network_tech", e.target.value as MobilePlanExtra["network_tech"])}
+          onChange={(e) => set("network_tech", e.target.value as UsimPlanExtra["network_tech"])}
           className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
         >
           {NETWORK_TECHS.map((t) => (
@@ -118,7 +136,7 @@ export function MobilePlanSpecFields({
         소진 후 속도 제한
         <select
           value={value.data_throttle_speed}
-          onChange={(e) => set("data_throttle_speed", e.target.value as MobilePlanExtra["data_throttle_speed"])}
+          onChange={(e) => set("data_throttle_speed", e.target.value as UsimPlanExtra["data_throttle_speed"])}
           className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
         >
           {THROTTLE_SPEED_OPTIONS.map((o) => (
@@ -136,6 +154,17 @@ export function MobilePlanSpecFields({
           min="0"
           value={value.call_minutes ?? ""}
           onChange={(e) => set("call_minutes", numberOrNull(e.target.value))}
+          className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+        />
+      </label>
+
+      <label className="text-sm">
+        영상통화 제공량 (분, 비우면 무제한, 0=없음)
+        <input
+          type="number"
+          min="0"
+          value={value.video_call_minutes ?? ""}
+          onChange={(e) => set("video_call_minutes", numberOrNull(e.target.value))}
           className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
         />
       </label>
@@ -166,7 +195,7 @@ export function MobilePlanSpecFields({
         유심 타입
         <select
           value={value.sim_type}
-          onChange={(e) => set("sim_type", e.target.value as MobilePlanExtra["sim_type"])}
+          onChange={(e) => set("sim_type", e.target.value as UsimPlanExtra["sim_type"])}
           className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
         >
           {SIM_TYPES.map((s) => (
@@ -213,6 +242,14 @@ export function MobilePlanSpecFields({
             onChange={(e) => set("internet_bundle", e.target.checked)}
           />
           인터넷 결합 가능
+        </label>
+        <label className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            checked={value.wifi_provided}
+            onChange={(e) => set("wifi_provided", e.target.checked)}
+          />
+          Wi-Fi 제공
         </label>
         <label className="flex items-center gap-2">
           <input
@@ -305,6 +342,41 @@ export function MobilePlanSpecFields({
                 <button
                   type="button"
                   onClick={() => removeExtraCost(i)}
+                  className="shrink-0 rounded-lg border border-gray-300 px-2.5 py-2 text-xs text-gray-500 hover:border-red-300 hover:text-red-500"
+                >
+                  삭제
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div className="text-sm sm:col-span-2">
+        <div className="flex items-center justify-between">
+          <p className="font-medium text-gray-700">제휴 혜택 (예: 밀리의서재 구독 무료)</p>
+          <button
+            type="button"
+            onClick={addPartnerBenefit}
+            className="rounded-full border border-[var(--brand-blue)] px-2.5 py-1 text-xs font-semibold text-[var(--brand-blue)]"
+          >
+            + 항목 추가
+          </button>
+        </div>
+        {value.partner_benefits.length > 0 && (
+          <div className="mt-2 space-y-2">
+            {value.partner_benefits.map((benefit, i) => (
+              <div key={i} className="flex items-center gap-2">
+                <input
+                  type="text"
+                  placeholder="혜택 내용 (예: 바로배송유심 상품권 2만원 지급)"
+                  value={benefit}
+                  onChange={(e) => updatePartnerBenefit(i, e.target.value)}
+                  className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                />
+                <button
+                  type="button"
+                  onClick={() => removePartnerBenefit(i)}
                   className="shrink-0 rounded-lg border border-gray-300 px-2.5 py-2 text-xs text-gray-500 hover:border-red-300 hover:text-red-500"
                 >
                   삭제

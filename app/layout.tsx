@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 const title = "플랜파트너스";
-const defaultDescription = "인터넷·휴대폰·가전렌탈·보험·상조를 비교해드리는 비교·중개 전문 플랫폼";
+const defaultDescription = "인터넷·유심·가전렌탈·보험·상조를 비교해드리는 비교·중개 전문 플랫폼";
 // 배포 환경에 NEXT_PUBLIC_SITE_URL이 설정되지 않으면 localhost로 절대경로가 만들어져
 // 카카오톡 등 외부 크롤러가 og:image를 가져오지 못해 공유 시 이미지가 아예 노출되지
 // 않는다 — 실제 배포 도메인을 최종 폴백으로 지정해 항상 로고가 뜨도록 보장한다.

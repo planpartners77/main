@@ -6,8 +6,9 @@ import {
   callLabel,
   dataLabel,
   smsLabel,
-  type MobilePlanExtra,
-} from "@/lib/mobile/plan-spec";
+  videoCallLabel,
+  type UsimPlanExtra,
+} from "@/lib/usim/plan-spec";
 
 function formatWon(value: number) {
   return `${Math.round(value).toLocaleString("ko-KR")}원`;
@@ -20,13 +21,13 @@ const TABS = [
 ] as const;
 type TabId = (typeof TABS)[number]["id"];
 
-function simLabel(simType: MobilePlanExtra["sim_type"]) {
+function simLabel(simType: UsimPlanExtra["sim_type"]) {
   if (simType === "usim") return "유심 개통 가능 / eSIM 불가";
   if (simType === "esim") return "eSIM 개통 가능 / 유심 불가";
   return "유심 · eSIM 모두 개통 가능";
 }
 
-export function MobilePlanInfoTabs({ extra }: { extra: MobilePlanExtra }) {
+export function UsimPlanInfoTabs({ extra }: { extra: UsimPlanExtra }) {
   const [tab, setTab] = useState<TabId>("basic");
 
   const throttleOption = THROTTLE_SPEED_OPTIONS.find((o) => o.value === extra.data_throttle_speed);
@@ -47,6 +48,15 @@ export function MobilePlanInfoTabs({ extra }: { extra: MobilePlanExtra }) {
       title: `${callLabel(extra.call_minutes)} / ${smsLabel(extra.sms_count)}`,
       desc: `${extra.carrier_network}망 · ${extra.network_tech}`,
     },
+    ...(extra.video_call_minutes != null
+      ? [
+          {
+            icon: "🎥",
+            title: videoCallLabel(extra.video_call_minutes),
+            desc: null,
+          },
+        ]
+      : []),
     {
       icon: "📅",
       title: extra.contract_months > 0 ? `${extra.contract_months}개월 약정` : "약정 없음",
@@ -117,9 +127,16 @@ export function MobilePlanInfoTabs({ extra }: { extra: MobilePlanExtra }) {
       available: extra.features.includes("유심무료"),
       detail: null,
     },
+    {
+      id: "wifi",
+      icon: "🛜",
+      label: "Wi-Fi 제공",
+      available: extra.wifi_provided,
+      detail: null,
+    },
   ];
 
-  const hasCostContent = !!extra.bundle_benefit || extra.extra_costs.length > 0;
+  const hasCostContent = !!extra.bundle_benefit || extra.extra_costs.length > 0 || extra.partner_benefits.length > 0;
 
   return (
     <div className="mt-8">
@@ -191,6 +208,20 @@ export function MobilePlanInfoTabs({ extra }: { extra: MobilePlanExtra }) {
                 </div>
               ))}
             </dl>
+          )}
+
+          {extra.partner_benefits.length > 0 && (
+            <div className="rounded-2xl border border-gray-200 bg-white p-4">
+              <p className="text-sm font-bold text-gray-800">제휴 혜택</p>
+              <ul className="mt-2 space-y-1">
+                {extra.partner_benefits.map((benefit, i) => (
+                  <li key={i} className="flex gap-1.5 text-sm text-gray-600">
+                    <span className="text-[var(--brand-blue)]">·</span>
+                    {benefit}
+                  </li>
+                ))}
+              </ul>
+            </div>
           )}
 
           {!hasCostContent && (
