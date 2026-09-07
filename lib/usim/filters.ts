@@ -74,7 +74,27 @@ export const DATA_USAGE_PRESETS = [
 ] as const;
 export type DataUsagePresetId = (typeof DATA_USAGE_PRESETS)[number]["id"];
 
-// --- 가격 구간 (중복 포함 구간 그대로 — 사용자가 겹치는 예산 구간을 동시에 체크할 수 있게) ---
+// --- 연속 범위 슬라이더 공통 타입 ---
+// 요금제 종류가 늘어날수록 고정 구간 프리셋을 계속 추가하는 방식은 한계가 있어,
+// 가격/통화량/할인기간/핫스팟 용량은 슬라이더 기반 연속 범위로 필터링한다.
+// 각 SLIDER_MAX는 "그 이상"을 의미하는 상한 고정값이며, 프리셋 버튼은 슬라이더 값을
+// 세팅하는 바로가기로만 남긴다(클릭 시 슬라이더가 해당 구간으로 이동).
+export interface RangeValue {
+  min: number;
+  max: number;
+}
+
+export const PRICE_SLIDER_MAX = 60000; // 6만원 이상은 최대값으로 취급
+export const CALL_SLIDER_MAX = 300; // 300분 이상은 최대값, "무제한"은 별도 토글
+export const DISCOUNT_SLIDER_MAX = 24; // 24개월 이상은 최대값, "평생"은 별도 토글
+export const HOTSPOT_SLIDER_MAX = 100; // 100GB 이상은 최대값
+
+export const DEFAULT_PRICE_RANGE: RangeValue = { min: 0, max: PRICE_SLIDER_MAX };
+export const DEFAULT_CALL_RANGE: RangeValue = { min: 0, max: CALL_SLIDER_MAX };
+export const DEFAULT_DISCOUNT_RANGE: RangeValue = { min: 0, max: DISCOUNT_SLIDER_MAX };
+export const DEFAULT_HOTSPOT_RANGE: RangeValue = { min: 0, max: HOTSPOT_SLIDER_MAX };
+
+// --- 가격 구간 프리셋 (슬라이더 바로가기 버튼) ---
 export const PRICE_RANGES = [
   { id: "0-1000", label: "0~1천원", min: 0, max: 1000 },
   { id: "0-5000", label: "0~5천원", min: 0, max: 5000 },
@@ -82,47 +102,27 @@ export const PRICE_RANGES = [
   { id: "10000-20000", label: "1만~2만원", min: 10000, max: 20000 },
   { id: "20000-30000", label: "2만~3만원", min: 20000, max: 30000 },
   { id: "30000-50000", label: "3만~5만원", min: 30000, max: 50000 },
-  { id: "50000+", label: "5만원 이상", min: 50000, max: Infinity },
+  { id: "50000+", label: "5만원 이상", min: 50000, max: PRICE_SLIDER_MAX },
 ] as const;
 export type PriceRangeId = (typeof PRICE_RANGES)[number]["id"];
 
-// --- 할인(프로모션) 기간 구간 ---
+// --- 할인(프로모션) 기간 구간 프리셋 (슬라이더 바로가기 버튼, "평생"은 별도 토글) ---
 export const DISCOUNT_PERIODS = [
-  { id: "lifetime", label: "평생" },
-  { id: "24+", label: "24개월 이상" },
-  { id: "12-24", label: "12~24개월" },
-  { id: "6-12", label: "6~12개월" },
-  { id: "1-6", label: "1~6개월" },
+  { id: "24+", label: "24개월 이상", min: 24, max: DISCOUNT_SLIDER_MAX },
+  { id: "12-24", label: "12~24개월", min: 12, max: 24 },
+  { id: "6-12", label: "6~12개월", min: 6, max: 12 },
+  { id: "1-6", label: "1~6개월", min: 1, max: 6 },
 ] as const;
 export type DiscountPeriodId = (typeof DISCOUNT_PERIODS)[number]["id"];
 
-function matchesDiscountPeriod(months: number, id: DiscountPeriodId): boolean {
-  if (id === "lifetime") return months === Infinity;
-  if (months === Infinity) return false;
-  if (id === "24+") return months >= 24;
-  if (id === "12-24") return months >= 12 && months < 24;
-  if (id === "6-12") return months >= 6 && months < 12;
-  return months >= 1 && months < 6;
-}
-
-// --- 통화량 구간 ---
+// --- 통화량 구간 프리셋 (슬라이더 바로가기 버튼, "무제한"은 별도 토글) ---
 export const CALL_PRESETS = [
-  { id: "unlimited", label: "무제한" },
-  { id: "180-300", label: "180~300분" },
-  { id: "60-180", label: "60~180분" },
-  { id: "under60", label: "60분 미만" },
-  { id: "none", label: "없음" },
+  { id: "180-300", label: "180~300분", min: 180, max: 300 },
+  { id: "60-180", label: "60~180분", min: 60, max: 180 },
+  { id: "under60", label: "60분 미만", min: 0, max: 60 },
+  { id: "none", label: "없음", min: 0, max: 0 },
 ] as const;
 export type CallPresetId = (typeof CALL_PRESETS)[number]["id"];
-
-function matchesCallPreset(minutes: number | null, id: CallPresetId): boolean {
-  if (id === "unlimited") return minutes === null;
-  if (minutes === null) return false;
-  if (id === "180-300") return minutes >= 180 && minutes <= 300;
-  if (id === "60-180") return minutes >= 60 && minutes < 180;
-  if (id === "under60") return minutes > 0 && minutes < 60;
-  return minutes === 0;
-}
 
 // --- 문자량 구간 ---
 export const SMS_PRESETS = [
@@ -166,15 +166,18 @@ export const HOT_SELECTED_COUNT_THRESHOLD = 100;
 export interface UsimFilterState {
   dataUsage: DataUsagePresetId | null;
   throttleSpeeds: ThrottleSpeed[];
-  callPresets: CallPresetId[];
-  priceRanges: PriceRangeId[];
-  discountPeriods: DiscountPeriodId[];
+  callRange: RangeValue;
+  callUnlimitedOnly: boolean;
+  priceRange: RangeValue;
+  discountRange: RangeValue;
+  discountLifetimeOnly: boolean;
   carrierNetworks: CarrierNetwork[];
   networkTechs: NetworkTech[];
+  partnerIds: string[];
   internetBundleOnly: boolean;
   smsPresets: SmsPresetId[];
   features: PlanFeature[];
-  hotspotOnly: boolean;
+  hotspotRange: RangeValue;
   dedicatedTags: DedicatedTag[];
   eligibilityMinor: boolean;
   eligibilityForeigner: boolean;
@@ -185,15 +188,18 @@ export interface UsimFilterState {
 export const EMPTY_FILTER_STATE: UsimFilterState = {
   dataUsage: null,
   throttleSpeeds: [],
-  callPresets: [],
-  priceRanges: [],
-  discountPeriods: [],
+  callRange: DEFAULT_CALL_RANGE,
+  callUnlimitedOnly: false,
+  priceRange: DEFAULT_PRICE_RANGE,
+  discountRange: DEFAULT_DISCOUNT_RANGE,
+  discountLifetimeOnly: false,
   carrierNetworks: [],
   networkTechs: [],
+  partnerIds: [],
   internetBundleOnly: false,
   smsPresets: [],
   features: [],
-  hotspotOnly: false,
+  hotspotRange: DEFAULT_HOTSPOT_RANGE,
   dedicatedTags: [],
   eligibilityMinor: false,
   eligibilityForeigner: false,
@@ -201,19 +207,24 @@ export const EMPTY_FILTER_STATE: UsimFilterState = {
   search: "",
 };
 
+function isRangeActive(range: RangeValue, def: RangeValue): boolean {
+  return range.min !== def.min || range.max !== def.max;
+}
+
 export function activeFilterCount(f: UsimFilterState): number {
   let n = 0;
   if (f.dataUsage) n++;
   n += f.throttleSpeeds.length;
-  n += f.callPresets.length;
-  n += f.priceRanges.length;
-  n += f.discountPeriods.length;
+  if (f.callUnlimitedOnly || isRangeActive(f.callRange, DEFAULT_CALL_RANGE)) n++;
+  if (isRangeActive(f.priceRange, DEFAULT_PRICE_RANGE)) n++;
+  if (f.discountLifetimeOnly || isRangeActive(f.discountRange, DEFAULT_DISCOUNT_RANGE)) n++;
   n += f.carrierNetworks.length;
   n += f.networkTechs.length;
+  n += f.partnerIds.length;
   if (f.internetBundleOnly) n++;
   n += f.smsPresets.length;
   n += f.features.length;
-  if (f.hotspotOnly) n++;
+  if (isRangeActive(f.hotspotRange, DEFAULT_HOTSPOT_RANGE)) n++;
   n += f.dedicatedTags.length;
   if (f.eligibilityMinor) n++;
   if (f.eligibilityForeigner) n++;
@@ -232,28 +243,41 @@ export function matchesFilter(item: UsimPlanListItem, f: UsimFilterState): boole
 
   if (f.throttleSpeeds.length > 0 && !f.throttleSpeeds.includes(e.data_throttle_speed)) return false;
 
-  if (f.callPresets.length > 0 && !f.callPresets.some((id) => matchesCallPreset(e.call_minutes, id))) return false;
+  if (f.callUnlimitedOnly) {
+    if (e.call_minutes !== null) return false;
+  } else if (isRangeActive(f.callRange, DEFAULT_CALL_RANGE)) {
+    if (e.call_minutes === null) return false;
+    const max = f.callRange.max >= CALL_SLIDER_MAX ? Infinity : f.callRange.max;
+    if (e.call_minutes < f.callRange.min || e.call_minutes > max) return false;
+  }
 
   if (f.smsPresets.length > 0 && !f.smsPresets.some((id) => matchesSmsPreset(e.sms_count, id))) return false;
 
-  if (f.priceRanges.length > 0) {
+  if (isRangeActive(f.priceRange, DEFAULT_PRICE_RANGE)) {
     const price = effectiveMonthlyPrice(item);
-    const ok = f.priceRanges.some((id) => {
-      const range = PRICE_RANGES.find((r) => r.id === id)!;
-      return price >= range.min && price <= range.max;
-    });
-    if (!ok) return false;
+    const max = f.priceRange.max >= PRICE_SLIDER_MAX ? Infinity : f.priceRange.max;
+    if (price < f.priceRange.min || price > max) return false;
   }
 
-  if (f.discountPeriods.length > 0) {
+  if (f.discountLifetimeOnly) {
+    if (!isLifetimePromotion(item.promotion)) return false;
+  } else if (isRangeActive(f.discountRange, DEFAULT_DISCOUNT_RANGE)) {
     const months = promotionDurationMonths(item.promotion);
-    if (!f.discountPeriods.some((id) => matchesDiscountPeriod(months, id))) return false;
+    if (months === Infinity) return false;
+    const max = f.discountRange.max >= DISCOUNT_SLIDER_MAX ? Infinity : f.discountRange.max;
+    if (months < f.discountRange.min || months > max) return false;
   }
 
   if (f.carrierNetworks.length > 0 && !f.carrierNetworks.includes(e.carrier_network)) return false;
   if (f.networkTechs.length > 0 && !f.networkTechs.includes(e.network_tech)) return false;
+  if (f.partnerIds.length > 0 && (!item.partner_id || !f.partnerIds.includes(item.partner_id))) return false;
   if (f.internetBundleOnly && !e.internet_bundle) return false;
-  if (f.hotspotOnly && (e.hotspot_gb == null || e.hotspot_gb <= 0)) return false;
+
+  if (isRangeActive(f.hotspotRange, DEFAULT_HOTSPOT_RANGE)) {
+    const gb = e.hotspot_gb ?? 0;
+    const max = f.hotspotRange.max >= HOTSPOT_SLIDER_MAX ? Infinity : f.hotspotRange.max;
+    if (gb < f.hotspotRange.min || gb > max) return false;
+  }
 
   if (f.features.length > 0 && !f.features.every((feat) => e.features.includes(feat))) return false;
   if (f.dedicatedTags.length > 0 && !f.dedicatedTags.some((tag) => e.tags.includes(tag))) return false;

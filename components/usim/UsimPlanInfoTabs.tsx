@@ -82,7 +82,7 @@ export function UsimPlanInfoTabs({ extra }: { extra: UsimPlanExtra }) {
       id: "hotspot",
       icon: "📡",
       label: "모바일 핫스팟",
-      available: extra.features.includes("핫스팟"),
+      available: (extra.hotspot_gb ?? 0) > 0,
       detail: extra.hotspot_gb != null ? `월 ${extra.hotspot_gb}GB 제공` : null,
     },
     {

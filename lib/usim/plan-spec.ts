@@ -37,7 +37,8 @@ export const DEDICATED_TAGS = [
 ] as const;
 export type DedicatedTag = (typeof DEDICATED_TAGS)[number];
 
-export const PLAN_FEATURES = ["NFC", "소액결제", "유심무료", "해외로밍", "핫스팟", "eSIM", "데이터쉐어링"] as const;
+// "핫스팟"은 별도 features 태그로 중복 관리하지 않고 hotspot_gb 값으로만 판단한다(관리자 입력 중복 방지).
+export const PLAN_FEATURES = ["NFC", "소액결제", "유심무료", "해외로밍", "eSIM", "데이터쉐어링"] as const;
 export type PlanFeature = (typeof PLAN_FEATURES)[number];
 
 export interface UsimPlanExtraCost {
