@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
@@ -155,19 +156,32 @@ export function PromotionManager({ promotions, products }: { promotions: Promoti
     router.refresh();
   }
 
+  const hasProducts = products.length > 0;
+
   return (
     <div>
       <div className="flex items-center justify-between gap-3">
         <p className="text-sm text-gray-500">요금제별 페이백/포인트 프로모션을 관리합니다. &quot;평생&quot;은 매월 동일 금액이 무기한 지급됨을 의미합니다.</p>
         <button
           onClick={() => (showForm ? setShowForm(false) : startCreate())}
-          className="shrink-0 rounded-full bg-[var(--brand-navy)] px-4 py-2 text-xs font-semibold text-white hover:opacity-90"
+          disabled={!hasProducts}
+          className="shrink-0 rounded-full bg-[var(--brand-navy)] px-4 py-2 text-xs font-semibold text-white hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
         >
           {showForm ? "닫기" : "새 프로모션 추가"}
         </button>
       </div>
 
-      {showForm && (
+      {!hasProducts && (
+        <p className="mt-4 rounded-xl border border-dashed border-gray-300 bg-gray-50 p-4 text-sm text-gray-500">
+          등록된 휴대폰 요금제가 없어 프로모션을 추가할 수 없습니다.{" "}
+          <Link href="/admin/products" className="font-semibold text-[var(--brand-blue)] hover:underline">
+            상품 관리에서 요금제를 먼저 등록
+          </Link>
+          해 주세요.
+        </p>
+      )}
+
+      {showForm && hasProducts && (
         <form
           onSubmit={handleSubmit}
           className="mt-4 grid gap-3 rounded-2xl border border-gray-200 bg-white p-5 sm:grid-cols-2"

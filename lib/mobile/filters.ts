@@ -151,11 +151,11 @@ export type SortId = (typeof SORT_OPTIONS)[number]["id"];
 // 원문의 "LG 자회사 / KT 자회사" 계열사 분류는 별도 통신사 마스터 테이블이 있어야 가능한데,
 // 우리는 카테고리 공용 partners 테이블만 쓰므로 통신망(SKT/KT/LGU+) 기준 칩으로 대체했다.
 export const QUICK_CHIPS = [
-  { id: "zero", label: "혜택가 0원" },
-  { id: "under10k_lifetime", label: "평생 1만원 이하" },
-  { id: "skt", label: "SKT망" },
-  { id: "kt", label: "KT망" },
-  { id: "hot", label: "지금 HOT" },
+  { id: "zero", label: "혜택가 0원", emoji: "🎁", tint: "bg-green-50" },
+  { id: "under10k_lifetime", label: "평생 1만원 이하", emoji: "💰", tint: "bg-amber-50" },
+  { id: "skt", label: "SKT망", emoji: "📶", tint: "bg-red-50" },
+  { id: "kt", label: "KT망", emoji: "📡", tint: "bg-purple-50" },
+  { id: "hot", label: "지금 HOT", emoji: "🔥", tint: "bg-orange-50" },
 ] as const;
 export type QuickChipId = (typeof QUICK_CHIPS)[number]["id"];
 

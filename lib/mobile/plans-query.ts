@@ -11,6 +11,7 @@ interface RawPromotion {
   valid_from: string | null;
   valid_until: string | null;
   is_active: boolean;
+  created_at: string;
 }
 
 interface RawProduct {
@@ -24,13 +25,20 @@ interface RawProduct {
   plan_promotions: RawPromotion[] | null;
 }
 
+// 한 요금제에 활성 프로모션이 여러 개 등록된 경우(관리자 실수 등) 노출 순서가
+// DB 조인 결과 순서에 좌우되지 않도록, 총 지급액이 큰 것을 우선하고 동률이면
+// 가장 최근에 등록한 것을 택해 목록/상세 페이지가 항상 동일한 프로모션을 보여주게 한다.
 function pickActivePromotion(promotions: RawPromotion[] | null): MobilePlanPromotion | null {
   if (!promotions || promotions.length === 0) return null;
   const today = new Date().toISOString().slice(0, 10);
-  const active = promotions.find(
+  const eligible = promotions.filter(
     (p) => p.is_active && (!p.valid_from || p.valid_from <= today) && (!p.valid_until || p.valid_until >= today),
   );
-  if (!active) return null;
+  if (eligible.length === 0) return null;
+  const active = eligible.reduce((best, p) => {
+    if (p.total_amount !== best.total_amount) return p.total_amount > best.total_amount ? p : best;
+    return p.created_at > best.created_at ? p : best;
+  });
   return {
     id: active.id,
     label: active.label,
@@ -42,13 +50,14 @@ function pickActivePromotion(promotions: RawPromotion[] | null): MobilePlanPromo
   };
 }
 
-function toListItem(row: RawProduct): MobilePlanListItem {
+function toListItem(row: RawProduct, leadCount: number): MobilePlanListItem {
+  const extra = normalizeMobilePlanExtra(row.extra);
   return {
     id: row.id,
     title: row.title,
     image_url: row.image_url,
     base_price: row.base_price,
-    extra: normalizeMobilePlanExtra(row.extra),
+    extra: { ...extra, selected_count: leadCount },
     partner_id: row.partner_id,
     partner_name: row.partners?.name ?? null,
     promotion: pickActivePromotion(row.plan_promotions),
@@ -56,31 +65,44 @@ function toListItem(row: RawProduct): MobilePlanListItem {
 }
 
 const SELECT_COLUMNS =
-  "id, title, image_url, base_price, extra, partner_id, partners(name), plan_promotions(id, label, type, total_amount, schedule, valid_from, valid_until, is_active)";
+  "id, title, image_url, base_price, extra, partner_id, partners(name), plan_promotions(id, label, type, total_amount, schedule, valid_from, valid_until, is_active, created_at)";
+
+// "n명 선택" 표시는 관리자 수동 입력이 아니라 실제 leads 건수를 집계한 값이어야 하므로,
+// leads 테이블을 직접 읽을 수 없는 공개 페이지에서도 상품별 집계만 안전하게 가져온다.
+async function getLeadCounts(supabase: Awaited<ReturnType<typeof createClient>>): Promise<Map<string, number>> {
+  const { data } = await supabase.rpc("mobile_plan_lead_counts");
+  const map = new Map<string, number>();
+  for (const row of (data ?? []) as { product_id: string; lead_count: number }[]) {
+    map.set(row.product_id, row.lead_count);
+  }
+  return map;
+}
 
 export async function getMobilePlanList(): Promise<MobilePlanListItem[]> {
   const supabase = await createClient();
   const { data: category } = await supabase.from("categories").select("id").eq("slug", "mobile").maybeSingle();
   if (!category) return [];
 
-  const { data } = await supabase
-    .from("products")
-    .select(SELECT_COLUMNS)
-    .eq("category_id", category.id)
-    .eq("is_active", true)
-    .order("created_at", { ascending: false });
+  const [{ data }, leadCounts] = await Promise.all([
+    supabase
+      .from("products")
+      .select(SELECT_COLUMNS)
+      .eq("category_id", category.id)
+      .eq("is_active", true)
+      .order("created_at", { ascending: false }),
+    getLeadCounts(supabase),
+  ]);
 
-  return ((data ?? []) as unknown as RawProduct[]).map(toListItem);
+  return ((data ?? []) as unknown as RawProduct[]).map((row) => toListItem(row, leadCounts.get(row.id) ?? 0));
 }
 
 export async function getMobilePlanDetail(id: string): Promise<MobilePlanListItem | null> {
   const supabase = await createClient();
-  const { data } = await supabase
-    .from("products")
-    .select(SELECT_COLUMNS)
-    .eq("id", id)
-    .eq("is_active", true)
-    .maybeSingle();
+  const [{ data }, leadCounts] = await Promise.all([
+    supabase.from("products").select(SELECT_COLUMNS).eq("id", id).eq("is_active", true).maybeSingle(),
+    getLeadCounts(supabase),
+  ]);
   if (!data) return null;
-  return toListItem(data as unknown as RawProduct);
+  const row = data as unknown as RawProduct;
+  return toListItem(row, leadCounts.get(row.id) ?? 0);
 }

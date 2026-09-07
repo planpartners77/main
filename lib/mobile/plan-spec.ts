@@ -40,6 +40,11 @@ export type DedicatedTag = (typeof DEDICATED_TAGS)[number];
 export const PLAN_FEATURES = ["NFC", "소액결제", "유심무료", "해외로밍", "핫스팟", "eSIM", "데이터쉐어링"] as const;
 export type PlanFeature = (typeof PLAN_FEATURES)[number];
 
+export interface MobilePlanExtraCost {
+  label: string;
+  amount: number; // 0 = 무료
+}
+
 export interface MobilePlanExtra {
   carrier_network: CarrierNetwork;
   network_tech: NetworkTech;
@@ -50,7 +55,9 @@ export interface MobilePlanExtra {
   contract_months: number; // 0 = 무약정
   sim_type: SimType;
   internet_bundle: boolean;
+  bundle_benefit: string | null; // 결합 혜택 설명 (예: "인터넷 결합 시 13,200원 할인")
   hotspot_gb: number | null; // null = 해당 없음
+  extra_costs: MobilePlanExtraCost[]; // 기타비용 (유심비, 가입비 등)
   tags: DedicatedTag[];
   features: PlanFeature[];
   eligibility_minor: boolean;
@@ -68,7 +75,9 @@ export const EMPTY_MOBILE_PLAN_EXTRA: MobilePlanExtra = {
   contract_months: 0,
   sim_type: "usim",
   internet_bundle: false,
+  bundle_benefit: null,
   hotspot_gb: null,
+  extra_costs: [],
   tags: [],
   features: [],
   eligibility_minor: false,
@@ -95,7 +104,14 @@ export function normalizeMobilePlanExtra(raw: Record<string, unknown> | null | u
     contract_months: typeof r.contract_months === "number" ? r.contract_months : 0,
     sim_type: SIM_TYPES.some((o) => o.value === r.sim_type) ? (r.sim_type as SimType) : "usim",
     internet_bundle: r.internet_bundle === true,
+    bundle_benefit: typeof r.bundle_benefit === "string" && r.bundle_benefit.trim() ? r.bundle_benefit : null,
     hotspot_gb: typeof r.hotspot_gb === "number" ? r.hotspot_gb : null,
+    extra_costs: Array.isArray(r.extra_costs)
+      ? r.extra_costs.filter(
+          (c): c is MobilePlanExtraCost =>
+            !!c && typeof c === "object" && typeof (c as MobilePlanExtraCost).label === "string" && typeof (c as MobilePlanExtraCost).amount === "number",
+        )
+      : [],
     tags: asStringArray(r.tags).filter((t): t is DedicatedTag => (DEDICATED_TAGS as readonly string[]).includes(t)),
     features: asStringArray(r.features).filter((f): f is PlanFeature => (PLAN_FEATURES as readonly string[]).includes(f)),
     eligibility_minor: r.eligibility_minor === true,

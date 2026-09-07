@@ -10,14 +10,25 @@ import {
   THROTTLE_SPEED_OPTIONS,
   normalizeMobilePlanExtra,
   type MobilePlanExtra,
+  type MobilePlanExtraCost,
 } from "@/lib/mobile/plan-spec";
 
 function toggleInArray<T>(arr: T[], value: T): T[] {
   return arr.includes(value) ? arr.filter((v) => v !== value) : [...arr, value];
 }
 
+// 비정상 입력(NaN, 음수)이 그대로 extra jsonb에 저장되면 필터 비교에서 요금제가
+// 조용히 안 보이는 등 눈에 띄지 않는 오류로 이어지므로, 유효하지 않은 값은
+// 안전한 기본값(무제한=null / 0)으로 되돌린다.
 function numberOrNull(raw: string): number | null {
-  return raw.trim() === "" ? null : Number(raw);
+  if (raw.trim() === "") return null;
+  const n = Number(raw);
+  return Number.isFinite(n) && n >= 0 ? n : null;
+}
+
+function numberOrZero(raw: string): number {
+  const n = Number(raw);
+  return Number.isFinite(n) && n >= 0 ? n : 0;
 }
 
 export function parseMobileExtra(raw: string): MobilePlanExtra {
@@ -38,6 +49,24 @@ export function MobilePlanSpecFields({
 }) {
   function set<K extends keyof MobilePlanExtra>(key: K, v: MobilePlanExtra[K]) {
     onChange({ ...value, [key]: v });
+  }
+
+  function addExtraCost() {
+    set("extra_costs", [...value.extra_costs, { label: "", amount: 0 }]);
+  }
+
+  function updateExtraCost(index: number, patch: Partial<MobilePlanExtraCost>) {
+    set(
+      "extra_costs",
+      value.extra_costs.map((c, i) => (i === index ? { ...c, ...patch } : c)),
+    );
+  }
+
+  function removeExtraCost(index: number) {
+    set(
+      "extra_costs",
+      value.extra_costs.filter((_, i) => i !== index),
+    );
   }
 
   return (
@@ -78,6 +107,7 @@ export function MobilePlanSpecFields({
         데이터 제공량 (GB, 비우면 무제한)
         <input
           type="number"
+          min="0"
           value={value.data_gb ?? ""}
           onChange={(e) => set("data_gb", numberOrNull(e.target.value))}
           className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
@@ -103,6 +133,7 @@ export function MobilePlanSpecFields({
         통화 제공량 (분, 비우면 무제한, 0=없음)
         <input
           type="number"
+          min="0"
           value={value.call_minutes ?? ""}
           onChange={(e) => set("call_minutes", numberOrNull(e.target.value))}
           className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
@@ -113,6 +144,7 @@ export function MobilePlanSpecFields({
         문자 제공량 (건, 비우면 무제한, 0=없음)
         <input
           type="number"
+          min="0"
           value={value.sms_count ?? ""}
           onChange={(e) => set("sms_count", numberOrNull(e.target.value))}
           className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
@@ -123,8 +155,9 @@ export function MobilePlanSpecFields({
         약정 개월 (0=무약정)
         <input
           type="number"
+          min="0"
           value={value.contract_months}
-          onChange={(e) => set("contract_months", Number(e.target.value))}
+          onChange={(e) => set("contract_months", numberOrZero(e.target.value))}
           className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
         />
       </label>
@@ -148,18 +181,26 @@ export function MobilePlanSpecFields({
         핫스팟 제공량 (GB, 미제공 시 비움)
         <input
           type="number"
+          min="0"
           value={value.hotspot_gb ?? ""}
           onChange={(e) => set("hotspot_gb", numberOrNull(e.target.value))}
           className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
         />
       </label>
 
-      <label className="text-sm">
-        누적 선택 수 (표시용)
+      <div className="text-sm">
+        <p className="font-medium text-gray-700">누적 선택 수</p>
+        <p className="mt-1 text-xs text-gray-400">
+          실제 신청(leads) 건수를 기준으로 화면에 자동 표시돼요. 별도 입력은 필요 없습니다.
+        </p>
+      </div>
+
+      <label className="text-sm sm:col-span-2">
+        결합 혜택 설명 (선택, 예: 인터넷 결합 시 13,200원 할인)
         <input
-          type="number"
-          value={value.selected_count}
-          onChange={(e) => set("selected_count", Number(e.target.value))}
+          type="text"
+          value={value.bundle_benefit ?? ""}
+          onChange={(e) => set("bundle_benefit", e.target.value.trim() ? e.target.value : null)}
           className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
         />
       </label>
@@ -229,6 +270,49 @@ export function MobilePlanSpecFields({
             </button>
           ))}
         </div>
+      </div>
+
+      <div className="text-sm sm:col-span-2">
+        <div className="flex items-center justify-between">
+          <p className="font-medium text-gray-700">기타비용 (유심비, 가입비 등)</p>
+          <button
+            type="button"
+            onClick={addExtraCost}
+            className="rounded-full border border-[var(--brand-blue)] px-2.5 py-1 text-xs font-semibold text-[var(--brand-blue)]"
+          >
+            + 항목 추가
+          </button>
+        </div>
+        {value.extra_costs.length > 0 && (
+          <div className="mt-2 space-y-2">
+            {value.extra_costs.map((cost, i) => (
+              <div key={i} className="flex items-center gap-2">
+                <input
+                  type="text"
+                  placeholder="항목명 (예: 유심비)"
+                  value={cost.label}
+                  onChange={(e) => updateExtraCost(i, { label: e.target.value })}
+                  className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                />
+                <input
+                  type="number"
+                  min="0"
+                  placeholder="금액 (0=무료)"
+                  value={cost.amount}
+                  onChange={(e) => updateExtraCost(i, { amount: numberOrZero(e.target.value) })}
+                  className="w-32 rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                />
+                <button
+                  type="button"
+                  onClick={() => removeExtraCost(i)}
+                  className="shrink-0 rounded-lg border border-gray-300 px-2.5 py-2 text-xs text-gray-500 hover:border-red-300 hover:text-red-500"
+                >
+                  삭제
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

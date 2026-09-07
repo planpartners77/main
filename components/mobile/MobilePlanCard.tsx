@@ -38,6 +38,12 @@ export function MobilePlanCard({ item }: { item: MobilePlanListItem }) {
         <span className="rounded-full bg-gray-50 px-2 py-0.5">{smsLabel(item.extra.sms_count)}</span>
         <span className="rounded-full bg-gray-50 px-2 py-0.5">{item.extra.carrier_network}망</span>
         <span className="rounded-full bg-gray-50 px-2 py-0.5">{item.extra.network_tech}</span>
+        {item.extra.internet_bundle && item.extra.bundle_benefit && (
+          <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[var(--brand-blue-dark)]">결합혜택</span>
+        )}
+        {item.extra.extra_costs.length > 0 && (
+          <span className="rounded-full bg-amber-50 px-2 py-0.5 text-amber-700">기타비용 있음</span>
+        )}
       </div>
 
       <div className="mt-4 flex items-end justify-between">
