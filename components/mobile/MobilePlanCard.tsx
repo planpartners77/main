@@ -15,39 +15,41 @@ export function MobilePlanCard({ item }: { item: MobilePlanListItem }) {
   return (
     <Link
       href={`/mobile/${item.id}`}
-      className="block rounded-2xl border border-gray-200 bg-white p-5 transition hover:border-[var(--brand-blue)]/50 hover:shadow-sm"
+      className="flex flex-col gap-4 rounded-2xl border border-gray-200 bg-white p-5 transition hover:border-[var(--brand-blue)]/50 hover:shadow-sm sm:flex-row sm:items-center sm:justify-between sm:gap-6"
     >
-      <div className="flex items-center justify-between">
-        <PartnerBadge name={item.partner_name} logoUrl={item.partner_logo_url} />
-        {hasPromo && (
-          <span className="rounded-full bg-[var(--surface-tint)] px-2 py-0.5 text-[10px] font-semibold text-[var(--brand-blue-dark)]">
-            페이백 포함
-          </span>
-        )}
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-2">
+          <PartnerBadge name={item.partner_name} logoUrl={item.partner_logo_url} />
+          {hasPromo && (
+            <span className="rounded-full bg-[var(--surface-tint)] px-2 py-0.5 text-[10px] font-semibold text-[var(--brand-blue-dark)]">
+              페이백 포함
+            </span>
+          )}
+        </div>
+
+        <p className="mt-2 text-sm font-medium text-gray-500">{item.title}</p>
+        <p className="mt-1 text-lg font-bold text-[var(--brand-navy)]">
+          월 {dataLabel(item.extra.data_gb)}
+          {item.extra.data_throttle_speed !== "none" && (
+            <span className="ml-1 text-sm font-semibold text-gray-500">+ 소진 후 제한속도</span>
+          )}
+        </p>
+
+        <div className="mt-2 flex flex-wrap gap-1.5 text-[11px] font-medium text-gray-500">
+          <span className="rounded-full bg-gray-50 px-2 py-0.5">{callLabel(item.extra.call_minutes)}</span>
+          <span className="rounded-full bg-gray-50 px-2 py-0.5">{smsLabel(item.extra.sms_count)}</span>
+          <span className="rounded-full bg-gray-50 px-2 py-0.5">{item.extra.carrier_network}망</span>
+          <span className="rounded-full bg-gray-50 px-2 py-0.5">{item.extra.network_tech}</span>
+          {item.extra.internet_bundle && item.extra.bundle_benefit && (
+            <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[var(--brand-blue-dark)]">결합혜택</span>
+          )}
+          {item.extra.extra_costs.length > 0 && (
+            <span className="rounded-full bg-amber-50 px-2 py-0.5 text-amber-700">기타비용 있음</span>
+          )}
+        </div>
       </div>
 
-      <p className="mt-2 text-sm font-medium text-gray-500">{item.title}</p>
-      <p className="mt-1 text-lg font-bold text-[var(--brand-navy)]">
-        월 {dataLabel(item.extra.data_gb)}
-        {item.extra.data_throttle_speed !== "none" && (
-          <span className="ml-1 text-sm font-semibold text-gray-500">+ 소진 후 제한속도</span>
-        )}
-      </p>
-
-      <div className="mt-2 flex flex-wrap gap-1.5 text-[11px] font-medium text-gray-500">
-        <span className="rounded-full bg-gray-50 px-2 py-0.5">{callLabel(item.extra.call_minutes)}</span>
-        <span className="rounded-full bg-gray-50 px-2 py-0.5">{smsLabel(item.extra.sms_count)}</span>
-        <span className="rounded-full bg-gray-50 px-2 py-0.5">{item.extra.carrier_network}망</span>
-        <span className="rounded-full bg-gray-50 px-2 py-0.5">{item.extra.network_tech}</span>
-        {item.extra.internet_bundle && item.extra.bundle_benefit && (
-          <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[var(--brand-blue-dark)]">결합혜택</span>
-        )}
-        {item.extra.extra_costs.length > 0 && (
-          <span className="rounded-full bg-amber-50 px-2 py-0.5 text-amber-700">기타비용 있음</span>
-        )}
-      </div>
-
-      <div className="mt-4 flex items-end justify-between">
+      <div className="flex shrink-0 items-center justify-between gap-4 border-t border-gray-100 pt-3 sm:flex-col sm:items-end sm:justify-center sm:gap-1.5 sm:border-t-0 sm:pt-0 sm:text-right">
         <div>
           <p className="text-xl font-bold text-[var(--brand-blue)]">
             {formatWon(price)}

@@ -246,7 +246,7 @@ export function MobilePlanList({ items }: { items: MobilePlanListItem[] }) {
             조건에 맞는 요금제가 없습니다. 필터를 조정해 보세요.
           </p>
         ) : (
-          <div className="mt-3 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-3 grid gap-4">
             {paged.map((item) => (
               <MobilePlanCard key={item.id} item={item} />
             ))}
