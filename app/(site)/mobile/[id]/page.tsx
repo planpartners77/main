@@ -4,6 +4,7 @@ import { getMobilePlanDetail } from "@/lib/mobile/plans-query";
 import { callLabel, dataLabel, smsLabel } from "@/lib/mobile/plan-spec";
 import { effectiveMonthlyPrice, isLifetimePromotion, promotionDurationMonths } from "@/lib/mobile/filters";
 import { MobilePlanPriceCard } from "@/components/mobile/MobilePlanPriceCard";
+import { MobilePlanInfoTabs } from "@/components/mobile/MobilePlanInfoTabs";
 import { RecordRecentView } from "@/components/mobile/RecordRecentView";
 
 const ACTIVATION_STEPS = [
@@ -72,78 +73,7 @@ export default async function MobilePlanDetailPage({ params }: { params: Promise
         </div>
       )}
 
-      {/* 기본정보 테이블 */}
-      <div className="mt-8">
-        <h2 className="text-sm font-bold text-[var(--brand-navy)]">기본정보</h2>
-        <dl className="mt-3 divide-y divide-gray-100 rounded-2xl border border-gray-200 bg-white text-sm">
-          {[
-            ["데이터", dataLabel(item.extra.data_gb)],
-            ["소진 후 속도", item.extra.data_throttle_speed === "none" ? "제한 없음" : item.extra.data_throttle_speed],
-            ["통화", callLabel(item.extra.call_minutes)],
-            ["문자", smsLabel(item.extra.sms_count)],
-            ["약정", item.extra.contract_months > 0 ? `${item.extra.contract_months}개월` : "무약정"],
-            ["유심 타입", item.extra.sim_type === "usim" ? "유심" : item.extra.sim_type === "esim" ? "eSIM" : "유심 / eSIM"],
-            ["인터넷 결합", item.extra.internet_bundle ? "가능" : "불가"],
-            ["핫스팟", item.extra.hotspot_gb != null ? `${item.extra.hotspot_gb}GB` : "미제공"],
-          ].map(([label, value]) => (
-            <div key={label} className="flex justify-between px-4 py-3">
-              <dt className="text-gray-500">{label}</dt>
-              <dd className="font-medium text-gray-800">{value}</dd>
-            </div>
-          ))}
-        </dl>
-      </div>
-
-      {item.extra.internet_bundle && item.extra.bundle_benefit && (
-        <div className="mt-6">
-          <h2 className="text-sm font-bold text-[var(--brand-navy)]">결합 혜택</h2>
-          <div className="mt-3 rounded-2xl border border-gray-200 bg-white p-4 text-sm text-gray-700">
-            {item.extra.bundle_benefit}
-          </div>
-        </div>
-      )}
-
-      {item.extra.extra_costs.length > 0 && (
-        <div className="mt-6">
-          <h2 className="text-sm font-bold text-[var(--brand-navy)]">기타비용</h2>
-          <dl className="mt-3 divide-y divide-gray-100 rounded-2xl border border-gray-200 bg-white text-sm">
-            {item.extra.extra_costs.map((cost, i) => (
-              <div key={i} className="flex justify-between px-4 py-3">
-                <dt className="text-gray-500">{cost.label}</dt>
-                <dd className="font-medium text-gray-800">{cost.amount === 0 ? "무료" : formatWon(cost.amount)}</dd>
-              </div>
-            ))}
-          </dl>
-        </div>
-      )}
-
-      {item.extra.features.length > 0 && (
-        <div className="mt-6">
-          <h2 className="text-sm font-bold text-[var(--brand-navy)]">지원서비스</h2>
-          <div className="mt-3 flex flex-wrap gap-2">
-            {item.extra.features.map((f) => (
-              <span key={f} className="rounded-full bg-gray-50 px-3 py-1.5 text-xs font-medium text-gray-600">
-                {f}
-              </span>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {(item.extra.eligibility_minor || item.extra.eligibility_foreigner || item.extra.tags.length > 0) && (
-        <div className="mt-6">
-          <h2 className="text-sm font-bold text-[var(--brand-navy)]">가입 안내</h2>
-          <div className="mt-3 flex flex-wrap gap-2 text-xs font-medium text-gray-600">
-            {item.extra.tags.map((t) => (
-              <span key={t} className="rounded-full bg-[var(--surface-tint)] px-3 py-1.5 text-[var(--brand-blue-dark)]">
-                {t} 전용
-              </span>
-            ))}
-            {item.extra.eligibility_minor && <span className="rounded-full bg-gray-50 px-3 py-1.5">미성년자 가입 가능</span>}
-            {item.extra.eligibility_foreigner && <span className="rounded-full bg-gray-50 px-3 py-1.5">외국인 가입 가능</span>}
-          </div>
-        </div>
-      )}
+      <MobilePlanInfoTabs extra={item.extra} />
 
       <div className="mt-6">
         <h2 className="text-sm font-bold text-[var(--brand-navy)]">신청 및 개통 과정</h2>
