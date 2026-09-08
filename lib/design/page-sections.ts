@@ -75,6 +75,8 @@ export interface ProductDisplayConfig {
 export interface UsimSpotlightConfig {
   title: string;
   limit: number;
+  mode: "auto" | "manual";
+  planIds: string[];
 }
 
 export interface RichTextConfig {
@@ -100,7 +102,7 @@ export function defaultSectionConfig(type: SectionType): Record<string, unknown>
         limit: 6,
       } satisfies ProductDisplayConfig;
     case "usim_spotlight":
-      return { title: "인기 유심 요금제", limit: 3 } satisfies UsimSpotlightConfig;
+      return { title: "인기 유심 요금제", limit: 6, mode: "auto", planIds: [] } satisfies UsimSpotlightConfig;
     case "rich_text":
       return { title: "", text: "" } satisfies RichTextConfig;
     case "notice_list":

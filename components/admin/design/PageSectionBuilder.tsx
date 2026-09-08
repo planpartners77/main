@@ -309,7 +309,14 @@ function SectionConfigForm({
         />
       );
     case "usim_spotlight":
-      return <UsimSpotlightConfigForm section={section} onSaved={onSaved} />;
+      return (
+        <UsimSpotlightConfigForm
+          section={section}
+          categories={categories}
+          productTitleById={productTitleById}
+          onSaved={onSaved}
+        />
+      );
     case "rich_text":
       return <RichTextConfigForm section={section} onSaved={onSaved} />;
     case "notice_list":
@@ -433,20 +440,82 @@ function RichTextConfigForm({ section, onSaved }: { section: PageSectionRow; onS
   );
 }
 
-function UsimSpotlightConfigForm({ section, onSaved }: { section: PageSectionRow; onSaved: () => void }) {
+function UsimSpotlightConfigForm({
+  section,
+  categories,
+  productTitleById,
+  onSaved,
+}: {
+  section: PageSectionRow;
+  categories: CategoryOption[];
+  productTitleById: Record<string, ProductInfo>;
+  onSaved: () => void;
+}) {
   const initial = section.config as Partial<UsimSpotlightConfig>;
-  const [form, setForm] = useState({ title: initial.title ?? "인기 유심 요금제", limit: initial.limit ?? 3 });
+  const usimCategoryId = categories.find((c) => c.slug === "usim")?.id ?? null;
+  const [title, setTitle] = useState(initial.title ?? "인기 유심 요금제");
+  const [limit, setLimit] = useState(initial.limit ?? 6);
+  const [mode, setMode] = useState<"auto" | "manual">(initial.mode ?? "auto");
+  const [planIds, setPlanIds] = useState<string[]>(initial.planIds ?? []);
+  const [localTitles, setLocalTitles] = useState<Record<string, ProductInfo>>(productTitleById);
+  const [search, setSearch] = useState("");
+  const [searchResults, setSearchResults] = useState<{ id: string; title: string; image_url: string | null }[]>([]);
+  const [searching, setSearching] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  async function runSearch() {
+    if (!search.trim() || !usimCategoryId) {
+      setSearchResults([]);
+      return;
+    }
+    setSearching(true);
+    const supabase = createClient();
+    const { data } = await supabase
+      .from("products")
+      .select("id, title, image_url")
+      .eq("category_id", usimCategoryId)
+      .ilike("title", `%${search.trim()}%`)
+      .eq("is_active", true)
+      .limit(10);
+    setSearching(false);
+    setSearchResults(data ?? []);
+  }
+
+  function addPlan(plan: { id: string; title: string; image_url: string | null }) {
+    if (!planIds.includes(plan.id)) {
+      setPlanIds((prev) => [...prev, plan.id]);
+      setLocalTitles((prev) => ({ ...prev, [plan.id]: { title: plan.title, image_url: plan.image_url } }));
+    }
+    setSearch("");
+    setSearchResults([]);
+  }
+
+  function removePlan(id: string) {
+    setPlanIds((prev) => prev.filter((p) => p !== id));
+  }
+
+  function movePlan(index: number, direction: -1 | 1) {
+    setPlanIds((prev) => {
+      const next = [...prev];
+      const target = index + direction;
+      if (target < 0 || target >= next.length) return prev;
+      [next[index], next[target]] = [next[target], next[index]];
+      return next;
+    });
+  }
 
   async function save() {
     setSaving(true);
     setError(null);
+    const config: UsimSpotlightConfig = {
+      title: title.trim() || "인기 유심 요금제",
+      limit: Number(limit) || 6,
+      mode,
+      planIds,
+    };
     const supabase = createClient();
-    const { error: err } = await supabase
-      .from("page_sections")
-      .update({ config: { title: form.title, limit: Number(form.limit) || 3 } })
-      .eq("id", section.id);
+    const { error: err } = await supabase.from("page_sections").update({ config }).eq("id", section.id);
     setSaving(false);
     if (err) {
       setError(`저장 실패: ${err.message}`);
@@ -456,36 +525,124 @@ function UsimSpotlightConfigForm({ section, onSaved }: { section: PageSectionRow
   }
 
   return (
-    <div className="grid gap-3 sm:grid-cols-2">
-      <label className="text-sm">
-        제목
+    <div className="space-y-4">
+      <label className="block text-sm">
+        섹션 제목
         <input
-          value={form.title}
-          onChange={(e) => setForm({ ...form, title: e.target.value })}
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
           className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
         />
       </label>
-      <label className="text-sm">
+
+      <div className="flex gap-4 text-sm">
+        <label className="flex items-center gap-1.5">
+          <input type="radio" checked={mode === "auto"} onChange={() => setMode("auto")} /> 자동(추천순으로 노출)
+        </label>
+        <label className="flex items-center gap-1.5">
+          <input type="radio" checked={mode === "manual"} onChange={() => setMode("manual")} /> 수동(요금제 직접
+          선택·순서 지정)
+        </label>
+      </div>
+
+      <label className="block text-sm sm:w-48">
         노출 개수
         <input
           type="number"
           min={1}
-          max={6}
-          value={form.limit}
-          onChange={(e) => setForm({ ...form, limit: Number(e.target.value) })}
+          max={12}
+          value={limit}
+          onChange={(e) => setLimit(Number(e.target.value))}
           className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
         />
       </label>
-      {error && <p className="text-xs text-red-600 sm:col-span-2">{error}</p>}
-      <div className="sm:col-span-2">
-        <button
-          onClick={save}
-          disabled={saving}
-          className="rounded-full bg-[var(--brand-blue)] px-4 py-1.5 text-xs font-semibold text-white disabled:opacity-50"
-        >
-          {saving ? "저장 중..." : "저장"}
-        </button>
-      </div>
+
+      {mode === "manual" && (
+        <div>
+          <div className="flex gap-2">
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  runSearch();
+                }
+              }}
+              placeholder="요금제명으로 검색"
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+            />
+            <button
+              type="button"
+              onClick={runSearch}
+              disabled={searching}
+              className="shrink-0 rounded-lg border border-gray-300 px-3 py-2 text-xs font-semibold text-gray-600"
+            >
+              검색
+            </button>
+          </div>
+          {searchResults.length > 0 && (
+            <ul className="mt-2 divide-y divide-gray-100 rounded-lg border border-gray-200">
+              {searchResults.map((p) => (
+                <li key={p.id} className="flex items-center justify-between px-3 py-2 text-sm">
+                  <span>{p.title}</span>
+                  <button
+                    type="button"
+                    onClick={() => addPlan(p)}
+                    className="text-xs font-semibold text-[var(--brand-blue)]"
+                  >
+                    추가
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          <p className="mt-4 text-xs font-semibold text-gray-500">선택된 요금제 ({planIds.length})</p>
+          {planIds.length === 0 ? (
+            <p className="mt-1 text-xs text-gray-400">검색해서 노출할 요금제를 순서대로 추가해 주세요.</p>
+          ) : (
+            <ul className="mt-2 divide-y divide-gray-100 rounded-lg border border-gray-200">
+              {planIds.map((id, index) => (
+                <li key={id} className="flex items-center justify-between px-3 py-2 text-sm">
+                  <span>{localTitles[id]?.title ?? id}</span>
+                  <div className="flex items-center gap-2 text-xs font-semibold">
+                    <button
+                      type="button"
+                      onClick={() => movePlan(index, -1)}
+                      disabled={index === 0}
+                      className="text-gray-400 hover:text-[var(--brand-navy)] disabled:opacity-30"
+                    >
+                      ↑
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => movePlan(index, 1)}
+                      disabled={index === planIds.length - 1}
+                      className="text-gray-400 hover:text-[var(--brand-navy)] disabled:opacity-30"
+                    >
+                      ↓
+                    </button>
+                    <button type="button" onClick={() => removePlan(id)} className="text-red-500 hover:text-red-700">
+                      제거
+                    </button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+
+      {error && <p className="text-xs text-red-600">{error}</p>}
+      <button
+        type="button"
+        onClick={save}
+        disabled={saving}
+        className="rounded-full bg-[var(--brand-blue)] px-4 py-1.5 text-xs font-semibold text-white disabled:opacity-50"
+      >
+        {saving ? "저장 중..." : "저장"}
+      </button>
     </div>
   );
 }

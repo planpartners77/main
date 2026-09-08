@@ -22,8 +22,11 @@ export default async function AdminPageDetail({ params }: { params: Promise<{ id
       const productIds = Array.from(
         new Set(
           sections
-            .filter((s) => s.type === "product_display")
-            .flatMap((s) => (s.config as { productIds?: string[] }).productIds ?? []),
+            .filter((s) => s.type === "product_display" || s.type === "usim_spotlight")
+            .flatMap((s) => {
+              const config = s.config as { productIds?: string[]; planIds?: string[] };
+              return config.productIds ?? config.planIds ?? [];
+            }),
         ),
       );
       if (productIds.length === 0) return {};

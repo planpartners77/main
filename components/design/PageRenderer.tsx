@@ -7,7 +7,7 @@ import { WhyPossible } from "@/components/home/WhyPossible";
 import { TravelSpotlight } from "@/components/home/TravelSpotlight";
 import { UsimSpotlightSection } from "@/components/usim/UsimSpotlightSection";
 import { getUsimPlanList } from "@/lib/usim/plans-query";
-import { sortPlans } from "@/lib/usim/filters";
+import { sortPlans, type UsimPlanListItem } from "@/lib/usim/filters";
 import { BottomCta } from "@/components/home/BottomCta";
 import { BannerStrip } from "@/components/design/BannerStrip";
 import { ProductDisplaySection } from "@/components/design/ProductDisplaySection";
@@ -93,8 +93,21 @@ async function Section({ section, isLoggedIn }: { section: PageSectionRow; isLog
       );
     }
     case "usim_spotlight": {
-      const config: UsimSpotlightConfig = { title: "인기 유심 요금제", limit: 3, ...(section.config as Partial<UsimSpotlightConfig>) };
-      const items = sortPlans(await getUsimPlanList(), "recommended").slice(0, config.limit);
+      const config: UsimSpotlightConfig = {
+        title: "인기 유심 요금제",
+        limit: 6,
+        mode: "auto",
+        planIds: [],
+        ...(section.config as Partial<UsimSpotlightConfig>),
+      };
+      const allPlans = sortPlans(await getUsimPlanList(), "recommended");
+      const items =
+        config.mode === "manual" && config.planIds.length > 0
+          ? config.planIds
+              .map((id) => allPlans.find((plan) => plan.id === id))
+              .filter((plan): plan is UsimPlanListItem => !!plan)
+              .slice(0, config.limit)
+          : allPlans.slice(0, config.limit);
       return <UsimSpotlightSection title={config.title} items={items} />;
     }
     case "travel_spotlight":
