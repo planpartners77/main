@@ -9,6 +9,7 @@ import {
   type UsimPlanExtra,
   type NetworkTech,
   type PlanFeature,
+  type PromotionType,
   type ThrottleSpeed,
 } from "./plan-spec";
 
@@ -20,7 +21,7 @@ export interface PlanPromotionSchedule {
 export interface UsimPlanPromotion {
   id: string;
   label: string;
-  type: "fixed" | "point";
+  type: PromotionType;
   total_amount: number;
   schedule: PlanPromotionSchedule[];
   valid_from: string | null;

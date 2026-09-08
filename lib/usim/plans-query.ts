@@ -1,11 +1,11 @@
 import { createClient } from "@/lib/supabase/server";
-import { normalizeUsimPlanExtra } from "./plan-spec";
+import { normalizeUsimPlanExtra, type PromotionType } from "./plan-spec";
 import type { UsimPlanListItem, UsimPlanPromotion } from "./filters";
 
 interface RawPromotion {
   id: string;
   label: string;
-  type: "fixed" | "point";
+  type: PromotionType;
   total_amount: number;
   schedule: unknown;
   valid_from: string | null;

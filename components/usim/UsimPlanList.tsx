@@ -16,6 +16,7 @@ import {
   type QuickChipId,
   type SortId,
 } from "@/lib/usim/filters";
+import { PROMOTION_TYPE_SHORT_LABELS } from "@/lib/usim/plan-spec";
 import { paramsToState, stateToParams, type UsimUrlState } from "@/lib/usim/url-state";
 import { UsimPlanCard } from "./UsimPlanCard";
 import { UsimFilterModal } from "./UsimFilterModal";
@@ -57,7 +58,9 @@ function PromoBanner({ items }: { items: UsimPlanListItem[] }) {
       className="flex flex-col gap-3 rounded-2xl bg-gradient-to-r from-[var(--brand-navy)] to-[var(--brand-blue)] p-5 text-white sm:flex-row sm:items-center sm:justify-between"
     >
       <div>
-        <p className="text-xs font-semibold text-white/70">이번 달 한정 페이백 요금제</p>
+        <p className="text-xs font-semibold text-white/70">
+          이번 달 한정 {PROMOTION_TYPE_SHORT_LABELS[featured.promotion!.type]} 요금제
+        </p>
         <p className="mt-1 text-base font-bold">{featured.title}</p>
         <p className="mt-1 text-sm text-white/80">
           월 {formatWon(effectiveMonthlyPrice(featured))} · {featured.partner_name ?? "통신사 미지정"}
@@ -200,7 +203,7 @@ export function UsimPlanList({ items }: { items: UsimPlanListItem[] }) {
               onChange={(e) => setFilters((f) => ({ ...f, paybackOnly: e.target.checked }))}
               className="h-4 w-4 accent-[var(--brand-blue)]"
             />
-            페이백 포함 요금만
+            혜택 포함 요금만
           </label>
         </div>
 

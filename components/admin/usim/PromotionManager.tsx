@@ -5,6 +5,7 @@ import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { getExposureStatus, EXPOSURE_STATUS_LABEL, EXPOSURE_STATUS_STYLE } from "@/lib/design/exposure-status";
+import { PROMOTION_TYPES, PROMOTION_TYPE_OPTION_LABELS, PROMOTION_TYPE_SHORT_LABELS, type PromotionType } from "@/lib/usim/plan-spec";
 
 export interface PromotionScheduleEntry {
   month: number;
@@ -15,7 +16,7 @@ export interface PromotionRow {
   id: string;
   product_id: string;
   label: string;
-  type: "fixed" | "point";
+  type: PromotionType;
   total_amount: number;
   schedule: PromotionScheduleEntry[];
   valid_from: string | null;
@@ -34,7 +35,7 @@ type ScheduleMode = "lifetime" | "custom";
 const EMPTY_FORM = {
   product_id: "",
   label: "",
-  type: "fixed" as "fixed" | "point",
+  type: "fixed" as PromotionType,
   valid_from: "",
   valid_until: "",
   is_active: true,
@@ -170,7 +171,7 @@ export function PromotionManager({ promotions, products }: { promotions: Promoti
   return (
     <div>
       <div className="flex items-center justify-between gap-3">
-        <p className="text-sm text-gray-500">요금제별 페이백/포인트 프로모션을 관리합니다. &quot;평생&quot;은 매월 동일 금액이 무기한 지급됨을 의미합니다.</p>
+        <p className="text-sm text-gray-500">요금제별 페이백/포인트지급/추가할인 프로모션을 관리합니다. &quot;평생&quot;은 매월 동일 금액이 무기한 지급됨을 의미합니다.</p>
         <button
           onClick={() => (showForm ? setShowForm(false) : startCreate())}
           disabled={!hasProducts}
@@ -223,11 +224,14 @@ export function PromotionManager({ promotions, products }: { promotions: Promoti
             지급 유형
             <select
               value={form.type}
-              onChange={(e) => setForm({ ...form, type: e.target.value as "fixed" | "point" })}
+              onChange={(e) => setForm({ ...form, type: e.target.value as PromotionType })}
               className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
             >
-              <option value="fixed">현금 페이백</option>
-              <option value="point">포인트 지급</option>
+              {PROMOTION_TYPES.map((t) => (
+                <option key={t} value={t}>
+                  {PROMOTION_TYPE_OPTION_LABELS[t]}
+                </option>
+              ))}
             </select>
           </label>
           <label className="flex items-center gap-2 self-end text-sm">
@@ -367,7 +371,7 @@ export function PromotionManager({ promotions, products }: { promotions: Promoti
                   <tr key={promo.id} className="border-b border-gray-50 last:border-0">
                     <td className="px-4 py-3 font-medium">{promo.products?.title ?? "-"}</td>
                     <td className="px-4 py-3">{promo.label}</td>
-                    <td className="px-4 py-3 text-gray-500">{promo.type === "fixed" ? "현금" : "포인트"}</td>
+                    <td className="px-4 py-3 text-gray-500">{PROMOTION_TYPE_SHORT_LABELS[promo.type]}</td>
                     <td className="px-4 py-3 text-gray-500">{formatWon(promo.total_amount)}</td>
                     <td className="px-4 py-3 text-gray-500">
                       {promo.valid_from ?? "-"} ~ {promo.valid_until ?? "무기한"}

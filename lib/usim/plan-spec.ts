@@ -2,6 +2,22 @@
 // §12-11 결정(카테고리별 동적 스키마는 실제 필요해질 때 도입) — 지금이 그 시점이라
 // products 테이블에 컬럼을 추가하지 않고 고정 TS 타입으로 extra jsonb 계약을 정의한다.
 
+// 프로모션 "지급 유형" — 관리자 드롭다운 전체 표기(OPTION)와 카드/뱃지 등에 쓰는
+// 축약 표기(SHORT)를 분리 관리한다. 축약 표기는 여러 컴포넌트에서 "혜택 종류"를
+// 구분해 보여줘야 할 때 공용으로 참조하는 단일 소스다.
+export type PromotionType = "fixed" | "point" | "discount";
+export const PROMOTION_TYPES: PromotionType[] = ["fixed", "point", "discount"];
+export const PROMOTION_TYPE_OPTION_LABELS: Record<PromotionType, string> = {
+  fixed: "현금 페이백",
+  point: "포인트 지급",
+  discount: "추가 요금할인",
+};
+export const PROMOTION_TYPE_SHORT_LABELS: Record<PromotionType, string> = {
+  fixed: "페이백",
+  point: "포인트지급",
+  discount: "추가할인",
+};
+
 export type CarrierNetwork = "SKT" | "KT" | "LGU+";
 export type NetworkTech = "5G" | "LTE" | "3G";
 export type ThrottleSpeed = "1mbps_under" | "1mbps" | "3mbps" | "5mbps" | "10mbps" | "none";

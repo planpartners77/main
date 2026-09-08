@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { callLabel, dataLabel, smsLabel } from "@/lib/usim/plan-spec";
+import { callLabel, dataLabel, smsLabel, PROMOTION_TYPE_SHORT_LABELS } from "@/lib/usim/plan-spec";
 import { effectiveMonthlyPrice, promotionDurationMonths, type UsimPlanListItem } from "@/lib/usim/filters";
 import { PartnerBadge } from "./PartnerBadge";
 
@@ -22,7 +22,7 @@ export function UsimPlanCard({ item }: { item: UsimPlanListItem }) {
           <PartnerBadge name={item.partner_name} logoUrl={item.partner_logo_url} />
           {hasPromo && (
             <span className="rounded-full bg-[var(--surface-tint)] px-2 py-0.5 text-[10px] font-semibold text-[var(--brand-blue-dark)]">
-              페이백 포함
+              {PROMOTION_TYPE_SHORT_LABELS[item.promotion!.type]} 포함
             </span>
           )}
         </div>

@@ -63,6 +63,7 @@ export default async function UsimPlanDetailPage({ params }: { params: Promise<{
           basePrice={item.base_price}
           effectivePrice={price}
           promotionLabel={item.promotion!.label}
+          promotionType={item.promotion!.type}
           schedule={item.promotion!.schedule}
           durationMonths={durationMonths}
           lifetime={lifetime}

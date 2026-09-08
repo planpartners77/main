@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { THROTTLE_SPEED_OPTIONS, callLabel, dataLabel, smsLabel } from "@/lib/usim/plan-spec";
+import { THROTTLE_SPEED_OPTIONS, callLabel, dataLabel, smsLabel, PROMOTION_TYPE_SHORT_LABELS } from "@/lib/usim/plan-spec";
 import {
   effectiveMonthlyPrice,
   firstMonthPaybackAmount,
@@ -24,7 +24,7 @@ function benefitLines(item: UsimPlanListItem): string[] {
     const amount = firstMonthPaybackAmount(item.promotion);
     if (amount > 0) {
       const durationText = isLifetimePromotion(item.promotion) ? "평생" : `${promotionDurationMonths(item.promotion)}개월간`;
-      lines.push(`${item.promotion.label} 매달 ${formatWon(amount)} 페이백 (${durationText})`);
+      lines.push(`${item.promotion.label} 매달 ${formatWon(amount)} ${PROMOTION_TYPE_SHORT_LABELS[item.promotion.type]} (${durationText})`);
     }
   }
   if (item.extra.bundle_benefit) lines.push(item.extra.bundle_benefit);
