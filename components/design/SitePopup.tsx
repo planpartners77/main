@@ -70,10 +70,10 @@ export function SitePopup({ popups }: { popups: PublicPopup[] }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
-      <div className="w-full max-w-sm overflow-hidden rounded-2xl bg-white">
+      <div className="max-h-[85vh] w-full max-w-sm overflow-y-auto rounded-2xl bg-white">
         {popup.image_url && (
           // eslint-disable-next-line @next/next/no-img-element -- 관리자 업로드 URL, next/image 미사용 컨벤션
-          <img src={popup.image_url} alt={popup.title} className="max-h-72 w-full object-cover" />
+          <img src={popup.image_url} alt={popup.title} className="w-full object-contain" />
         )}
         <div className="p-5">{body}</div>
         <div className="flex border-t border-gray-100 text-xs font-semibold">
