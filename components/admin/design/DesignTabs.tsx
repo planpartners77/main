@@ -11,6 +11,7 @@ const TABS = [
   { href: "/admin/design/categories", label: "카테고리관리" },
   { href: "/admin/design/notices", label: "공지사항" },
   { href: "/admin/design/events", label: "이벤트" },
+  { href: "/admin/design/rewards", label: "사은품 지급" },
   { href: "/admin/design/legal", label: "약관" },
   { href: "/admin/design/reviews", label: "후기" },
   { href: "/admin/design/sns", label: "SNS" },
