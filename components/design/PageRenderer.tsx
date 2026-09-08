@@ -4,6 +4,7 @@ import { IncentiveBanner } from "@/components/home/IncentiveBanner";
 import { TrustPoints } from "@/components/home/TrustPoints";
 import { ReviewsSection, type ReviewCategoryOption, type ReviewRow } from "@/components/home/ReviewsSection";
 import { WhyPossible } from "@/components/home/WhyPossible";
+import { TravelSpotlight } from "@/components/home/TravelSpotlight";
 import { BottomCta } from "@/components/home/BottomCta";
 import { BannerStrip } from "@/components/design/BannerStrip";
 import { ProductDisplaySection } from "@/components/design/ProductDisplaySection";
@@ -87,6 +88,8 @@ async function Section({ section, isLoggedIn }: { section: PageSectionRow; isLog
         />
       );
     }
+    case "travel_spotlight":
+      return <TravelSpotlight />;
     case "why_steps":
       return <WhyPossible />;
     case "cta":
