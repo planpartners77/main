@@ -15,12 +15,12 @@ export function TravelSpotlight() {
       <div className="mx-auto max-w-5xl px-4">
         <h2 className="text-xl font-bold text-[var(--brand-navy)]">지금 인기 있는 여행 프로그램</h2>
 
-        <div className="mt-6 overflow-hidden rounded-3xl bg-white shadow-sm sm:flex sm:items-center">
+        <div className="mt-6 rounded-3xl bg-white p-3 shadow-sm sm:flex sm:items-center sm:p-4">
           <div className="sm:w-1/2">
             <img
               src="/travel/hero.jpg"
               alt="태국 치앙라이 CRIS 국제학교 골프 프로그램"
-              className="aspect-[1343/727] w-full object-cover"
+              className="aspect-[1343/727] w-full rounded-2xl object-cover"
             />
           </div>
 
