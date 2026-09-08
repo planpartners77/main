@@ -283,12 +283,23 @@ function BarList({
   );
 }
 
-export default async function AdminStatisticsPage() {
+const MONTH_RANGE_OPTIONS: number[] = [3, 6, 12];
+const DAY_RANGE_OPTIONS: number[] = [7, 14, 30];
+
+export default async function AdminStatisticsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ months?: string; days?: string }>;
+}) {
+  const { months, days } = await searchParams;
+  const monthRange = MONTH_RANGE_OPTIONS.includes(Number(months)) ? Number(months) : 6;
+  const dayRange = DAY_RANGE_OPTIONS.includes(Number(days)) ? Number(days) : 14;
+
   const supabase = await createClient();
 
-  const fourteenDaysAgo = new Date();
-  fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 13);
-  fourteenDaysAgo.setHours(0, 0, 0, 0);
+  const daysAgo = new Date();
+  daysAgo.setDate(daysAgo.getDate() - (dayRange - 1));
+  daysAgo.setHours(0, 0, 0, 0);
 
   const [
     { data: leadsData },
@@ -324,7 +335,7 @@ export default async function AdminStatisticsPage() {
     supabase
       .from("visitor_logs")
       .select("visitor_id, created_at")
-      .gte("created_at", fourteenDaysAgo.toISOString()),
+      .gte("created_at", daysAgo.toISOString()),
   ]);
 
   const leads = (leadsData ?? []) as unknown as LeadStatRow[];
@@ -338,7 +349,7 @@ export default async function AdminStatisticsPage() {
   const recentVisitorLogs = (recentVisitorLogsData ?? []) as unknown as VisitorLogRow[];
   const dailyVisitorLogs = (dailyVisitorLogsData ?? []) as unknown as DailyVisitorRow[];
 
-  const MONTHS = lastNMonths(6);
+  const MONTHS = lastNMonths(monthRange);
 
   // 1. 리드 현황
   const leadStatusCounts = countBy(leads, (l) => l.status);
@@ -460,7 +471,7 @@ export default async function AdminStatisticsPage() {
   const reviewCategoryCountItems = toItems(countBy(reviews, (r) => r.categories?.name ?? "미분류"), 8);
 
   // 8. 접속자 현황 (proxy.ts가 waitUntil로 기록하는 visitor_logs 기반)
-  const DAYS = lastNDays(14);
+  const DAYS = lastNDays(dayRange);
   const dailyUniqueItems = bucketUniqueVisitorsByDay(DAYS, dailyVisitorLogs);
   const dailyPageviewItems = bucketCountByDay(DAYS, dailyVisitorLogs);
   const todayKey = dayKey(new Date());
@@ -482,6 +493,32 @@ export default async function AdminStatisticsPage() {
         리드·회원·정산·쿠폰·추천인·상품·리뷰·접속자 지표를 한눈에 모아보는 화면입니다.
       </p>
 
+      <form className="mt-4 flex flex-wrap items-center gap-2" method="get">
+        <label className="flex items-center gap-1.5 text-xs text-gray-500">
+          월별 추이 기간
+          <select name="months" defaultValue={String(monthRange)} className="rounded-lg border border-gray-300 px-2 py-1.5 text-sm">
+            {MONTH_RANGE_OPTIONS.map((m) => (
+              <option key={m} value={m}>
+                최근 {m}개월
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="flex items-center gap-1.5 text-xs text-gray-500">
+          접속자 기간
+          <select name="days" defaultValue={String(dayRange)} className="rounded-lg border border-gray-300 px-2 py-1.5 text-sm">
+            {DAY_RANGE_OPTIONS.map((d) => (
+              <option key={d} value={d}>
+                최근 {d}일
+              </option>
+            ))}
+          </select>
+        </label>
+        <button type="submit" className="rounded-full bg-[var(--brand-navy)] px-4 py-1.5 text-xs font-semibold text-white">
+          적용
+        </button>
+      </form>
+
       <Section title="리드 현황" description="상태별 처리 현황과 카테고리·월별 유입 추이">
         <div className="grid gap-3 sm:grid-cols-3">
           <StatTile label="전체 리드" value={`${leads.length.toLocaleString("ko-KR")}건`} />
@@ -496,7 +533,7 @@ export default async function AdminStatisticsPage() {
         <div className="mt-2">
           <BarList items={leadCategoryItems} valueFormatter={(v) => `${v}건`} />
         </div>
-        <p className="mt-5 text-xs font-semibold text-gray-400">월별 추이 (최근 6개월)</p>
+        <p className="mt-5 text-xs font-semibold text-gray-400">{`월별 추이 (최근 ${monthRange}개월)`}</p>
         <div className="mt-2">
           <BarList items={leadMonthlyItems} valueFormatter={(v) => `${v}건`} />
         </div>
@@ -511,7 +548,7 @@ export default async function AdminStatisticsPage() {
           />
           <StatTile label="마케팅 동의율" value={`${marketingRate}%`} />
         </div>
-        <p className="mt-5 text-xs font-semibold text-gray-400">신규가입 추이 (최근 6개월)</p>
+        <p className="mt-5 text-xs font-semibold text-gray-400">{`신규가입 추이 (최근 ${monthRange}개월)`}</p>
         <div className="mt-2">
           <BarList items={profileMonthlyItems} valueFormatter={(v) => `${v}명`} />
         </div>
@@ -534,7 +571,7 @@ export default async function AdminStatisticsPage() {
         <div className="mt-2">
           <BarList items={settlementStatusItems} valueFormatter={won} />
         </div>
-        <p className="mt-5 text-xs font-semibold text-gray-400">월별 정산 금액 추이 (최근 6개월)</p>
+        <p className="mt-5 text-xs font-semibold text-gray-400">{`월별 정산 금액 추이 (최근 ${monthRange}개월)`}</p>
         <div className="mt-2">
           <BarList items={settlementMonthlyItems} valueFormatter={won} />
         </div>
@@ -646,11 +683,11 @@ export default async function AdminStatisticsPage() {
         </div>
       </Section>
 
-      <Section title="일 접속자 현황" description="쿠키(pp_visitor_id) 기준 순 방문자·페이지뷰 추이 (최근 14일)">
+      <Section title="일 접속자 현황" description={`쿠키(pp_visitor_id) 기준 순 방문자·페이지뷰 추이 (최근 ${dayRange}일)`}>
         <div className="grid gap-3 sm:grid-cols-3">
           <StatTile label="오늘 순 방문자" value={`${todayUniqueCount.toLocaleString("ko-KR")}명`} />
           <StatTile label="오늘 페이지뷰" value={`${todayVisitorLogs.length.toLocaleString("ko-KR")}건`} />
-          <StatTile label="최근 14일 순 방문자" value={`${periodUniqueCount.toLocaleString("ko-KR")}명`} />
+          <StatTile label={`최근 ${dayRange}일 순 방문자`} value={`${periodUniqueCount.toLocaleString("ko-KR")}명`} />
         </div>
         <p className="mt-5 text-xs font-semibold text-gray-400">일별 순 방문자</p>
         <div className="mt-2">
