@@ -179,7 +179,7 @@ export function MemberEditForm({
       </label>
 
       {error && <p className="mt-3 text-xs text-red-600">{error}</p>}
-      {saved && !error && <p className="mt-3 text-xs text-green-600">저장되었습니다.</p>}
+      {saved && !error && <p className="mt-3 text-xs text-[var(--brand-mint)]">저장되었습니다.</p>}
 
       <button
         type="button"
@@ -197,7 +197,7 @@ export function MemberEditForm({
         </p>
 
         {resetError && <p className="mt-2 text-xs text-red-600">{resetError}</p>}
-        {resetMessage && !resetError && <p className="mt-2 text-xs text-green-600">{resetMessage}</p>}
+        {resetMessage && !resetError && <p className="mt-2 text-xs text-[var(--brand-mint)]">{resetMessage}</p>}
 
         <button
           type="button"

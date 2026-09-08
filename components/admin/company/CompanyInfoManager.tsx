@@ -171,7 +171,7 @@ export function CompanyInfoManager({ info }: { info: CompanyInfo }) {
       </div>
 
       {error && <p className="text-sm text-red-600">{error}</p>}
-      {saved && !error && <p className="text-sm text-green-600">저장되었습니다.</p>}
+      {saved && !error && <p className="text-sm text-[var(--brand-mint)]">저장되었습니다.</p>}
 
       <button
         onClick={handleSave}
