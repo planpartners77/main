@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 
 export interface HomePageSettings {
@@ -26,6 +27,9 @@ export interface SeoSettings {
   naverSiteVerification: string | null;
   metaDescription: string | null;
   faviconUrl: string | null;
+  ogImageUrl: string | null;
+  siteTitle: string | null;
+  headScript: string | null;
   indexable: boolean;
 }
 
@@ -49,6 +53,9 @@ export const DEFAULT_SEO_SETTINGS: SeoSettings = {
   naverSiteVerification: null,
   metaDescription: null,
   faviconUrl: null,
+  ogImageUrl: null,
+  siteTitle: null,
+  headScript: null,
   indexable: true,
 };
 
@@ -73,8 +80,9 @@ export async function getSnsLinks(): Promise<SnsLink[]> {
   return value?.links ?? DEFAULT_SNS_LINKS;
 }
 
-export async function getSeoSettings(): Promise<SeoSettings> {
+// generateMetadata와 RootLayout이 각각 호출하므로 요청당 한 번만 조회되도록 캐싱한다.
+export const getSeoSettings = cache(async (): Promise<SeoSettings> => {
   const value = (await getSettingValue("seo")) as Partial<SeoSettings> | null;
   if (!value) return DEFAULT_SEO_SETTINGS;
   return { ...DEFAULT_SEO_SETTINGS, ...value };
-}
+});

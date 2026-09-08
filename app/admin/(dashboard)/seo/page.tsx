@@ -50,6 +50,30 @@ export default async function AdminSeoPage() {
         >
           sitemap.xml 보기 ↗
         </a>
+        <a
+          href="https://search.google.com/search-console"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="rounded-full border border-gray-200 px-3 py-1.5 font-medium text-gray-600 hover:border-gray-400"
+        >
+          Search Console 바로가기 ↗
+        </a>
+        <a
+          href="https://searchadvisor.naver.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="rounded-full border border-gray-200 px-3 py-1.5 font-medium text-gray-600 hover:border-gray-400"
+        >
+          네이버 서치어드바이저 바로가기 ↗
+        </a>
+        <a
+          href="https://datalab.naver.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="rounded-full border border-gray-200 px-3 py-1.5 font-medium text-gray-600 hover:border-gray-400"
+        >
+          네이버 데이터랩 바로가기 ↗
+        </a>
       </div>
 
       <h2 className="mt-8 text-sm font-bold text-[var(--brand-navy)]">1. 사이트 소유확인 및 설정</h2>

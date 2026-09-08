@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { getSeoSettings } from "@/lib/design/site-settings";
+import { CustomHeadScript } from "@/components/CustomHeadScript";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -28,25 +29,29 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://planpartner.co.kr";
 export async function generateMetadata(): Promise<Metadata> {
   const seo = await getSeoSettings();
   const description = seo.metaDescription?.trim() || defaultDescription;
+  const pageTitle = seo.siteTitle?.trim() || title;
+  const ogImage = seo.ogImageUrl
+    ? { url: seo.ogImageUrl, width: 1200, height: 630, alt: pageTitle }
+    : { url: "/images/logo.jpg", width: 483, height: 258, alt: pageTitle };
 
   return {
     metadataBase: new URL(siteUrl),
-    title,
+    title: pageTitle,
     description,
     openGraph: {
-      title,
+      title: pageTitle,
       description,
-      siteName: title,
+      siteName: pageTitle,
       url: siteUrl,
       locale: "ko_KR",
       type: "website",
-      images: [{ url: "/images/logo.jpg", width: 483, height: 258, alt: title }],
+      images: [ogImage],
     },
     twitter: {
       card: "summary_large_image",
-      title,
+      title: pageTitle,
       description,
-      images: ["/images/logo.jpg"],
+      images: [ogImage.url],
     },
     verification: {
       google: seo.googleSiteVerification || undefined,
@@ -63,13 +68,18 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  const seo = await getSeoSettings();
+
   return (
     <html
       lang="ko"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <CustomHeadScript html={seo.headScript} />
+        {children}
+      </body>
     </html>
   );
 }
