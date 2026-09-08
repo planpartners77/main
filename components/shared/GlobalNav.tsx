@@ -10,7 +10,7 @@ import { CategoryDropdown } from "@/components/shared/CategoryDropdown";
 
 function ConsultTag() {
   return (
-    <span className="ml-1 rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium text-amber-800">
+    <span className="ml-1 rounded bg-amber-100 px-1.5 py-0.5 text-[11px] font-medium text-amber-800">
       상담 필수
     </span>
   );
@@ -87,7 +87,7 @@ export function GlobalNav({ categories }: { categories: CategoryConfig[] }) {
             />
           </Link>
 
-          <ul className="flex items-center gap-5 text-sm">
+          <ul className="flex items-center gap-1 text-base">
             {categories.map((category) => {
               const href = `/${category.slug}`;
               const isActive = pathname === href;
@@ -97,8 +97,8 @@ export function GlobalNav({ categories }: { categories: CategoryConfig[] }) {
                     href={href}
                     className={
                       isActive
-                        ? "font-semibold text-[var(--brand-blue)]"
-                        : "text-gray-600 hover:text-[var(--brand-blue)]"
+                        ? "rounded-full bg-[var(--surface-tint)] px-3.5 py-2 font-semibold text-[var(--brand-blue)] transition-colors duration-150"
+                        : "rounded-full px-3.5 py-2 font-medium text-gray-700 transition-colors duration-150 hover:bg-[var(--surface-tint)] hover:text-[var(--brand-blue)]"
                     }
                   >
                     {category.name}
@@ -106,7 +106,7 @@ export function GlobalNav({ categories }: { categories: CategoryConfig[] }) {
                   </Link>
 
                   {category.subcategories && (
-                    <div className="pointer-events-none absolute left-1/2 top-full z-20 -translate-x-1/2 pt-3 opacity-0 translate-y-1 transition-all duration-200 ease-out group-hover:pointer-events-auto group-hover:translate-y-0 group-hover:opacity-100">
+                    <div className="pointer-events-none absolute left-1/2 top-full z-20 -translate-x-1/2 pt-2 opacity-0 translate-y-1 transition-all duration-200 ease-out group-hover:pointer-events-auto group-hover:translate-y-0 group-hover:opacity-100">
                       <CategoryDropdown items={category.subcategories} />
                     </div>
                   )}
