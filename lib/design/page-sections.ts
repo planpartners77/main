@@ -11,6 +11,7 @@ export const SECTION_TYPES = [
   "trust_points",
   "reviews",
   "product_display",
+  "usim_spotlight",
   "travel_spotlight",
   "why_steps",
   "cta",
@@ -32,6 +33,7 @@ export const SECTION_LABELS: Record<SectionType, string> = {
   trust_points: "신뢰 포인트",
   reviews: "고객 후기",
   product_display: "상품 진열",
+  usim_spotlight: "유심 요금제 스포트라이트",
   travel_spotlight: "여행 프로그램 스포트라이트",
   why_steps: "이용 절차 안내",
   cta: "하단 CTA",
@@ -48,6 +50,7 @@ export const SECTION_HAS_CONFIG: Record<SectionType, boolean> = {
   trust_points: false,
   reviews: false,
   product_display: true,
+  usim_spotlight: true,
   travel_spotlight: false,
   why_steps: false,
   cta: false,
@@ -66,6 +69,11 @@ export interface ProductDisplayConfig {
   mode: "latest" | "manual";
   categoryIds: string[];
   productIds: string[];
+  limit: number;
+}
+
+export interface UsimSpotlightConfig {
+  title: string;
   limit: number;
 }
 
@@ -91,6 +99,8 @@ export function defaultSectionConfig(type: SectionType): Record<string, unknown>
         productIds: [],
         limit: 6,
       } satisfies ProductDisplayConfig;
+    case "usim_spotlight":
+      return { title: "인기 유심 요금제", limit: 3 } satisfies UsimSpotlightConfig;
     case "rich_text":
       return { title: "", text: "" } satisfies RichTextConfig;
     case "notice_list":

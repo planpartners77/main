@@ -5,6 +5,9 @@ import { TrustPoints } from "@/components/home/TrustPoints";
 import { ReviewsSection, type ReviewCategoryOption, type ReviewRow } from "@/components/home/ReviewsSection";
 import { WhyPossible } from "@/components/home/WhyPossible";
 import { TravelSpotlight } from "@/components/home/TravelSpotlight";
+import { UsimSpotlightSection } from "@/components/usim/UsimSpotlightSection";
+import { getUsimPlanList } from "@/lib/usim/plans-query";
+import { sortPlans } from "@/lib/usim/filters";
 import { BottomCta } from "@/components/home/BottomCta";
 import { BannerStrip } from "@/components/design/BannerStrip";
 import { ProductDisplaySection } from "@/components/design/ProductDisplaySection";
@@ -18,6 +21,7 @@ import type { PageSectionRow } from "@/lib/design/pages-query";
 import type {
   HeroSectionConfig,
   ProductDisplayConfig,
+  UsimSpotlightConfig,
   RichTextConfig,
   NoticeListConfig,
 } from "@/lib/design/page-sections";
@@ -87,6 +91,11 @@ async function Section({ section, isLoggedIn }: { section: PageSectionRow; isLog
           isLoggedIn={isLoggedIn}
         />
       );
+    }
+    case "usim_spotlight": {
+      const config: UsimSpotlightConfig = { title: "인기 유심 요금제", limit: 3, ...(section.config as Partial<UsimSpotlightConfig>) };
+      const items = sortPlans(await getUsimPlanList(), "recommended").slice(0, config.limit);
+      return <UsimSpotlightSection title={config.title} items={items} />;
     }
     case "travel_spotlight":
       return <TravelSpotlight />;
