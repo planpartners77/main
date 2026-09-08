@@ -78,12 +78,12 @@ export function UsimPlanPriceCard({
           {schedule.length > 0 && (
             <details className="mt-3 text-xs text-gray-500">
               <summary className="cursor-pointer font-semibold text-[var(--brand-navy)]">
-                {promotionLabel} · 지급 스케줄 자세히
+                {promotionLabel} · {promotionType === "discount" ? "할인" : "지급"} 스케줄 자세히
               </summary>
               <ul className="mt-2 space-y-1">
                 {schedule.map((s, i) => (
                   <li key={i}>
-                    {s.month === 0 ? "매월(평생)" : `${s.month}개월차`} · {formatWon(s.amount)}
+                    {s.month === 0 ? "매월(평생)" : `${s.month}개월차`} · {formatWon(s.amount)} {shortLabel}
                   </li>
                 ))}
               </ul>
