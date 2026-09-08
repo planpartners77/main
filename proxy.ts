@@ -19,7 +19,14 @@ function shouldLogVisit(request: NextRequest) {
 }
 
 export async function proxy(request: NextRequest, event: NextFetchEvent) {
-  let response = NextResponse.next({ request });
+  // SitePopupLayer(app/(site)/layout.tsx)가 카테고리별 팝업을 가리려면 현재 경로를 알아야
+  // 하는데, 레이아웃은 page.tsx와 달리 pathname을 직접 받지 못한다 — 요청 헤더로 전달해
+  // 서버 컴포넌트의 headers()에서 읽을 수 있게 한다(응답 헤더가 아니라 요청 헤더에 심어야 함).
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set("x-pathname", request.nextUrl.pathname);
+  const requestInit = { request: { headers: requestHeaders } };
+
+  let response = NextResponse.next(requestInit);
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -31,7 +38,7 @@ export async function proxy(request: NextRequest, event: NextFetchEvent) {
         },
         setAll(cookiesToSet) {
           cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
-          response = NextResponse.next({ request });
+          response = NextResponse.next(requestInit);
           cookiesToSet.forEach(({ name, value, options }) =>
             response.cookies.set(name, value, options),
           );

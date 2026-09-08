@@ -14,6 +14,7 @@ export interface PublicPopup {
   body: string | null;
   link_url: string | null;
   display_type: "layer" | "bottom_bar";
+  dismiss_days: number;
 }
 
 // 노출기간(start_at/end_at)은 null 허용이라 PostgREST에서 "컬럼이 null이거나, now와 비교해 범위 안"을
@@ -36,17 +37,28 @@ export async function getActiveBanners(categoryId: string | null): Promise<Publi
   return data ?? [];
 }
 
-export async function getActivePopups(): Promise<PublicPopup[]> {
+export async function getActivePopups(categoryId: string | null): Promise<PublicPopup[]> {
   const supabase = await createClient();
   const now = new Date().toISOString();
 
-  const { data } = await supabase
+  let query = supabase
     .from("popups")
-    .select("id, title, image_url, body, link_url, display_type")
+    .select("id, title, image_url, body, link_url, display_type, dismiss_days")
     .eq("is_active", true)
     .or(`start_at.is.null,start_at.lte.${now}`)
     .or(`end_at.is.null,end_at.gte.${now}`)
     .order("sort_order", { ascending: true });
 
+  query = categoryId ? query.eq("category_id", categoryId) : query.is("category_id", null);
+
+  const { data } = await query;
   return data ?? [];
+}
+
+// 팝업 레이어(app/(site)/layout.tsx)는 전 페이지 공용이라 어느 카테고리 페이지인지
+// path 세그먼트로 직접 알아내야 한다(banners처럼 각 카테고리 page.tsx가 직접 아는 구조가 아님).
+export async function getCategoryIdBySlug(slug: string): Promise<string | null> {
+  const supabase = await createClient();
+  const { data } = await supabase.from("categories").select("id").eq("slug", slug).maybeSingle();
+  return data?.id ?? null;
 }
