@@ -16,6 +16,8 @@ const PATHS: Record<string, string> = {
   bell: "M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9ZM13.7 21a2 2 0 0 1-3.4 0",
   stats: "M4 21V10M10 21V4M16 21v-7M3 21h18",
   seo: "M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14ZM21 21l-4.35-4.35",
+  tier: "M12 2 2 7l10 5 10-5-10-5ZM2 17l10 5 10-5M2 12l10 5 10-5",
+  "audit-log": "M8 3h8v3H8zM6 6h12v15H6zM9 11h6M9 15h6",
 };
 
 // 관리자 대시보드 전용 최소 선형 아이콘 세트. components/shared/CategoryIcon와 동일한 스타일.

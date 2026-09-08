@@ -45,6 +45,8 @@ export const MENU_KEYS = [
   "stores",
   "seo",
   "company_info",
+  "tiers",
+  "audit_logs",
   "admins",
 ] as const;
 
@@ -56,7 +58,7 @@ const ROLE_MENUS: Record<AdminRole, MenuKey[]> = {
   cs_agent: ["dashboard", "leads", "consultations"],
   settlement_manager: ["dashboard", "settlements"],
   content_manager: ["dashboard", "design", "seo", "company_info"],
-  member_manager: ["dashboard", "members", "referrals", "coupons"],
+  member_manager: ["dashboard", "members", "referrals", "coupons", "tiers"],
   product_manager: ["dashboard", "products", "partners"],
   marketing_manager: ["dashboard", "statistics", "referrals", "coupons", "seo"],
   operations_manager: ["dashboard", "stores"],
@@ -94,6 +96,8 @@ const PATH_TO_MENU_ENTRIES: [string, MenuKey][] = [
   ["/admin/stores", "stores"],
   ["/admin/seo", "seo"],
   ["/admin/company-info", "company_info"],
+  ["/admin/tiers", "tiers"],
+  ["/admin/audit-logs", "audit_logs"],
   ["/admin/admins", "admins"],
 ];
 const PATH_TO_MENU = [...PATH_TO_MENU_ENTRIES].sort((a, b) => b[0].length - a[0].length);

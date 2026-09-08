@@ -41,6 +41,7 @@ const NAV_GROUPS: NavGroup[] = [
     label: "회원",
     items: [
       { title: "회원 관리", href: "/admin/members", icon: "member" },
+      { title: "회원 등급", href: "/admin/tiers", icon: "tier" },
       { title: "추천인 코드", href: "/admin/referrals", icon: "referral" },
       { title: "쿠폰 관리", href: "/admin/coupons", icon: "coupon" },
     ],
@@ -58,7 +59,13 @@ const NAV_GROUPS: NavGroup[] = [
     label: "회사 정보",
     items: [{ title: "회사 정보 관리", href: "/admin/company-info", icon: "content" }],
   },
-  { label: "시스템", items: [{ title: "관리자 관리", href: "/admin/admins", icon: "settings" }] },
+  {
+    label: "시스템",
+    items: [
+      { title: "감사 로그", href: "/admin/audit-logs", icon: "audit-log" },
+      { title: "관리자 관리", href: "/admin/admins", icon: "settings" },
+    ],
+  },
 ];
 
 function roleLabel(role: string): string {
@@ -128,6 +135,8 @@ export function AdminSidebar({
     <>
       {/* 데스크톱: 고정 좌측 사이드바 */}
       <aside className="hidden w-60 shrink-0 flex-col bg-[#12182b] text-white md:flex">
+        {/* 메인 사이트 Hero의 상단 그라디언트 바(브랜드 민트→블루)와 동일한 포인트 액센트 */}
+        <div className="h-1 shrink-0 bg-gradient-to-r from-[var(--brand-mint)] to-[var(--brand-blue)]" />
         <div className="px-6 py-6">
           <p className="text-[11px] font-semibold tracking-widest text-white/40">ADMIN</p>
           <Link href="/admin" className="mt-1 block text-lg font-bold">
@@ -157,15 +166,24 @@ export function AdminSidebar({
           </div>
           <SignOutButton />
         </div>
-        <nav className="flex gap-1 overflow-x-auto border-t border-white/10 px-3 py-2">
-          {visibleNavGroups(role).flatMap((g) => g.items).map((item) => (
-            <Link
-              key={item.title}
-              href={item.href}
-              className="shrink-0 rounded-full px-3 py-1.5 text-xs text-white/70 hover:bg-white/10 hover:text-white"
-            >
-              {item.title}
-            </Link>
+        <nav className="flex gap-3 overflow-x-auto border-t border-white/10 px-3 py-2">
+          {visibleNavGroups(role).map((group) => (
+            <div key={group.label ?? "root"} className="flex shrink-0 items-center gap-1">
+              {group.label && (
+                <span className="shrink-0 pl-1 text-[10px] font-semibold tracking-wider text-white/30">
+                  {group.label}
+                </span>
+              )}
+              {group.items.map((item) => (
+                <Link
+                  key={item.title}
+                  href={item.href}
+                  className="shrink-0 rounded-full px-3 py-1.5 text-xs text-white/70 hover:bg-white/10 hover:text-white"
+                >
+                  {item.title}
+                </Link>
+              ))}
+            </div>
           ))}
         </nav>
       </div>
