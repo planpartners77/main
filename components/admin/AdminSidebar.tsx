@@ -54,6 +54,10 @@ const NAV_GROUPS: NavGroup[] = [
   },
   { label: "운영", items: [{ title: "매장 관리", href: "/admin/stores", icon: "settings" }] },
   { label: "SEO", items: [{ title: "SEO 관리", href: "/admin/seo", icon: "seo" }] },
+  {
+    label: "회사 정보",
+    items: [{ title: "회사 정보 관리", href: "/admin/company-info", icon: "content" }],
+  },
   { label: "시스템", items: [{ title: "관리자 관리", href: "/admin/admins", icon: "settings" }] },
 ];
 

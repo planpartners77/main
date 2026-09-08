@@ -22,6 +22,22 @@ export interface SnsLink {
   enabled: boolean;
 }
 
+export interface CompanyInfo {
+  companyName: string;
+  ceo: string;
+  bizRegNo: string;
+  corpRegNo: string;
+  address: string;
+  bizType: string;
+  bizItem: string;
+  mailOrderRegNo: string | null;
+  privacyOfficer: string | null;
+  insuranceAgentRegNo: string | null;
+  funeralInstallmentRegNo: string | null;
+  introText: string;
+  disclaimerText: string;
+}
+
 export interface SeoSettings {
   googleSiteVerification: string | null;
   naverSiteVerification: string | null;
@@ -47,6 +63,26 @@ export const DEFAULT_SNS_LINKS: SnsLink[] = [
   { platform: "instagram", label: "인스타그램", url: null, enabled: false },
   { platform: "tiktok", label: "틱톡", url: null, enabled: false },
 ];
+
+// footer/회사소개 페이지가 참조하던 lib/business-info.ts 정적 상수를 admin에서 고칠 수 있게
+// site_settings로 옮긴 것 — 값은 그 상수와 동일하게 시딩(0031_company_info_settings.sql).
+export const DEFAULT_COMPANY_INFO: CompanyInfo = {
+  companyName: "플랜파트너스",
+  ceo: "유현",
+  bizRegNo: "176-81-04087",
+  corpRegNo: "110111-0966888",
+  address: "서울특별시 종로구 인사동5길 25, 8층 812호(인사동, 하나로빌딩)",
+  bizType: "도매 및 소매업",
+  bizItem: "전자상거래 소매업",
+  mailOrderRegNo: null,
+  privacyOfficer: null,
+  insuranceAgentRegNo: null,
+  funeralInstallmentRegNo: null,
+  introText:
+    "플랜파트너스는 여러 통신사·보험사·상조회사를 비교해 가장 유리한 조건을 찾아드리는 비교·중개 전문 플랫폼입니다.",
+  disclaimerText:
+    "플랜파트너스는 통신판매중개자이며 통신판매의 당사자가 아닙니다. 상품, 상품정보, 거래에 관한 의무와 책임은 거래당사자에게 있습니다.",
+};
 
 export const DEFAULT_SEO_SETTINGS: SeoSettings = {
   googleSiteVerification: null,
@@ -85,4 +121,11 @@ export const getSeoSettings = cache(async (): Promise<SeoSettings> => {
   const value = (await getSettingValue("seo")) as Partial<SeoSettings> | null;
   if (!value) return DEFAULT_SEO_SETTINGS;
   return { ...DEFAULT_SEO_SETTINGS, ...value };
+});
+
+// Footer가 모든 페이지에서 렌더링되므로 요청당 한 번만 조회되도록 캐싱한다.
+export const getCompanyInfo = cache(async (): Promise<CompanyInfo> => {
+  const value = (await getSettingValue("company_info")) as Partial<CompanyInfo> | null;
+  if (!value) return DEFAULT_COMPANY_INFO;
+  return { ...DEFAULT_COMPANY_INFO, ...value };
 });

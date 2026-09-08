@@ -1,7 +1,6 @@
 import Link from "next/link";
-import { BUSINESS_INFO } from "@/lib/business-info";
 import { LEGAL_NAV } from "@/lib/legal-content";
-import { getSnsLinks } from "@/lib/design/site-settings";
+import { getCompanyInfo, getSnsLinks } from "@/lib/design/site-settings";
 
 function LegalRow({ label, value }: { label: string; value: string | null }) {
   return (
@@ -26,7 +25,7 @@ const MENU_LINKS = [
 // (§ 정보 정확성 원칙 — 가짜 URL 금지).
 // 가이드 §12-2 Footer 구성: 메뉴 링크 + 상단 고정 문구 + 카테고리별 법적 고지 영역 + 법적 문서 링크.
 export async function Footer() {
-  const snsLinks = await getSnsLinks();
+  const [info, snsLinks] = await Promise.all([getCompanyInfo(), getSnsLinks()]);
 
   return (
     <footer className="mt-16 border-t border-gray-800 bg-[var(--brand-navy-dark)] text-sm text-gray-300">
@@ -39,29 +38,20 @@ export async function Footer() {
           ))}
         </div>
 
-        <p className="mt-6 font-medium text-white">
-          플랜파트너스는 여러 통신사·보험사·상조회사를 비교해 가장 유리한 조건을 찾아드리는
-          비교·중개 전문 플랫폼입니다.
-        </p>
-        <p className="mt-2 text-xs text-gray-400">
-          {BUSINESS_INFO.companyName}는 통신판매중개자이며 통신판매의 당사자가 아닙니다. 상품,
-          상품정보, 거래에 관한 의무와 책임은 거래당사자에게 있습니다.
-        </p>
+        <p className="mt-6 font-medium text-white">{info.introText}</p>
+        <p className="mt-2 text-xs text-gray-400">{info.disclaimerText}</p>
 
         <div className="mt-6 grid gap-1 text-xs leading-relaxed sm:grid-cols-2">
-          <LegalRow label="상호" value={BUSINESS_INFO.companyName} />
-          <LegalRow label="대표자" value={BUSINESS_INFO.ceo} />
-          <LegalRow label="사업자등록번호" value={BUSINESS_INFO.bizRegNo} />
-          <LegalRow label="법인등록번호" value={BUSINESS_INFO.corpRegNo} />
-          <LegalRow label="주소" value={BUSINESS_INFO.address} />
-          <LegalRow label="업태/종목" value={`${BUSINESS_INFO.bizType} / ${BUSINESS_INFO.bizItem}`} />
-          <LegalRow label="통신판매중개업 신고번호" value={BUSINESS_INFO.mailOrderRegNo} />
-          <LegalRow label="개인정보 보호책임자" value={BUSINESS_INFO.privacyOfficer} />
-          <LegalRow label="보험 모집인 등록번호" value={BUSINESS_INFO.insuranceAgentRegNo} />
-          <LegalRow
-            label="상조 선불식 할부거래업 등록번호"
-            value={BUSINESS_INFO.funeralInstallmentRegNo}
-          />
+          <LegalRow label="상호" value={info.companyName} />
+          <LegalRow label="대표자" value={info.ceo} />
+          <LegalRow label="사업자등록번호" value={info.bizRegNo} />
+          <LegalRow label="법인등록번호" value={info.corpRegNo} />
+          <LegalRow label="주소" value={info.address} />
+          <LegalRow label="업태/종목" value={`${info.bizType} / ${info.bizItem}`} />
+          <LegalRow label="통신판매중개업 신고번호" value={info.mailOrderRegNo} />
+          <LegalRow label="개인정보 보호책임자" value={info.privacyOfficer} />
+          <LegalRow label="보험 모집인 등록번호" value={info.insuranceAgentRegNo} />
+          <LegalRow label="상조 선불식 할부거래업 등록번호" value={info.funeralInstallmentRegNo} />
         </div>
 
         <div className="mt-6 flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500">
@@ -99,7 +89,7 @@ export async function Footer() {
         </div>
 
         <p className="mt-6 text-xs text-gray-500">
-          © {new Date().getFullYear()} {BUSINESS_INFO.companyName}. All rights reserved.
+          © {new Date().getFullYear()} {info.companyName}. All rights reserved.
         </p>
       </div>
     </footer>

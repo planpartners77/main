@@ -1,13 +1,14 @@
-import { BUSINESS_INFO } from "@/lib/business-info";
+import { getCompanyInfo } from "@/lib/design/site-settings";
 
-export default function CompanyPage() {
+export default async function CompanyPage() {
+  const info = await getCompanyInfo();
   const rows: [string, string][] = [
-    ["상호", BUSINESS_INFO.companyName],
-    ["대표자", BUSINESS_INFO.ceo],
-    ["사업자등록번호", BUSINESS_INFO.bizRegNo],
-    ["법인등록번호", BUSINESS_INFO.corpRegNo],
-    ["주소", BUSINESS_INFO.address],
-    ["업태/종목", `${BUSINESS_INFO.bizType} / ${BUSINESS_INFO.bizItem}`],
+    ["상호", info.companyName],
+    ["대표자", info.ceo],
+    ["사업자등록번호", info.bizRegNo],
+    ["법인등록번호", info.corpRegNo],
+    ["주소", info.address],
+    ["업태/종목", `${info.bizType} / ${info.bizItem}`],
   ];
 
   return (
@@ -15,7 +16,7 @@ export default function CompanyPage() {
       <p className="text-xs font-bold tracking-wider text-[var(--brand-blue)]">COMPANY</p>
       <h1 className="mt-2 text-2xl font-bold text-[var(--brand-navy)]">회사소개</h1>
       <p className="mt-4 text-sm leading-relaxed text-gray-600">
-        {BUSINESS_INFO.companyName}는 인터넷·유심·가전렌탈·여행·보험·상조 등 생활 밀착형 상품을
+        {info.companyName}는 인터넷·유심·가전렌탈·여행·보험·상조 등 생활 밀착형 상품을
         한 곳에서 비교하고, 이용자에게 가장 유리한 조건을 찾아드리는 비교·중개 전문 플랫폼입니다.
       </p>
       <p className="mt-4 text-sm leading-relaxed text-gray-600">
