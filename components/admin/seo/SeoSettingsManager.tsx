@@ -1,9 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ChangeEvent } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import type { SeoSettings } from "@/lib/design/site-settings";
+
+const FAVICON_BUCKET = "design-assets";
+const FAVICON_MAX_SIZE = 1024 * 1024;
+const FAVICON_ACCEPTED_TYPES = ["image/png"];
 
 export function SeoSettingsManager({ settings }: { settings: SeoSettings }) {
   const router = useRouter();
@@ -11,6 +15,38 @@ export function SeoSettingsManager({ settings }: { settings: SeoSettings }) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
+  const [faviconUploading, setFaviconUploading] = useState(false);
+  const [faviconError, setFaviconError] = useState<string | null>(null);
+
+  async function handleFaviconUpload(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+
+    if (!FAVICON_ACCEPTED_TYPES.includes(file.type)) {
+      setFaviconError("png 파일만 업로드할 수 있습니다. (정사각형, 512x512 권장)");
+      return;
+    }
+    if (file.size > FAVICON_MAX_SIZE) {
+      setFaviconError("1MB 이하 파일만 업로드할 수 있습니다.");
+      return;
+    }
+
+    setFaviconError(null);
+    setFaviconUploading(true);
+    const supabase = createClient();
+    const path = `favicon-${crypto.randomUUID()}.png`;
+    const { error: uploadError } = await supabase.storage.from(FAVICON_BUCKET).upload(path, file);
+    setFaviconUploading(false);
+    if (uploadError) {
+      setFaviconError(`업로드 실패: ${uploadError.message}`);
+      return;
+    }
+
+    const publicUrl = supabase.storage.from(FAVICON_BUCKET).getPublicUrl(path).data.publicUrl;
+    setForm((prev) => ({ ...prev, faviconUrl: publicUrl }));
+    setSaved(false);
+  }
 
   async function handleSave() {
     setSaving(true);
@@ -24,6 +60,7 @@ export function SeoSettingsManager({ settings }: { settings: SeoSettings }) {
           googleSiteVerification: form.googleSiteVerification?.trim() || null,
           naverSiteVerification: form.naverSiteVerification?.trim() || null,
           metaDescription: form.metaDescription?.trim() || null,
+          faviconUrl: form.faviconUrl || null,
           indexable: form.indexable,
         },
       })
@@ -67,6 +104,44 @@ export function SeoSettingsManager({ settings }: { settings: SeoSettings }) {
         />
         <p className="mt-1.5 text-xs text-gray-500">
           네이버 서치어드바이저에서 발급받은 HTML 태그의 content=&quot;...&quot; 안쪽 값만 붙여넣으세요.
+        </p>
+      </div>
+
+      <div className="rounded-2xl border border-gray-200 bg-white p-4">
+        <label className="text-sm font-medium text-[var(--brand-navy)]">파비콘 (브라우저 탭 아이콘)</label>
+        <div className="mt-2 flex items-center gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-gray-200 bg-gray-50">
+            {/* eslint-disable-next-line @next/next/no-img-element -- Storage 이미지, next/image 미사용 프로젝트 컨벤션(unoptimized) */}
+            <img
+              src={form.faviconUrl || "/favicon.ico"}
+              alt="파비콘 미리보기"
+              className="h-full w-full object-contain"
+            />
+          </div>
+          <label className="cursor-pointer rounded-full border border-gray-300 px-4 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50">
+            {faviconUploading ? "업로드 중..." : "이미지 업로드"}
+            <input
+              type="file"
+              accept={FAVICON_ACCEPTED_TYPES.join(",")}
+              onChange={handleFaviconUpload}
+              disabled={faviconUploading}
+              className="hidden"
+            />
+          </label>
+          {form.faviconUrl && (
+            <button
+              type="button"
+              onClick={() => setForm((prev) => ({ ...prev, faviconUrl: null }))}
+              className="text-xs font-semibold text-gray-500 hover:text-red-500"
+            >
+              기본값으로 되돌리기
+            </button>
+          )}
+        </div>
+        {faviconError && <p className="mt-1.5 text-xs text-red-600">{faviconError}</p>}
+        <p className="mt-1.5 text-xs text-gray-500">
+          png 파일만 업로드할 수 있습니다. (정사각형, 512x512 권장 · 1MB 이하) 업로드 후 아래
+          &quot;저장&quot;을 눌러야 실제 사이트에 반영됩니다.
         </p>
       </div>
 

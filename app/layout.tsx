@@ -54,6 +54,8 @@ export async function generateMetadata(): Promise<Metadata> {
         ? { "naver-site-verification": seo.naverSiteVerification }
         : undefined,
     },
+    // 관리자 SEO 화면에서 파비콘을 업로드하지 않았으면 app/favicon.ico 기본값을 그대로 사용.
+    icons: seo.faviconUrl ? { icon: seo.faviconUrl } : undefined,
     robots: {
       index: seo.indexable,
       follow: seo.indexable,

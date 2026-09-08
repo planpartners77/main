@@ -25,6 +25,7 @@ export interface SeoSettings {
   googleSiteVerification: string | null;
   naverSiteVerification: string | null;
   metaDescription: string | null;
+  faviconUrl: string | null;
   indexable: boolean;
 }
 
@@ -47,6 +48,7 @@ export const DEFAULT_SEO_SETTINGS: SeoSettings = {
   googleSiteVerification: null,
   naverSiteVerification: null,
   metaDescription: null,
+  faviconUrl: null,
   indexable: true,
 };
 
