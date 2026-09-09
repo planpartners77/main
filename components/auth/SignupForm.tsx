@@ -27,6 +27,8 @@ export function SignupForm() {
   const [passwordConfirm, setPasswordConfirm] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [phone, setPhone] = useState("");
+  const [gender, setGender] = useState<"male" | "female" | "">("");
+  const [birthdate, setBirthdate] = useState("");
   const [termsAgree, setTermsAgree] = useState(false);
   const [privacyAgree, setPrivacyAgree] = useState(false);
   const [marketingAgree, setMarketingAgree] = useState(false);
@@ -73,6 +75,8 @@ export function SignupForm() {
 
     if (!displayName.trim()) return setError("이름을 입력해 주세요.");
     if (!RE_PHONE.test(phone)) return setError("휴대폰 번호를 010-0000-0000 형식으로 입력해 주세요.");
+    if (!gender) return setError("성별을 선택해 주세요.");
+    if (!birthdate) return setError("생년월일을 입력해 주세요.");
     if (password.length < 8) return setError("비밀번호는 8자 이상이어야 합니다.");
     if (password !== passwordConfirm) return setError("비밀번호가 일치하지 않습니다.");
     if (!termsAgree || !privacyAgree) return setError("서비스 이용약관과 개인정보처리방침에 동의해 주세요.");
@@ -88,6 +92,8 @@ export function SignupForm() {
         data: {
           display_name: displayName,
           phone,
+          gender,
+          birthdate,
           marketing_opt_in: marketingAgree,
           ...(referredByCode ? { referred_by_code: referredByCode } : {}),
         },
@@ -241,6 +247,48 @@ export function SignupForm() {
           placeholder="010-0000-0000"
           value={phone}
           onChange={(e) => setPhone(formatPhone(e.target.value))}
+          className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-[var(--brand-blue)] focus:outline-none"
+        />
+      </div>
+
+      <div>
+        <span className="text-sm font-medium text-gray-700">성별</span>
+        <div className="mt-1 flex gap-4">
+          <label className="flex items-center gap-1.5 text-sm text-gray-600">
+            <input
+              type="radio"
+              name="gender"
+              value="male"
+              checked={gender === "male"}
+              onChange={() => setGender("male")}
+              className="h-4 w-4 accent-[var(--brand-blue)]"
+            />
+            남성
+          </label>
+          <label className="flex items-center gap-1.5 text-sm text-gray-600">
+            <input
+              type="radio"
+              name="gender"
+              value="female"
+              checked={gender === "female"}
+              onChange={() => setGender("female")}
+              className="h-4 w-4 accent-[var(--brand-blue)]"
+            />
+            여성
+          </label>
+        </div>
+      </div>
+
+      <div>
+        <label htmlFor="birthdate" className="text-sm font-medium text-gray-700">
+          생년월일
+        </label>
+        <input
+          id="birthdate"
+          type="date"
+          required
+          value={birthdate}
+          onChange={(e) => setBirthdate(e.target.value)}
           className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-[var(--brand-blue)] focus:outline-none"
         />
       </div>
