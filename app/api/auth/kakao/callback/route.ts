@@ -3,6 +3,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getOAuthCredentials, getOAuthRedirectUri } from "@/lib/oauth/credentials";
+import { sendTelegramMessage } from "@/lib/telegram";
 
 const STATE_COOKIE = "kakao_oauth_state";
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
@@ -160,6 +161,14 @@ export async function GET(request: NextRequest) {
     });
     if (createError || !created.user) return fail("kakao_signup_failed");
     authUserId = created.user.id;
+
+    // 이 라우트는 서버에서 방금 생성을 확정한 데이터를 그대로 쓰므로, /api/notify처럼
+    // DB를 재조회해 신뢰성을 검증할 필요 없이 바로 알림을 보낸다.
+    await sendTelegramMessage(
+      ["🆕 <b>신규 회원가입</b> (카카오 3초 로그인)", `이름: ${account.name ?? "-"}`, `연락처: ${phone ?? "-"}`].join(
+        "\n",
+      ),
+    );
   }
 
   // 7) Admin API로는 세션을 직접 발급할 수 없어, 임시 비밀번호를 설정한 뒤 서버에서 즉시
