@@ -27,7 +27,7 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { title: "상품 관리", href: "/admin/products", icon: "product" },
       { title: "요금제 프로모션", href: "/admin/usim-promotions", icon: "product" },
-      { title: "파트너 관리", href: "/admin/partners", icon: "partner" },
+      { title: "공급자 관리", href: "/admin/partners", icon: "partner" },
     ],
   },
   {
@@ -62,7 +62,6 @@ const NAV_GROUPS: NavGroup[] = [
   {
     label: "시스템",
     items: [
-      { title: "감사 로그", href: "/admin/audit-logs", icon: "audit-log" },
       { title: "보안", href: "/admin/security", icon: "shield" },
       { title: "관리자 관리", href: "/admin/admins", icon: "settings" },
       { title: "간편로그인 관리", href: "/admin/login-methods", icon: "login-key" },

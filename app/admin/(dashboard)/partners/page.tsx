@@ -17,7 +17,7 @@ export default async function AdminPartnersPage() {
       <Link href="/admin" className="text-sm text-gray-500 hover:text-[var(--brand-navy)]">
         ← 대시보드
       </Link>
-      <h1 className="mt-2 text-xl font-bold text-[var(--brand-navy)]">파트너 관리</h1>
+      <h1 className="mt-2 text-xl font-bold text-[var(--brand-navy)]">공급자 관리</h1>
       <div className="mt-6">
         <PartnerManager partners={(partners ?? []) as unknown as PartnerRow[]} categories={categories ?? []} />
       </div>
