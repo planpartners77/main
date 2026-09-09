@@ -10,6 +10,7 @@ import { MemberStatusControl } from "@/components/admin/members/MemberStatusCont
 import { PointAdjustPanel } from "@/components/admin/members/PointAdjustPanel";
 import { MemberNotes } from "@/components/admin/members/MemberNotes";
 import { MemberDeleteButton } from "@/components/admin/members/MemberDeleteButton";
+import { MemberPurgeButton } from "@/components/admin/members/MemberPurgeButton";
 
 interface MemberDetail {
   id: string;
@@ -247,6 +248,11 @@ export default async function AdminMemberDetailPage({
         <p className="mt-3 rounded-xl border border-gray-200 bg-gray-50 p-3 text-sm text-gray-500">
           탈퇴 처리된 회원입니다. 로그인이 영구 차단되었고 개인식별정보는 익명화되었습니다. 포인트/쿠폰/추천인 이력은 정산 근거 보존을 위해 남아 있습니다.
         </p>
+      )}
+      {session?.role === "super_admin" && (
+        <div className="mt-3">
+          <MemberPurgeButton memberId={detail.id} memberName={detail.display_name ?? "이름 없음"} />
+        </div>
       )}
 
       <div className="mt-6 grid gap-4 sm:grid-cols-2">
