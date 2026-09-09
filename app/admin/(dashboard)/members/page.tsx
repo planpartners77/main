@@ -44,7 +44,7 @@ export default async function AdminMembersPage({
   let query = supabase
     .from("profiles")
     .select(
-      "id, display_name, phone, marketing_opt_in, referral_role, status, created_at, customer_tiers(name)",
+      "id, display_name, phone, marketing_opt_in, referral_role, status, created_at, auth_provider, kakao_user_id, gender, birthdate, shipping_name, shipping_address, shipping_phone, customer_tiers(name)",
       { count: "exact" },
     )
     .order("created_at", { ascending: false });

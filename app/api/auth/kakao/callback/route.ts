@@ -20,6 +20,9 @@ interface KakaoAccount {
   birthyear?: string; // YYYY
   phone_number?: string; // 예: "+82 10-1234-5678"
   ci?: string;
+  email?: string;
+  is_email_valid?: boolean;
+  is_email_verified?: boolean;
 }
 
 interface KakaoUserMeResponse {
@@ -97,6 +100,9 @@ export async function GET(request: NextRequest) {
   const phone = normalizePhone(account.phone_number);
   const birthdate = normalizeBirthdate(account.birthyear, account.birthday);
   const ciHash = account.ci ? hashCi(account.ci) : null;
+  // 카카오 개발자 콘솔의 "카카오계정(이메일)" 동의항목이 꺼져 있으면 이 필드 자체가 응답에
+  // 없다(코드만으로는 수집 불가 — 콘솔 설정이 선행 조건). 검증된 이메일만 신뢰한다.
+  const email = account.is_email_valid && account.is_email_verified ? (account.email ?? null) : null;
 
   // 3) 배송지정보(선택 동의항목) — 미동의/미등록이면 조용히 스킵.
   let shipping: KakaoShippingAddress | null = null;
@@ -139,11 +145,13 @@ export async function GET(request: NextRequest) {
     }
   }
 
+  const isReturningUser = !!authUserId;
+
   // 6) 완전 신규 회원 생성 (phone 기반 auth.users — 동의항목에 이메일이 없어 phone을 식별자로 사용).
   if (!authUserId) {
     if (!phone) return fail("kakao_phone_required");
 
-    const { data: created, error: createError } = await admin.auth.admin.createUser({
+    const baseUserPayload = {
       phone,
       phone_confirm: true,
       user_metadata: {
@@ -158,9 +166,18 @@ export async function GET(request: NextRequest) {
         shipping_address: shipping ? `${shipping.base_address ?? ""} ${shipping.detail_address ?? ""}`.trim() : null,
         shipping_phone: shipping?.receiver_phone_number1 ?? null,
       },
-    });
-    if (createError || !created.user) return fail("kakao_signup_failed");
-    authUserId = created.user.id;
+    };
+
+    let created = await admin.auth.admin.createUser(
+      email ? { ...baseUserPayload, email, email_confirm: true } : baseUserPayload,
+    );
+    // 카카오 이메일이 이미 다른 계정(이메일/비밀번호 가입 등)에서 쓰이고 있으면 충돌로
+    // 실패할 수 있다 — 이 경우 이메일 없이 phone만으로 재시도해 가입 자체는 막지 않는다.
+    if (created.error && email) {
+      created = await admin.auth.admin.createUser(baseUserPayload);
+    }
+    if (created.error || !created.data.user) return fail("kakao_signup_failed");
+    authUserId = created.data.user.id;
 
     // 이 라우트는 서버에서 방금 생성을 확정한 데이터를 그대로 쓰므로, /api/notify처럼
     // DB를 재조회해 신뢰성을 검증할 필요 없이 바로 알림을 보낸다.
@@ -169,6 +186,15 @@ export async function GET(request: NextRequest) {
         "\n",
       ),
     );
+  }
+
+  // 6-1) 기존 회원이 이번 로그인에서 처음으로 인증된 이메일을 동의했다면 백필한다(예: 콘솔에서
+  //      이메일 동의항목을 뒤늦게 켠 경우). 이미 다른 계정이 그 이메일을 쓰고 있으면 조용히 스킵.
+  if (isReturningUser && email) {
+    const { data: existing } = await admin.auth.admin.getUserById(authUserId);
+    if (!existing.user?.email) {
+      await admin.auth.admin.updateUserById(authUserId, { email, email_confirm: true }).catch(() => null);
+    }
   }
 
   // 7) Admin API로는 세션을 직접 발급할 수 없어, 임시 비밀번호를 설정한 뒤 서버에서 즉시

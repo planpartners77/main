@@ -9,6 +9,7 @@ import { MemberEditForm } from "@/components/admin/members/MemberEditForm";
 import { MemberStatusControl } from "@/components/admin/members/MemberStatusControl";
 import { PointAdjustPanel } from "@/components/admin/members/PointAdjustPanel";
 import { MemberNotes } from "@/components/admin/members/MemberNotes";
+import { MemberDeleteButton } from "@/components/admin/members/MemberDeleteButton";
 
 interface MemberDetail {
   id: string;
@@ -20,6 +21,14 @@ interface MemberDetail {
   status: "active" | "suspended" | "withdrawn";
   created_at: string;
   my_ref_code_id: string | null;
+  auth_provider: "email" | "kakao";
+  kakao_user_id: string | null;
+  gender: "male" | "female" | null;
+  birthdate: string | null;
+  ci_hash: string | null;
+  shipping_name: string | null;
+  shipping_address: string | null;
+  shipping_phone: string | null;
   customer_tiers: { name: string | null } | null;
 }
 
@@ -68,7 +77,22 @@ interface AuditLogRow {
   actor_id: string | null;
 }
 
-const ACCESSED_FIELDS = ["display_name", "phone", "tier_id", "marketing_opt_in", "referral_role", "email"];
+const ACCESSED_FIELDS = [
+  "display_name",
+  "phone",
+  "tier_id",
+  "marketing_opt_in",
+  "referral_role",
+  "email",
+  "auth_provider",
+  "kakao_user_id",
+  "gender",
+  "birthdate",
+  "ci_hash",
+  "shipping_name",
+  "shipping_address",
+  "shipping_phone",
+];
 
 export default async function AdminMemberDetailPage({
   params,
@@ -82,7 +106,7 @@ export default async function AdminMemberDetailPage({
   const { data: member, error } = await supabase
     .from("profiles")
     .select(
-      "id, display_name, phone, tier_id, marketing_opt_in, referral_role, status, created_at, my_ref_code_id, customer_tiers(name)",
+      "id, display_name, phone, tier_id, marketing_opt_in, referral_role, status, created_at, my_ref_code_id, auth_provider, kakao_user_id, gender, birthdate, ci_hash, shipping_name, shipping_address, shipping_phone, customer_tiers(name)",
     )
     .eq("id", id)
     .single();
@@ -195,7 +219,16 @@ export default async function AdminMemberDetailPage({
       <Link href="/admin/members" className="text-sm text-gray-500 hover:text-[var(--brand-navy)]">
         ← 회원 목록
       </Link>
-      <h1 className="mt-2 text-xl font-bold text-[var(--brand-navy)]">{detail.display_name ?? "이름 없음"}</h1>
+      <div className="mt-2 flex items-center justify-between gap-3">
+        <h1 className="text-xl font-bold text-[var(--brand-navy)]">{detail.display_name ?? "이름 없음"}</h1>
+        {session && (
+          <MemberDeleteButton
+            memberId={detail.id}
+            memberName={detail.display_name ?? "이름 없음"}
+            redirectOnSuccess="/admin/members"
+          />
+        )}
+      </div>
       <p className="mt-1 text-xs text-amber-600">
         이 페이지 열람 기록은 audit_logs에 자동으로 남습니다.
       </p>
@@ -248,6 +281,44 @@ export default async function AdminMemberDetailPage({
             }))}
           />
         )}
+      </div>
+
+      <div className="mt-6 rounded-2xl border border-gray-200 bg-white p-5">
+        <p className="text-sm font-semibold text-[var(--brand-navy)]">가입경로 · 카카오 수집정보</p>
+        <dl className="mt-3 grid gap-2 text-sm sm:grid-cols-2">
+          <div className="flex justify-between">
+            <dt className="text-gray-500">가입경로</dt>
+            <dd>{detail.auth_provider === "kakao" ? "카카오 3초 로그인" : "이메일"}</dd>
+          </div>
+          <div className="flex justify-between">
+            <dt className="text-gray-500">카카오 회원번호</dt>
+            <dd>{detail.kakao_user_id ?? "-"}</dd>
+          </div>
+          <div className="flex justify-between">
+            <dt className="text-gray-500">성별</dt>
+            <dd>{detail.gender === "male" ? "남성" : detail.gender === "female" ? "여성" : "-"}</dd>
+          </div>
+          <div className="flex justify-between">
+            <dt className="text-gray-500">생년월일</dt>
+            <dd>{detail.birthdate ?? "-"}</dd>
+          </div>
+          <div className="flex justify-between">
+            <dt className="text-gray-500">CI(연계정보) 인증</dt>
+            <dd>{detail.ci_hash ? "인증됨 (원본 미보관, 해시만 저장)" : "-"}</dd>
+          </div>
+          <div className="flex justify-between">
+            <dt className="text-gray-500">배송지 수령인</dt>
+            <dd>{detail.shipping_name ?? "-"}</dd>
+          </div>
+          <div className="flex justify-between sm:col-span-2">
+            <dt className="text-gray-500">배송지 주소</dt>
+            <dd>{detail.shipping_address ?? "-"}</dd>
+          </div>
+          <div className="flex justify-between">
+            <dt className="text-gray-500">배송지 연락처</dt>
+            <dd>{detail.shipping_phone ?? "-"}</dd>
+          </div>
+        </dl>
       </div>
 
       <div className="mt-6 rounded-2xl border border-gray-200 bg-white p-5">

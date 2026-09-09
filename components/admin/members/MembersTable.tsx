@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { MemberDeleteButton } from "./MemberDeleteButton";
 
 export interface MemberRow {
   id: string;
@@ -13,6 +14,13 @@ export interface MemberRow {
   referral_role: "member" | "partner";
   status: "active" | "suspended" | "withdrawn";
   created_at: string;
+  auth_provider: "email" | "kakao";
+  kakao_user_id: string | null;
+  gender: "male" | "female" | null;
+  birthdate: string | null;
+  shipping_name: string | null;
+  shipping_address: string | null;
+  shipping_phone: string | null;
   customer_tiers: { name: string | null } | null;
 }
 
@@ -119,7 +127,7 @@ export function MembersTable({
       </div>
 
       <div className="overflow-x-auto rounded-b-2xl border border-gray-200 bg-white">
-        <table className="w-full min-w-[820px] text-sm">
+        <table className="w-full min-w-[920px] text-sm">
           <thead>
             <tr className="border-b border-gray-100 text-left text-xs font-semibold text-gray-400">
               <th className="px-4 py-3">
@@ -133,6 +141,7 @@ export function MembersTable({
               <th className="px-4 py-3">이름</th>
               <th className="px-4 py-3">이메일</th>
               <th className="px-4 py-3">연락처</th>
+              <th className="px-4 py-3">가입경로</th>
               <th className="px-4 py-3">구분</th>
               <th className="px-4 py-3">등급</th>
               <th className="px-4 py-3">상태</th>
@@ -156,6 +165,15 @@ export function MembersTable({
                 <td className="px-4 py-3 text-gray-500">{emailById.get(member.id) ?? "-"}</td>
                 <td className="px-4 py-3 text-gray-500">{member.phone ?? "-"}</td>
                 <td className="px-4 py-3 text-gray-500">
+                  {member.auth_provider === "kakao" ? (
+                    <span className="rounded-full bg-[#FEE500]/60 px-2 py-0.5 text-[10px] font-semibold text-[#3C1E1E]">
+                      카카오
+                    </span>
+                  ) : (
+                    "이메일"
+                  )}
+                </td>
+                <td className="px-4 py-3 text-gray-500">
                   {member.referral_role === "partner" ? (
                     <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-semibold text-blue-700">
                       파트너
@@ -170,13 +188,16 @@ export function MembersTable({
                     {STATUS_LABEL[member.status]}
                   </span>
                 </td>
-                <td className="px-4 py-3 text-right">
-                  <Link
-                    href={`/admin/members/${member.id}`}
-                    className="text-xs font-semibold text-gray-500 hover:text-[var(--brand-navy)]"
-                  >
-                    상세보기
-                  </Link>
+                <td className="px-4 py-3">
+                  <div className="flex items-center justify-end gap-3">
+                    <Link
+                      href={`/admin/members/${member.id}`}
+                      className="text-xs font-semibold text-gray-500 hover:text-[var(--brand-navy)]"
+                    >
+                      상세보기
+                    </Link>
+                    <MemberDeleteButton memberId={member.id} memberName={member.display_name ?? "이름 없음"} />
+                  </div>
                 </td>
               </tr>
             ))}
