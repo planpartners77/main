@@ -38,6 +38,11 @@ export interface CompanyInfo {
   disclaimerText: string;
 }
 
+export interface LoginMethodsSettings {
+  kakao: boolean;
+  google: boolean;
+}
+
 export interface SeoSettings {
   googleSiteVerification: string | null;
   naverSiteVerification: string | null;
@@ -84,6 +89,12 @@ export const DEFAULT_COMPANY_INFO: CompanyInfo = {
     "플랜파트너스는 통신판매중개자이며 통신판매의 당사자가 아닙니다. 상품, 상품정보, 거래에 관한 의무와 책임은 거래당사자에게 있습니다.",
 };
 
+// 카카오는 심사 완료 전까지 관리자가 직접 켜기 전엔 false, 구글은 연동 전이라 UI에서 비활성.
+export const DEFAULT_LOGIN_METHODS_SETTINGS: LoginMethodsSettings = {
+  kakao: false,
+  google: false,
+};
+
 export const DEFAULT_SEO_SETTINGS: SeoSettings = {
   googleSiteVerification: null,
   naverSiteVerification: null,
@@ -128,4 +139,11 @@ export const getCompanyInfo = cache(async (): Promise<CompanyInfo> => {
   const value = (await getSettingValue("company_info")) as Partial<CompanyInfo> | null;
   if (!value) return DEFAULT_COMPANY_INFO;
   return { ...DEFAULT_COMPANY_INFO, ...value };
+});
+
+// 로그인 폼(LoginForm)이 모든 요청에서 렌더링되므로 요청당 한 번만 조회되도록 캐싱한다.
+export const getLoginMethodsSettings = cache(async (): Promise<LoginMethodsSettings> => {
+  const value = (await getSettingValue("login_methods")) as Partial<LoginMethodsSettings> | null;
+  if (!value) return DEFAULT_LOGIN_METHODS_SETTINGS;
+  return { ...DEFAULT_LOGIN_METHODS_SETTINGS, ...value };
 });

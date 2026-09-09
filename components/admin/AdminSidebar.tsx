@@ -64,6 +64,7 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { title: "감사 로그", href: "/admin/audit-logs", icon: "audit-log" },
       { title: "관리자 관리", href: "/admin/admins", icon: "settings" },
+      { title: "간편로그인 관리", href: "/admin/login-methods", icon: "login-key" },
     ],
   },
 ];

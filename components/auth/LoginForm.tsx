@@ -4,9 +4,7 @@ import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
-// 카카오싱크 심사 완료 전까지의 임시 로그인 방식(§12-9는 원래 카카오 로그인 모달을 계획).
-// /signup과 동일한 이메일+비밀번호 계정을 그대로 사용한다.
-export function LoginForm() {
+export function LoginForm({ kakaoEnabled = false }: { kakaoEnabled?: boolean }) {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -72,6 +70,23 @@ export function LoginForm() {
       >
         {loading ? "로그인 중..." : "로그인"}
       </button>
+
+      {kakaoEnabled && (
+        <>
+          <div className="flex items-center gap-3 pt-1 text-xs text-gray-400">
+            <span className="h-px flex-1 bg-gray-200" />
+            또는
+            <span className="h-px flex-1 bg-gray-200" />
+          </div>
+          {/* eslint-disable-next-line @next/next/no-html-link-for-pages -- 페이지가 아니라 서버 리다이렉트 라우트(OAuth 시작점)라 next/link 대상이 아님 */}
+          <a
+            href="/api/auth/kakao/start"
+            className="flex w-full items-center justify-center gap-2 rounded-full bg-[#FEE500] py-3 text-sm font-semibold text-[#191919] transition hover:brightness-95"
+          >
+            카카오로 시작하기
+          </a>
+        </>
+      )}
     </form>
   );
 }
