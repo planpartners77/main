@@ -11,6 +11,8 @@ const KAKAO_ERROR_MESSAGES: Record<string, string> = {
   kakao_phone_required: "카카오 계정에 연락처 동의가 필요합니다.",
   kakao_signup_failed: "회원 생성에 실패했습니다. 잠시 후 다시 시도해 주세요.",
   kakao_session_failed: "로그인 처리에 실패했습니다. 잠시 후 다시 시도해 주세요.",
+  too_many_attempts_ip: "로그인 시도가 너무 많습니다. 잠시 후 다시 시도해 주세요.",
+  too_many_attempts_identifier: "로그인 시도가 너무 많습니다. 잠시 후 다시 시도해 주세요.",
 };
 
 export default async function LoginPage({

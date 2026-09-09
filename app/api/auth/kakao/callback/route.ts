@@ -6,6 +6,7 @@ import { getOAuthCredentials, getOAuthRedirectUri } from "@/lib/oauth/credential
 import { sendTelegramMessage } from "@/lib/telegram";
 import { sanitizeNextPath } from "@/lib/auth/safe-redirect";
 import { logLoginEvent } from "@/lib/auth/log-login-event";
+import { checkLoginRateLimit } from "@/lib/auth/rate-limit";
 
 const STATE_COOKIE = "kakao_oauth_state";
 const NEXT_COOKIE = "kakao_oauth_next";
@@ -68,6 +69,11 @@ export async function GET(request: NextRequest) {
     );
     return NextResponse.redirect(new URL(`/login?error=${reason}`, siteUrl));
   }
+
+  // IP당 연속 실패가 과도하면 카카오 토큰 교환(외부 API 호출)까지 가기 전에 바로 차단한다
+  // (§보안 2단계). 이 시점엔 phone을 몰라 identifier 없이 IP만으로 판단.
+  const rateLimit = await checkLoginRateLimit({ ip });
+  if (rateLimit.blocked) return fail(rateLimit.reason ?? "rate_limited");
 
   const { clientId, clientSecret } = await getOAuthCredentials("kakao");
   const redirectUri = getOAuthRedirectUri("kakao");

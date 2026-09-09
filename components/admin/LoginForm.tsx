@@ -4,6 +4,7 @@ import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { reportLoginEvent } from "@/lib/auth/report-login-event";
+import { isLoginRateLimited } from "@/lib/auth/check-login-rate-limit";
 
 // 관리자/기존 회원 공용 이메일+비밀번호 로그인. 로그인 성공 후 admin_users에 role이 없는
 // 계정이면(=일반 고객 등급뿐인 계정) 즉시 로그아웃시키고 안내만 한다 — customer_tiers 값으로
@@ -19,6 +20,12 @@ export function LoginForm() {
     event.preventDefault();
     setError(null);
     setLoading(true);
+
+    if (await isLoginRateLimited({ provider: "admin", identifier: email })) {
+      setError("로그인 시도가 너무 많습니다. 잠시 후 다시 시도해 주세요.");
+      setLoading(false);
+      return;
+    }
 
     const supabase = createClient();
     const { data, error: signInError } = await supabase.auth.signInWithPassword({

@@ -4,6 +4,7 @@ import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { reportLoginEvent } from "@/lib/auth/report-login-event";
+import { isLoginRateLimited } from "@/lib/auth/check-login-rate-limit";
 
 export function LoginForm({ kakaoEnabled = false, next = "/" }: { kakaoEnabled?: boolean; next?: string }) {
   const router = useRouter();
@@ -19,6 +20,12 @@ export function LoginForm({ kakaoEnabled = false, next = "/" }: { kakaoEnabled?:
     event.preventDefault();
     setError(null);
     setLoading(true);
+
+    if (await isLoginRateLimited({ provider: "email", identifier: email })) {
+      setError("로그인 시도가 너무 많습니다. 잠시 후 다시 시도해 주세요.");
+      setLoading(false);
+      return;
+    }
 
     const supabase = createClient();
     const { data, error: signInError } = await supabase.auth.signInWithPassword({ email, password });
