@@ -13,7 +13,7 @@ interface LeadRow {
 }
 
 // guest_contact은 카테고리(신청서)마다 필드 구성이 달라 공용 키 후보 중 있는 값만 뽑아 보여준다.
-// 지금은 여행(travel) 신청서만 실제 데이터를 만들고 있어 childInfo/guardianName/phone이 채워진다.
+// travel은 guardianName/childInfo, usim/mobile 등은 name 키를 쓴다.
 function summarizeContact(contact: Record<string, unknown> | null) {
   if (!contact) return { name: "-", phone: "-" };
   const name =

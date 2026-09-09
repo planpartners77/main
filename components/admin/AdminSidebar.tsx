@@ -25,7 +25,7 @@ const NAV_GROUPS: NavGroup[] = [
   {
     label: "상품·파트너",
     items: [
-      { title: "알뜰폰_상품관리", href: "/admin/products", icon: "product" },
+      { title: "상품관리", href: "/admin/products", icon: "product" },
       { title: "알뜰폰_프로모션", href: "/admin/usim-promotions", icon: "product" },
       { title: "공급자 관리", href: "/admin/partners", icon: "partner" },
     ],
