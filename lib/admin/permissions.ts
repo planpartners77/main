@@ -49,8 +49,9 @@ export const MENU_KEYS = [
   "audit_logs",
   "admins",
   "login_methods",
+  "security",
 ] as const;
-// login_methods는 ROLE_MENUS에서 super_admin(스프레드로 MENU_KEYS 전체 포함)만 접근 가능 —
+// login_methods/security는 ROLE_MENUS에서 super_admin(스프레드로 MENU_KEYS 전체 포함)만 접근 가능 —
 // audit_logs/admins와 동일한 보안 민감 메뉴 취급.
 
 export type MenuKey = (typeof MENU_KEYS)[number];
@@ -103,6 +104,7 @@ const PATH_TO_MENU_ENTRIES: [string, MenuKey][] = [
   ["/admin/audit-logs", "audit_logs"],
   ["/admin/admins", "admins"],
   ["/admin/login-methods", "login_methods"],
+  ["/admin/security", "security"],
 ];
 const PATH_TO_MENU = [...PATH_TO_MENU_ENTRIES].sort((a, b) => b[0].length - a[0].length);
 

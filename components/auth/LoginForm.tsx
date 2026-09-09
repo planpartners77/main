@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { reportLoginEvent } from "@/lib/auth/report-login-event";
 
 export function LoginForm({ kakaoEnabled = false, next = "/" }: { kakaoEnabled?: boolean; next?: string }) {
   const router = useRouter();
@@ -20,14 +21,16 @@ export function LoginForm({ kakaoEnabled = false, next = "/" }: { kakaoEnabled?:
     setLoading(true);
 
     const supabase = createClient();
-    const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error: signInError } = await supabase.auth.signInWithPassword({ email, password });
 
     setLoading(false);
     if (signInError) {
       setError("이메일 또는 비밀번호가 올바르지 않습니다.");
+      reportLoginEvent({ provider: "email", result: "failure", identifier: email, failureReason: signInError.message });
       return;
     }
 
+    reportLoginEvent({ provider: "email", result: "success", identifier: email, userId: data.user?.id });
     router.push(next);
     router.refresh();
   }

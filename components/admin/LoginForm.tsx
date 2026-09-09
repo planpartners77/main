@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { reportLoginEvent } from "@/lib/auth/report-login-event";
 
 // 관리자/기존 회원 공용 이메일+비밀번호 로그인. 로그인 성공 후 admin_users에 role이 없는
 // 계정이면(=일반 고객 등급뿐인 계정) 즉시 로그아웃시키고 안내만 한다 — customer_tiers 값으로
@@ -28,6 +29,12 @@ export function LoginForm() {
     if (signInError || !data.user) {
       setError("이메일 또는 비밀번호가 올바르지 않습니다.");
       setLoading(false);
+      reportLoginEvent({
+        provider: "admin",
+        result: "failure",
+        identifier: email,
+        failureReason: signInError?.message ?? "no_user",
+      });
       return;
     }
 
@@ -41,9 +48,17 @@ export function LoginForm() {
       await supabase.auth.signOut();
       setError("관리자 권한이 없는 계정입니다.");
       setLoading(false);
+      reportLoginEvent({
+        provider: "admin",
+        result: "failure",
+        identifier: email,
+        userId: data.user.id,
+        failureReason: "not_admin",
+      });
       return;
     }
 
+    reportLoginEvent({ provider: "admin", result: "success", identifier: email, userId: data.user.id });
     router.push("/admin");
     router.refresh();
   }

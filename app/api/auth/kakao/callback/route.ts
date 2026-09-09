@@ -5,6 +5,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { getOAuthCredentials, getOAuthRedirectUri } from "@/lib/oauth/credentials";
 import { sendTelegramMessage } from "@/lib/telegram";
 import { sanitizeNextPath } from "@/lib/auth/safe-redirect";
+import { logLoginEvent } from "@/lib/auth/log-login-event";
 
 const STATE_COOKIE = "kakao_oauth_state";
 const NEXT_COOKIE = "kakao_oauth_next";
@@ -50,11 +51,24 @@ function hashCi(ci: string): string {
   return createHash("sha256").update(`${ci}${pepper}`).digest("hex");
 }
 
-function fail(reason: string) {
-  return NextResponse.redirect(new URL(`/login?error=${reason}`, siteUrl));
-}
-
 export async function GET(request: NextRequest) {
+  const ip =
+    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    request.headers.get("x-real-ip") ||
+    null;
+  const userAgent = request.headers.get("user-agent");
+  // fail() 호출 시점마다 그때까지 파악된 식별자/계정을 함께 남기기 위한 클로저 변수 —
+  // 초반 실패(state/token 등)는 phone을 알기 전이라 identifier가 null로 기록된다.
+  let identifier: string | null = null;
+  let userId: string | null = null;
+
+  function fail(reason: string) {
+    logLoginEvent({ provider: "kakao", result: "failure", ip, userAgent, identifier, userId, failureReason: reason }).catch(
+      (err) => console.error("[login_event_log_failed]", err),
+    );
+    return NextResponse.redirect(new URL(`/login?error=${reason}`, siteUrl));
+  }
+
   const { clientId, clientSecret } = await getOAuthCredentials("kakao");
   const redirectUri = getOAuthRedirectUri("kakao");
   if (!clientId) return fail("kakao_not_configured");
@@ -93,6 +107,7 @@ export async function GET(request: NextRequest) {
   const kakaoUserId = String(me.id);
   const account = me.kakao_account ?? {};
   const phone = normalizePhone(account.phone_number);
+  identifier = phone;
   const birthdate = normalizeBirthdate(account.birthyear, account.birthday);
   const ciHash = account.ci ? hashCi(account.ci) : null;
   // 카카오 개발자 콘솔의 "카카오계정(이메일)" 동의항목이 꺼져 있으면 이 필드 자체가 응답에
@@ -172,6 +187,8 @@ export async function GET(request: NextRequest) {
     ).catch((err) => console.error("[kakao_signup_telegram_notify_failed]", err));
   }
 
+  userId = authUserId;
+
   // 6-1) 기존 회원이 이번 로그인에서 처음으로 인증된 이메일을 동의했다면 백필한다(예: 콘솔에서
   //      이메일 동의항목을 뒤늦게 켠 경우). 이미 다른 계정이 그 이메일을 쓰고 있으면 조용히 스킵.
   if (isReturningUser && email) {
@@ -200,6 +217,10 @@ export async function GET(request: NextRequest) {
     ? await supabase.auth.signInWithPassword({ phone, password: tempPassword })
     : { error: new Error("no_phone") };
   if (signInError) return fail("kakao_session_failed");
+
+  logLoginEvent({ provider: "kakao", result: "success", ip, userAgent, identifier, userId }).catch((err) =>
+    console.error("[login_event_log_failed]", err),
+  );
 
   const next = sanitizeNextPath(request.cookies.get(NEXT_COOKIE)?.value) ?? "/";
   const response = NextResponse.redirect(new URL(next, siteUrl));
