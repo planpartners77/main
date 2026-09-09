@@ -20,7 +20,7 @@ function formatPhone(raw: string) {
 
 const RE_PHONE = /^010-\d{4}-\d{4}$/;
 
-export function SignupForm() {
+export function SignupForm({ kakaoEnabled = false }: { kakaoEnabled?: boolean }) {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -176,7 +176,25 @@ export function SignupForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="mt-8 space-y-4">
+    <div className="mt-8">
+      {kakaoEnabled && (
+        <>
+          {/* eslint-disable-next-line @next/next/no-html-link-for-pages -- 페이지가 아니라 서버 리다이렉트 라우트(OAuth 시작점)라 next/link 대상이 아님 */}
+          <a
+            href="/api/auth/kakao/start"
+            className="flex w-full items-center justify-center gap-2 rounded-full bg-[#FEE500] py-3.5 text-base font-bold text-[#191919] shadow-sm transition hover:brightness-95"
+          >
+            카카오 3초 로그인
+          </a>
+          <div className="mt-6 flex items-center gap-3 text-xs text-gray-400">
+            <span className="h-px flex-1 bg-gray-200" />
+            또는 이메일로 가입
+            <span className="h-px flex-1 bg-gray-200" />
+          </div>
+        </>
+      )}
+
+      <form onSubmit={handleSubmit} className={kakaoEnabled ? "mt-4 space-y-4" : "space-y-4"}>
       <div>
         <label htmlFor="email" className="text-sm font-medium text-gray-700">
           이메일
@@ -369,6 +387,7 @@ export function SignupForm() {
       >
         {loading ? "가입 처리 중..." : "회원가입"}
       </button>
-    </form>
+      </form>
+    </div>
   );
 }
