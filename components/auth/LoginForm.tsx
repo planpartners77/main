@@ -4,7 +4,7 @@ import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
-export function LoginForm({ kakaoEnabled = false }: { kakaoEnabled?: boolean }) {
+export function LoginForm({ kakaoEnabled = false, next = "/mypage" }: { kakaoEnabled?: boolean; next?: string }) {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -28,7 +28,7 @@ export function LoginForm({ kakaoEnabled = false }: { kakaoEnabled?: boolean }) 
       return;
     }
 
-    router.push("/mypage");
+    router.push(next);
     router.refresh();
   }
 
@@ -36,9 +36,8 @@ export function LoginForm({ kakaoEnabled = false }: { kakaoEnabled?: boolean }) 
     <div className="mt-8">
       {kakaoEnabled && (
         <>
-          {/* eslint-disable-next-line @next/next/no-html-link-for-pages -- 페이지가 아니라 서버 리다이렉트 라우트(OAuth 시작점)라 next/link 대상이 아님 */}
           <a
-            href="/api/auth/kakao/start"
+            href={`/api/auth/kakao/start?next=${encodeURIComponent(next)}`}
             className="flex w-full items-center justify-center gap-2 rounded-full bg-[#FEE500] py-3.5 text-base font-bold text-[#191919] shadow-sm transition hover:brightness-95"
           >
             카카오 3초 로그인

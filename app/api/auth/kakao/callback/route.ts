@@ -4,8 +4,10 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getOAuthCredentials, getOAuthRedirectUri } from "@/lib/oauth/credentials";
 import { sendTelegramMessage } from "@/lib/telegram";
+import { sanitizeNextPath } from "@/lib/auth/safe-redirect";
 
 const STATE_COOKIE = "kakao_oauth_state";
+const NEXT_COOKIE = "kakao_oauth_next";
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
 interface KakaoTokenResponse {
@@ -199,7 +201,9 @@ export async function GET(request: NextRequest) {
     : { error: new Error("no_phone") };
   if (signInError) return fail("kakao_session_failed");
 
-  const response = NextResponse.redirect(new URL("/mypage", siteUrl));
+  const next = sanitizeNextPath(request.cookies.get(NEXT_COOKIE)?.value) ?? "/mypage";
+  const response = NextResponse.redirect(new URL(next, siteUrl));
   response.cookies.delete(STATE_COOKIE);
+  response.cookies.delete(NEXT_COOKIE);
   return response;
 }

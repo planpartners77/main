@@ -54,6 +54,9 @@ export function GlobalNav({ categories }: { categories: CategoryConfig[] }) {
   const router = useRouter();
   const [loggedIn, setLoggedIn] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  // 로그인 후 무조건 마이페이지가 아니라 로그인 누르기 전 보던 페이지로 되돌아가게
+  // 현재 경로를 next로 붙여준다(로그인/관리자/API 경로는 lib/auth/safe-redirect가 거름).
+  const loginHref = `/login?next=${encodeURIComponent(pathname)}`;
 
   useEffect(() => {
     const supabase = createClient();
@@ -132,7 +135,7 @@ export function GlobalNav({ categories }: { categories: CategoryConfig[] }) {
               </button>
             ) : (
               <Link
-                href="/login"
+                href={loginHref}
                 className="rounded-full bg-[var(--brand-blue)] px-4 py-1.5 font-medium text-white hover:bg-[var(--brand-blue-dark)]"
               >
                 로그인
@@ -245,7 +248,7 @@ export function GlobalNav({ categories }: { categories: CategoryConfig[] }) {
                 </button>
               ) : (
                 <Link
-                  href="/login"
+                  href={loginHref}
                   onClick={() => setMenuOpen(false)}
                   className="block rounded-full bg-[var(--brand-blue)] px-2 py-2.5 text-center font-medium text-white"
                 >

@@ -1,9 +1,12 @@
-import { NextResponse } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
 import { getOAuthCredentials, getOAuthRedirectUri } from "@/lib/oauth/credentials";
+import { sanitizeNextPath } from "@/lib/auth/safe-redirect";
 
 const STATE_COOKIE = "kakao_oauth_state";
+const NEXT_COOKIE = "kakao_oauth_next";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const next = sanitizeNextPath(new URL(request.url).searchParams.get("next"));
   const { clientId } = await getOAuthCredentials("kakao");
   const redirectUri = getOAuthRedirectUri("kakao");
 
@@ -28,5 +31,14 @@ export async function GET() {
     maxAge: 60 * 10,
     path: "/",
   });
+  if (next) {
+    response.cookies.set(NEXT_COOKIE, next, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 60 * 10,
+      path: "/",
+    });
+  }
   return response;
 }

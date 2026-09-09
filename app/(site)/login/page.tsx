@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { LoginForm } from "@/components/auth/LoginForm";
 import { getLoginMethodsSettings } from "@/lib/design/site-settings";
+import { sanitizeNextPath } from "@/lib/auth/safe-redirect";
 
 const KAKAO_ERROR_MESSAGES: Record<string, string> = {
   kakao_not_configured: "카카오 로그인이 아직 설정되지 않았습니다.",
@@ -15,9 +16,10 @@ const KAKAO_ERROR_MESSAGES: Record<string, string> = {
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ confirmed?: string; error?: string }>;
+  searchParams: Promise<{ confirmed?: string; error?: string; next?: string }>;
 }) {
-  const { confirmed, error } = await searchParams;
+  const { confirmed, error, next: rawNext } = await searchParams;
+  const next = sanitizeNextPath(rawNext) ?? "/mypage";
   const loginMethods = await getLoginMethodsSettings();
 
   return (
@@ -35,7 +37,7 @@ export default async function LoginPage({
           {KAKAO_ERROR_MESSAGES[error]}
         </p>
       )}
-      <LoginForm kakaoEnabled={loginMethods.kakao} />
+      <LoginForm kakaoEnabled={loginMethods.kakao} next={next} />
       <p className="mt-6 text-center text-sm text-gray-500">
         아직 회원이 아니신가요?{" "}
         <Link href="/signup" className="font-semibold text-[var(--brand-blue)]">
