@@ -30,13 +30,6 @@ interface KakaoUserMeResponse {
   kakao_account?: KakaoAccount;
 }
 
-interface KakaoShippingAddress {
-  base_address?: string;
-  detail_address?: string;
-  receiver_name?: string;
-  receiver_phone_number1?: string;
-}
-
 function normalizePhone(raw: string | undefined): string | null {
   if (!raw) return null;
   // 카카오는 "+82 10-1234-5678" 형태로 내려준다 — Supabase phone auth는 공백/하이픈 없는
@@ -104,21 +97,9 @@ export async function GET(request: NextRequest) {
   // 없다(코드만으로는 수집 불가 — 콘솔 설정이 선행 조건). 검증된 이메일만 신뢰한다.
   const email = account.is_email_valid && account.is_email_verified ? (account.email ?? null) : null;
 
-  // 3) 배송지정보(선택 동의항목) — 미동의/미등록이면 조용히 스킵.
-  let shipping: KakaoShippingAddress | null = null;
-  try {
-    const shippingRes = await fetch("https://kapi.kakao.com/v1/user/shipping_address", {
-      headers: { Authorization: `Bearer ${tokenData.access_token}` },
-    });
-    if (shippingRes.ok) {
-      const shippingData = (await shippingRes.json()) as {
-        shipping_addresses?: KakaoShippingAddress[];
-      };
-      shipping = shippingData.shipping_addresses?.[0] ?? null;
-    }
-  } catch {
-    // 배송지 조회 실패는 로그인 자체를 막을 이유가 아니므로 무시한다.
-  }
+  // 3) 배송지정보(선택 동의항목) — 카카오 개발자 콘솔에서 현재 "권한 없음" 상태라 호출해도
+  // 항상 빈 응답/실패로 돌아온다. 매 로그인마다 불필요한 왕복이 생기므로 호출 자체를 생략한다.
+  // 추후 콘솔에서 해당 권한이 승인되면 이 블록을 fetch("https://kapi.kakao.com/v1/user/shipping_address")로 복원한다.
 
   const admin = createAdminClient();
 
@@ -162,9 +143,9 @@ export async function GET(request: NextRequest) {
         gender: account.gender ?? null,
         birthdate,
         ci_hash: ciHash,
-        shipping_name: shipping?.receiver_name ?? null,
-        shipping_address: shipping ? `${shipping.base_address ?? ""} ${shipping.detail_address ?? ""}`.trim() : null,
-        shipping_phone: shipping?.receiver_phone_number1 ?? null,
+        shipping_name: null,
+        shipping_address: null,
+        shipping_phone: null,
       },
     };
 
@@ -180,12 +161,13 @@ export async function GET(request: NextRequest) {
     authUserId = created.data.user.id;
 
     // 이 라우트는 서버에서 방금 생성을 확정한 데이터를 그대로 쓰므로, /api/notify처럼
-    // DB를 재조회해 신뢰성을 검증할 필요 없이 바로 알림을 보낸다.
-    await sendTelegramMessage(
+    // DB를 재조회해 신뢰성을 검증할 필요 없이 바로 알림을 보낸다. 텔레그램 발송은 사용자
+    // 리다이렉트와 무관하므로 await하지 않고 fire-and-forget으로 처리해 응답 지연을 없앤다.
+    sendTelegramMessage(
       ["🆕 <b>신규 회원가입</b> (카카오 3초 로그인)", `이름: ${account.name ?? "-"}`, `연락처: ${phone ?? "-"}`].join(
         "\n",
       ),
-    );
+    ).catch((err) => console.error("[kakao_signup_telegram_notify_failed]", err));
   }
 
   // 6-1) 기존 회원이 이번 로그인에서 처음으로 인증된 이메일을 동의했다면 백필한다(예: 콘솔에서
