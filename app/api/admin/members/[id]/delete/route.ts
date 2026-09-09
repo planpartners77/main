@@ -32,6 +32,16 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   const { error: banError } = await admin.auth.admin.updateUserById(id, { ban_duration: "87600h" });
   if (banError) return NextResponse.json({ error: banError.message }, { status: 500 });
 
+  // 1-1) auth.users.phone은 profiles.phone 익명화와 별개로 남아있어, 밴된 계정이 실제
+  // 전화번호를 계속 점유한다. 이 상태로 두면 같은 번호로는(카카오 재로그인 포함) 다시는
+  // 가입할 수 없다(Supabase가 "이미 등록된 전화번호"로 거부 -> kakao_signup_failed).
+  // 실제 회원 신원과 무관한 더미 번호로 치환해 원래 번호를 반납시킨다.
+  const tombstonePhone = `9${Date.now()}`;
+  const { error: phoneReleaseError } = await admin.auth.admin.updateUserById(id, { phone: tombstonePhone });
+  if (phoneReleaseError) {
+    console.error(`[member_delete_phone_release_failed] user=${id} reason=${phoneReleaseError.message}`);
+  }
+
   // 2) profiles 개인정보 익명화.
   const { error: anonError } = await admin
     .from("profiles")
