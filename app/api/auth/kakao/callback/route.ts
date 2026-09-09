@@ -2,6 +2,7 @@ import { createHash, randomBytes } from "crypto";
 import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { getOAuthCredentials, getOAuthRedirectUri } from "@/lib/oauth/credentials";
 
 const STATE_COOKIE = "kakao_oauth_state";
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
@@ -55,10 +56,9 @@ function fail(reason: string) {
 }
 
 export async function GET(request: NextRequest) {
-  const clientId = process.env.KAKAO_CLIENT_ID;
-  const clientSecret = process.env.KAKAO_CLIENT_SECRET;
-  const redirectUri = process.env.KAKAO_REDIRECT_URI;
-  if (!clientId || !redirectUri) return fail("kakao_not_configured");
+  const { clientId, clientSecret } = await getOAuthCredentials("kakao");
+  const redirectUri = getOAuthRedirectUri("kakao");
+  if (!clientId) return fail("kakao_not_configured");
 
   const url = new URL(request.url);
   const code = url.searchParams.get("code");

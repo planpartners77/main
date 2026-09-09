@@ -1,15 +1,13 @@
 import { NextResponse } from "next/server";
+import { getOAuthCredentials, getOAuthRedirectUri } from "@/lib/oauth/credentials";
 
 const STATE_COOKIE = "kakao_oauth_state";
 
-// 카카오싱크 로그인 시작점. KAKAO_CLIENT_ID는 서버 전용 값(NEXT_PUBLIC_ 아님)이라
-// 클라이언트가 인가 URL을 직접 만들 수 없어 이 라우트를 거친다. state는 CSRF 방지용
-// 랜덤값으로, 짧게 사는 httpOnly 쿠키에 저장해 콜백에서 그대로 되돌아온 값과 대조한다.
 export async function GET() {
-  const clientId = process.env.KAKAO_CLIENT_ID;
-  const redirectUri = process.env.KAKAO_REDIRECT_URI;
+  const { clientId } = await getOAuthCredentials("kakao");
+  const redirectUri = getOAuthRedirectUri("kakao");
 
-  if (!clientId || !redirectUri) {
+  if (!clientId) {
     return NextResponse.redirect(
       new URL("/login?error=kakao_not_configured", process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"),
     );

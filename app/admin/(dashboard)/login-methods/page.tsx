@@ -2,7 +2,15 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getAdminSession } from "@/lib/admin/session";
 import { getLoginMethodsSettings } from "@/lib/design/site-settings";
+import { createClient } from "@/lib/supabase/server";
+import { getOAuthRedirectUri, type OAuthProvider } from "@/lib/oauth/credentials";
 import { LoginMethodsManager } from "@/components/admin/login/LoginMethodsManager";
+import { OAuthCredentialsManager, type OAuthProviderInfo } from "@/components/admin/login/OAuthCredentialsManager";
+
+const PROVIDER_LABELS: Record<OAuthProvider, string> = {
+  kakao: "카카오",
+  google: "구글",
+};
 
 export default async function AdminLoginMethodsPage() {
   const session = await getAdminSession();
@@ -13,6 +21,26 @@ export default async function AdminLoginMethodsPage() {
   }
 
   const settings = await getLoginMethodsSettings();
+
+  const supabase = await createClient();
+  const { data: credentialRows } = await supabase
+    .from("oauth_credentials")
+    .select("provider, client_id, client_secret, updated_at");
+
+  // client_secret 실제 값은 여기서 걸러내고 boolean(hasSecret)만 클라이언트 컴포넌트로 넘긴다
+  // — 이 route는 서버 컴포넌트라 여기서 만드는 props 객체만 브라우저로 직렬화되며, secret 원문은
+  // 아예 응답에 포함되지 않는다.
+  const providers: OAuthProviderInfo[] = (["kakao", "google"] as const).map((provider) => {
+    const row = credentialRows?.find((r) => r.provider === provider);
+    return {
+      provider,
+      label: PROVIDER_LABELS[provider],
+      clientId: row?.client_id ?? "",
+      hasSecret: Boolean(row?.client_secret),
+      updatedAt: row?.updated_at ?? null,
+      redirectUri: getOAuthRedirectUri(provider),
+    };
+  });
 
   return (
     <div>
@@ -29,16 +57,15 @@ export default async function AdminLoginMethodsPage() {
         <LoginMethodsManager settings={settings} />
       </div>
 
-      <div className="mt-8 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
-        <p className="font-semibold">카카오싱크 연동 전 체크리스트</p>
-        <ul className="mt-1.5 list-inside list-disc space-y-1">
-          <li>카카오 디벨로퍼스에 비즈 앱으로 등록하고 간편가입 동의항목 심사를 통과해야 합니다.</li>
-          <li>
-            심사 통과 후 발급되는 REST API 키/시크릿을 서버 환경변수 KAKAO_CLIENT_ID,
-            KAKAO_CLIENT_SECRET에 설정해야 실제 로그인이 동작합니다.
-          </li>
-          <li>환경변수가 비어 있으면 토글을 켜도 로그인 시도 시 오류 화면으로 안내됩니다.</li>
-        </ul>
+      <div className="mt-8">
+        <h2 className="text-sm font-semibold text-[var(--brand-navy)]">OAuth 키 관리</h2>
+        <p className="mt-1 text-xs text-gray-500">
+          카카오/구글 개발자 콘솔에서 발급받은 Client ID·Secret을 아래에 입력하면 바로 저장됩니다.
+          Redirect URI는 배포 도메인 기준으로 자동 계산되므로 복사해서 개발자 콘솔에 등록하세요.
+        </p>
+        <div className="mt-3">
+          <OAuthCredentialsManager providers={providers} />
+        </div>
       </div>
     </div>
   );
