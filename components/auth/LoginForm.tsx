@@ -4,7 +4,7 @@ import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
-export function LoginForm({ kakaoEnabled = false, next = "/mypage" }: { kakaoEnabled?: boolean; next?: string }) {
+export function LoginForm({ kakaoEnabled = false, next = "/" }: { kakaoEnabled?: boolean; next?: string }) {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

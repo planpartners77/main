@@ -201,7 +201,7 @@ export async function GET(request: NextRequest) {
     : { error: new Error("no_phone") };
   if (signInError) return fail("kakao_session_failed");
 
-  const next = sanitizeNextPath(request.cookies.get(NEXT_COOKIE)?.value) ?? "/mypage";
+  const next = sanitizeNextPath(request.cookies.get(NEXT_COOKIE)?.value) ?? "/";
   const response = NextResponse.redirect(new URL(next, siteUrl));
   response.cookies.delete(STATE_COOKIE);
   response.cookies.delete(NEXT_COOKIE);

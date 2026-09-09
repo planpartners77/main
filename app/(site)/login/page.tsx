@@ -19,7 +19,7 @@ export default async function LoginPage({
   searchParams: Promise<{ confirmed?: string; error?: string; next?: string }>;
 }) {
   const { confirmed, error, next: rawNext } = await searchParams;
-  const next = sanitizeNextPath(rawNext) ?? "/mypage";
+  const next = sanitizeNextPath(rawNext) ?? "/";
   const loginMethods = await getLoginMethodsSettings();
 
   return (
