@@ -6,8 +6,12 @@ export function ReferralShareLink({ code }: { code: string }) {
   const [copied, setCopied] = useState(false);
 
   function copyLink() {
-    const url = `${window.location.origin}/?ref=${encodeURIComponent(code)}`;
-    navigator.clipboard.writeText(url).then(() => {
+    const url = new URL(window.location.origin);
+    url.searchParams.set("ref", code);
+    url.searchParams.set("utm_source", "member_referral");
+    url.searchParams.set("utm_medium", "referral");
+    url.searchParams.set("utm_campaign", code);
+    navigator.clipboard.writeText(url.toString()).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     });

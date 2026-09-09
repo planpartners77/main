@@ -9,6 +9,7 @@ interface LeadRow {
   created_at: string;
   guest_contact: Record<string, unknown> | null;
   categories: { name: string; slug: string } | null;
+  referral_code_id: string | null;
 }
 
 // guest_contact은 카테고리(신청서)마다 필드 구성이 달라 공용 키 후보 중 있는 값만 뽑아 보여준다.
@@ -38,7 +39,7 @@ export default async function AdminLeadsPage({
 
   let query = supabase
     .from("leads")
-    .select("id, status, created_at, guest_contact, categories(name, slug)")
+    .select("id, status, created_at, guest_contact, categories(name, slug), referral_code_id")
     .order("created_at", { ascending: false })
     .limit(100);
 
@@ -128,7 +129,7 @@ export default async function AdminLeadsPage({
                         >
                           {LEAD_STATUS_OPTIONS.find((o) => o.value === lead.status)?.label ?? lead.status}
                         </span>
-                        <LeadStatusSelect leadId={lead.id} status={lead.status} />
+                        <LeadStatusSelect leadId={lead.id} status={lead.status} referralCodeId={lead.referral_code_id} />
                       </div>
                     </td>
                   </tr>

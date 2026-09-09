@@ -2,7 +2,7 @@
 
 import { useEffect, useState, type FormEvent } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { getStoredReferral } from "@/lib/referral/client";
+import { getStoredReferral, getStoredUtm } from "@/lib/referral/client";
 
 const RE_PHONE = /^010-\d{4}-\d{4}$/;
 
@@ -137,6 +137,7 @@ export function UsimApplyForm({ initialPlanId }: { initialPlanId: string | null 
 
       const leadId = crypto.randomUUID();
       const referral = getStoredReferral();
+      const utm = getStoredUtm();
 
       const { error } = await supabase.from("leads").insert({
         id: leadId,
@@ -156,6 +157,9 @@ export function UsimApplyForm({ initialPlanId }: { initialPlanId: string | null 
         },
         consent: { terms: consentTerms, privacy: consentPrivacy, marketing: consentMarketing },
         referrer_url: typeof window !== "undefined" ? window.location.href : null,
+        utm_source: utm?.utm_source ?? null,
+        utm_medium: utm?.utm_medium ?? null,
+        utm_campaign: utm?.utm_campaign ?? null,
       });
       if (error) throw error;
 

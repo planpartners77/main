@@ -2,7 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { getStoredReferral } from "@/lib/referral/client";
+import { getStoredReferral, getStoredUtm } from "@/lib/referral/client";
 
 const PREFERRED_TIME_OPTIONS = ["평일 오전", "평일 오후", "저녁(18시 이후)", "주말"] as const;
 
@@ -53,6 +53,7 @@ export function ConsultRequestForm({ categorySlug, categoryName }: { categorySlu
 
       const leadId = crypto.randomUUID();
       const referral = getStoredReferral();
+      const utm = getStoredUtm();
 
       const { error } = await supabase.from("leads").insert({
         id: leadId,
@@ -71,6 +72,9 @@ export function ConsultRequestForm({ categorySlug, categoryName }: { categorySlu
           thirdParty: consentThirdParty,
         },
         referrer_url: typeof window !== "undefined" ? window.location.href : null,
+        utm_source: utm?.utm_source ?? null,
+        utm_medium: utm?.utm_medium ?? null,
+        utm_campaign: utm?.utm_campaign ?? null,
       });
 
       if (error) throw error;

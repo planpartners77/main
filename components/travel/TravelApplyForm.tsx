@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { getStoredReferral } from "@/lib/referral/client";
+import { getStoredReferral, getStoredUtm } from "@/lib/referral/client";
 
 // CRIS 골프 체험 프로그램 신청 페이지. 원본(vscode_pplan/index.html, ppartners 배포본)의
 // 신청서 항목·검증 로직·회차 일정을 그대로 유지하되 PlanPartners 블루 컨셉으로 재구성했다.
@@ -346,6 +346,7 @@ export function TravelApplyForm() {
       // id를 클라이언트에서 미리 생성해 넘긴다 — 알림 API 호출에 그대로 재사용.
       const leadId = crypto.randomUUID();
       const referral = getStoredReferral();
+      const utm = getStoredUtm();
 
       const { error } = await supabase.from("leads").insert({
         id: leadId,
@@ -376,6 +377,9 @@ export function TravelApplyForm() {
           final: form.consentFinal,
         },
         referrer_url: typeof window !== "undefined" ? window.location.href : null,
+        utm_source: utm?.utm_source ?? null,
+        utm_medium: utm?.utm_medium ?? null,
+        utm_campaign: utm?.utm_campaign ?? null,
       });
 
       if (error) throw error;

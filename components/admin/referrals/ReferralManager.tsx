@@ -16,6 +16,7 @@ export interface ReferralCodeRow {
   total_registrations: number;
   is_active: boolean;
   expires_at: string | null;
+  top_channel: string | null;
 }
 
 const EMPTY_FORM = {
@@ -151,8 +152,14 @@ export function ReferralManager({ codes }: { codes: ReferralCodeRow[] }) {
   }
 
   function copyLink(row: ReferralCodeRow) {
-    const url = `${window.location.origin}/?ref=${encodeURIComponent(row.code)}`;
-    navigator.clipboard.writeText(url).then(() => {
+    // 링크 자체에 UTM을 함께 실어 보내, 링크 클릭 시 ReferralCapture가 ref와 utm을
+    // 한 번에 캡처하게 한다 — 이후 리드 제출 시 leads.utm_*로 채널까지 남는다.
+    const url = new URL(window.location.origin);
+    url.searchParams.set("ref", row.code);
+    url.searchParams.set("utm_source", row.type === "member" ? "member_referral" : "partner_referral");
+    url.searchParams.set("utm_medium", "referral");
+    url.searchParams.set("utm_campaign", row.code);
+    navigator.clipboard.writeText(url.toString()).then(() => {
       setCopiedId(row.id);
       setTimeout(() => setCopiedId((id) => (id === row.id ? null : id)), 1500);
     });
@@ -261,7 +268,7 @@ export function ReferralManager({ codes }: { codes: ReferralCodeRow[] }) {
         </p>
       ) : (
         <div className="mt-4 overflow-x-auto rounded-2xl border border-gray-200 bg-white">
-          <table className="w-full min-w-[820px] text-sm">
+          <table className="w-full min-w-[940px] text-sm">
             <thead>
               <tr className="border-b border-gray-100 text-left text-xs font-semibold text-gray-400">
                 <th className="px-4 py-3">코드</th>
@@ -271,6 +278,7 @@ export function ReferralManager({ codes }: { codes: ReferralCodeRow[] }) {
                 <th className="px-4 py-3">뎁스</th>
                 <th className="px-4 py-3">클릭</th>
                 <th className="px-4 py-3">전환</th>
+                <th className="px-4 py-3">주요 채널</th>
                 <th className="px-4 py-3">상태</th>
                 <th className="px-4 py-3" />
               </tr>
@@ -288,6 +296,7 @@ export function ReferralManager({ codes }: { codes: ReferralCodeRow[] }) {
                     <td className="px-4 py-3 text-gray-500">{row.depth}</td>
                     <td className="px-4 py-3 text-gray-500">{row.total_clicks}</td>
                     <td className="px-4 py-3 text-gray-500">{row.total_registrations}</td>
+                    <td className="px-4 py-3 text-gray-500">{row.top_channel ?? "-"}</td>
                     <td className="px-4 py-3">
                       <button
                         onClick={() => toggleActive(row)}

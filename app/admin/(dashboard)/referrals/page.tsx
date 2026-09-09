@@ -40,14 +40,20 @@ export default async function AdminReferralsPage({
   let clickCounts = new Map<string, number>();
   let registrationCounts = new Map<string, number>();
 
+  let topChannelByCode = new Map<string, string>();
+
   if (codeIds.length > 0) {
-    const [{ data: clicksData }, { data: conversionsData }] = await Promise.all([
+    const [{ data: clicksData }, { data: conversionsData }, { data: leadsData }] = await Promise.all([
       supabase.from("referral_clicks").select("code_id").in("code_id", codeIds),
       supabase
         .from("referral_conversions")
         .select("code_id")
         .in("code_id", codeIds)
         .eq("conversion_type", "registration"),
+      // 리드에 실려온 utm_medium으로 코드별 어느 채널(카카오톡/블로그/문자 등)에서 실제 신청까지
+      // 이어졌는지 본다. leads는 담당 카테고리 관리자만 볼 수 있어(is_admin_for_category), 로그인한
+      // 관리자가 담당하지 않는 카테고리 리드는 이 집계에서 빠질 수 있다 — super_admin은 전체가 잡힌다.
+      supabase.from("leads").select("referral_code_id, utm_medium").in("referral_code_id", codeIds),
     ]);
 
     clickCounts = (clicksData ?? []).reduce((map, row) => {
@@ -59,12 +65,28 @@ export default async function AdminReferralsPage({
       map.set(row.code_id, (map.get(row.code_id) ?? 0) + 1);
       return map;
     }, new Map<string, number>());
+
+    const channelCountsByCode = new Map<string, Map<string, number>>();
+    for (const row of leadsData ?? []) {
+      if (!row.referral_code_id) continue;
+      const channel = row.utm_medium ?? "(미기록)";
+      const channelCounts = channelCountsByCode.get(row.referral_code_id) ?? new Map<string, number>();
+      channelCounts.set(channel, (channelCounts.get(channel) ?? 0) + 1);
+      channelCountsByCode.set(row.referral_code_id, channelCounts);
+    }
+    topChannelByCode = new Map(
+      Array.from(channelCountsByCode.entries()).map(([codeId, channelCounts]) => {
+        const [topChannel, topCount] = Array.from(channelCounts.entries()).sort((a, b) => b[1] - a[1])[0];
+        return [codeId, `${topChannel} ${topCount}`];
+      }),
+    );
   }
 
   const codesWithRealCounts = codes.map((c) => ({
     ...c,
     total_clicks: clickCounts.get(c.id) ?? 0,
     total_registrations: registrationCounts.get(c.id) ?? 0,
+    top_channel: topChannelByCode.get(c.id) ?? null,
   }));
 
   return (
