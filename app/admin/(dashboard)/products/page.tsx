@@ -20,7 +20,7 @@ export default async function AdminProductsPage() {
       <Link href="/admin" className="text-sm text-gray-500 hover:text-[var(--brand-navy)]">
         ← 대시보드
       </Link>
-      <h1 className="mt-2 text-xl font-bold text-[var(--brand-navy)]">상품 관리</h1>
+      <h1 className="mt-2 text-xl font-bold text-[var(--brand-navy)]">알뜰폰_상품관리</h1>
       <div className="mt-6">
         <ProductManager
           products={(products ?? []) as unknown as ProductRow[]}

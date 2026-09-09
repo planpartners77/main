@@ -24,7 +24,7 @@ export default async function AdminUsimPromotionsPage() {
       <Link href="/admin" className="text-sm text-gray-500 hover:text-[var(--brand-navy)]">
         ← 대시보드
       </Link>
-      <h1 className="mt-2 text-xl font-bold text-[var(--brand-navy)]">요금제 프로모션 관리</h1>
+      <h1 className="mt-2 text-xl font-bold text-[var(--brand-navy)]">알뜰폰_프로모션</h1>
       <div className="mt-6">
         {!category ? (
           <p className="rounded-xl border border-gray-200 bg-white p-8 text-center text-sm text-gray-500">
