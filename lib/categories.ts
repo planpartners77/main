@@ -41,6 +41,7 @@ export const CATEGORIES: CategoryConfig[] = [
   },
   { slug: "internet", name: "인터넷", trackType: "self_service", regulationLevel: "low" },
   { slug: "usim", name: "유심", trackType: "self_service", regulationLevel: "medium" },
+  { slug: "mobile", name: "휴대폰", trackType: "self_service", regulationLevel: "medium" },
   { slug: "rental", name: "가전렌탈", trackType: "self_service", regulationLevel: "low" },
   { slug: "insurance", name: "보험", trackType: "consult_required", regulationLevel: "high" },
   { slug: "funeral", name: "상조", trackType: "consult_required", regulationLevel: "high" },

@@ -6,15 +6,6 @@ const nextConfig: NextConfig = {
     // 출처 도메인을 미리 알 수 없으므로 remotePatterns 화이트리스트 대신 최적화 자체를 끈다.
     unoptimized: true,
   },
-  async redirects() {
-    // mobile -> usim 카테고리 명칭 정정에 따른 구 URL 리다이렉트.
-    // "휴대폰"은 별도 신규 카테고리로 추후 생성될 예정이라 /mobile 자체를 재사용하지 않는다.
-    return [
-      { source: "/mobile", destination: "/usim", permanent: true },
-      { source: "/mobile/:id*", destination: "/usim/:id*", permanent: true },
-      { source: "/apply/mobile", destination: "/apply/usim", permanent: true },
-    ];
-  },
 };
 
 export default nextConfig;

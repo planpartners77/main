@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { UsimPlanSpecFields, parseUsimExtra } from "./UsimPlanSpecFields";
 import { EMPTY_USIM_PLAN_EXTRA, type UsimPlanExtra } from "@/lib/usim/plan-spec";
+import { MobileDeviceSpecFields, parsePhoneExtra } from "./MobileDeviceSpecFields";
+import { EMPTY_PHONE_DEVICE_EXTRA, type PhoneDeviceExtra } from "@/lib/mobile/device-spec";
 
 export interface ProductRow {
   id: string;
@@ -93,6 +95,7 @@ export function ProductManager({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState(EMPTY_FORM);
   const [usimExtra, setUsimExtra] = useState<UsimPlanExtra>(EMPTY_USIM_PLAN_EXTRA);
+  const [phoneExtra, setPhoneExtra] = useState<PhoneDeviceExtra>(EMPTY_PHONE_DEVICE_EXTRA);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [categoryFilter, setCategoryFilter] = useState("");
@@ -101,6 +104,7 @@ export function ProductManager({
   const visiblePartners = partners.filter((p) => !form.category_id || p.category_id === form.category_id);
   const selectedCategory = categories.find((c) => c.id === form.category_id);
   const isUsimCategory = selectedCategory?.slug === "usim";
+  const isMobileCategory = selectedCategory?.slug === "mobile";
 
   const displayedProducts = useMemo(() => {
     const filtered = categoryFilter
@@ -112,6 +116,7 @@ export function ProductManager({
   function startCreate() {
     setForm(EMPTY_FORM);
     setUsimExtra(EMPTY_USIM_PLAN_EXTRA);
+    setPhoneExtra(EMPTY_PHONE_DEVICE_EXTRA);
     setEditingId(null);
     setShowForm(true);
     setError(null);
@@ -137,6 +142,11 @@ export function ProductManager({
     } else {
       setUsimExtra(EMPTY_USIM_PLAN_EXTRA);
     }
+    if (category?.slug === "mobile") {
+      setPhoneExtra(parsePhoneExtra(JSON.stringify(product.extra ?? {})));
+    } else {
+      setPhoneExtra(EMPTY_PHONE_DEVICE_EXTRA);
+    }
     setShowForm(true);
     setError(null);
   }
@@ -161,6 +171,8 @@ export function ProductManager({
     let extraParsed: Record<string, unknown>;
     if (isUsimCategory) {
       extraParsed = usimExtra as unknown as Record<string, unknown>;
+    } else if (isMobileCategory) {
+      extraParsed = phoneExtra as unknown as Record<string, unknown>;
     } else {
       try {
         extraParsed = form.extra.trim() ? JSON.parse(form.extra) : {};
@@ -338,6 +350,8 @@ export function ProductManager({
           </label>
           {isUsimCategory ? (
             <UsimPlanSpecFields value={usimExtra} onChange={setUsimExtra} />
+          ) : isMobileCategory ? (
+            <MobileDeviceSpecFields value={phoneExtra} onChange={setPhoneExtra} />
           ) : (
             <label className="text-sm sm:col-span-2">
               추가 정보(JSON, 선택 — 카테고리별 상이한 스펙)

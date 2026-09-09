@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { getCategory } from "@/lib/categories";
 import { TravelApplyForm } from "@/components/travel/TravelApplyForm";
 import { UsimApplyForm } from "@/components/usim/UsimApplyForm";
+import { PhoneApplyForm } from "@/components/mobile/PhoneApplyForm";
 
 // Phase 3에서 §12-8 신청서 플로우(셀프서비스 트랙)로 교체될 자리표시자.
 // travel/usim은 카테고리 전용 신청서가 먼저 만들어져 예외적으로 분기한다.
@@ -27,6 +28,17 @@ export default async function ApplyPage({
         <h1 className="text-2xl font-bold text-[var(--brand-navy)]">유심 요금제 신청서</h1>
         <p className="mt-2 text-sm text-gray-500">아래 정보를 입력하시면 담당자가 확인 후 개통을 도와드립니다.</p>
         <UsimApplyForm initialPlanId={planId ?? null} />
+      </main>
+    );
+  }
+
+  if (slug === "mobile") {
+    const { planId } = await searchParams;
+    return (
+      <main className="mx-auto max-w-2xl px-4 py-16">
+        <h1 className="text-2xl font-bold text-[var(--brand-navy)]">휴대폰 개통 신청서</h1>
+        <p className="mt-2 text-sm text-gray-500">아래 정보를 입력하시면 담당자가 확인 후 개통을 도와드립니다.</p>
+        <PhoneApplyForm initialDeviceId={planId ?? null} />
       </main>
     );
   }

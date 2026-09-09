@@ -7,6 +7,7 @@ const TONE: Record<string, string> = {
   travel: "bg-sky-50 text-sky-600",
   internet: "bg-blue-50 text-blue-600",
   usim: "bg-indigo-50 text-indigo-600",
+  mobile: "bg-cyan-50 text-cyan-600",
   rental: "bg-emerald-50 text-emerald-600",
   insurance: "bg-amber-50 text-amber-600",
   funeral: "bg-slate-100 text-slate-600",
