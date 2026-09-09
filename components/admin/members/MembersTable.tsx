@@ -49,6 +49,7 @@ export function MembersTable({
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [bulkTier, setBulkTier] = useState("");
   const [applying, setApplying] = useState(false);
+  const [deletingBulk, setDeletingBulk] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
   function toggle(id: string) {
@@ -99,6 +100,39 @@ export function MembersTable({
     router.refresh();
   }
 
+  async function applyBulkDelete() {
+    if (selected.size === 0) return;
+    const ids = Array.from(selected);
+    const names = ids
+      .map((id) => members.find((m) => m.id === id)?.display_name ?? "이름 없음")
+      .slice(0, 5)
+      .join(", ");
+    if (
+      !confirm(
+        `선택한 ${ids.length}명(${names}${ids.length > 5 ? " 외" : ""})을 삭제할까요?\n\n로그인이 영구 차단되고 이름/연락처/카카오정보 등 개인정보가 익명화됩니다.\n포인트/쿠폰/추천인 이력은 정산 근거 보존을 위해 남습니다.\n이 작업은 되돌릴 수 없습니다.`,
+      )
+    ) {
+      return;
+    }
+
+    setDeletingBulk(true);
+    setMessage(null);
+
+    const results = await Promise.all(
+      ids.map((id) => fetch(`/api/admin/members/${id}/delete`, { method: "POST" })),
+    );
+    const failCount = results.filter((r) => !r.ok).length;
+
+    setDeletingBulk(false);
+    setMessage(
+      failCount > 0
+        ? `${ids.length - failCount}명 삭제 완료, ${failCount}명 실패했습니다.`
+        : `${ids.length}명을 삭제했습니다.`,
+    );
+    setSelected(new Set());
+    router.refresh();
+  }
+
   return (
     <div className="mt-6">
       <div className="flex flex-wrap items-center gap-2 rounded-t-2xl border border-b-0 border-gray-200 bg-gray-50 px-4 py-2.5 text-xs">
@@ -122,6 +156,14 @@ export function MembersTable({
           className="rounded-full bg-[var(--brand-navy)] px-4 py-1.5 font-semibold text-white disabled:opacity-40"
         >
           {applying ? "적용 중..." : "일괄 등급변경"}
+        </button>
+        <button
+          type="button"
+          onClick={applyBulkDelete}
+          disabled={selected.size === 0 || deletingBulk}
+          className="rounded-full border border-red-300 px-4 py-1.5 font-semibold text-red-500 hover:bg-red-50 disabled:opacity-40"
+        >
+          {deletingBulk ? "삭제 중..." : "선택 삭제"}
         </button>
         {message && <span className="text-gray-500">{message}</span>}
       </div>
@@ -196,7 +238,11 @@ export function MembersTable({
                     >
                       상세보기
                     </Link>
-                    <MemberDeleteButton memberId={member.id} memberName={member.display_name ?? "이름 없음"} />
+                    <MemberDeleteButton
+                      memberId={member.id}
+                      memberName={member.display_name ?? "이름 없음"}
+                      alreadyWithdrawn={member.status === "withdrawn"}
+                    />
                   </div>
                 </td>
               </tr>

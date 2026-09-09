@@ -10,14 +10,20 @@ export function MemberDeleteButton({
   memberId,
   memberName,
   redirectOnSuccess,
+  alreadyWithdrawn,
 }: {
   memberId: string;
   memberName: string;
   redirectOnSuccess?: string;
+  alreadyWithdrawn?: boolean;
 }) {
   const router = useRouter();
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  if (alreadyWithdrawn) {
+    return <span className="text-xs font-medium text-gray-400">탈퇴됨</span>;
+  }
 
   async function handleDelete() {
     if (

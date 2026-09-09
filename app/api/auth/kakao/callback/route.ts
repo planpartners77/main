@@ -193,7 +193,15 @@ export async function GET(request: NextRequest) {
   if (isReturningUser && email) {
     const { data: existing } = await admin.auth.admin.getUserById(authUserId);
     if (!existing.user?.email) {
-      await admin.auth.admin.updateUserById(authUserId, { email, email_confirm: true }).catch(() => null);
+      const { error: backfillError } = await admin.auth.admin.updateUserById(authUserId, {
+        email,
+        email_confirm: true,
+      });
+      if (backfillError) {
+        // 다른 계정이 이미 이 이메일을 쓰고 있는 등으로 실패해도 로그인 자체는 막지 않되,
+        // 조용히 삼키지 않고 남겨서 "왜 이 회원은 이메일이 안 채워지지" 문의 시 추적 가능하게 한다.
+        console.error(`[kakao_email_backfill_failed] user=${authUserId} reason=${backfillError.message}`);
+      }
     }
   }
 

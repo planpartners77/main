@@ -35,7 +35,9 @@ export async function GET(request: NextRequest) {
 
   let query = supabase
     .from("profiles")
-    .select("id, display_name, phone, referral_role, status, created_at, customer_tiers(name)")
+    .select(
+      "id, display_name, phone, referral_role, status, created_at, auth_provider, gender, birthdate, shipping_name, shipping_address, shipping_phone, customer_tiers(name)",
+    )
     .order("created_at", { ascending: false })
     .limit(EXPORT_LIMIT);
 
@@ -58,10 +60,30 @@ export async function GET(request: NextRequest) {
     referral_role: string;
     status: string;
     created_at: string;
+    auth_provider: "email" | "kakao";
+    gender: "male" | "female" | null;
+    birthdate: string | null;
+    shipping_name: string | null;
+    shipping_address: string | null;
+    shipping_phone: string | null;
     customer_tiers: { name: string | null } | null;
   }[];
 
-  const header = ["가입일", "이름", "이메일", "연락처", "구분", "등급", "상태"];
+  const header = [
+    "가입일",
+    "이름",
+    "이메일",
+    "연락처",
+    "가입경로",
+    "성별",
+    "생년월일",
+    "구분",
+    "등급",
+    "상태",
+    "배송지 수령인",
+    "배송지 주소",
+    "배송지 연락처",
+  ];
   const lines = [header.join(",")];
   for (const r of rows) {
     lines.push(
@@ -70,9 +92,15 @@ export async function GET(request: NextRequest) {
         r.display_name ?? "",
         emailById.get(r.id) ?? "",
         r.phone ?? "",
+        r.auth_provider === "kakao" ? "카카오" : "이메일",
+        r.gender === "male" ? "남성" : r.gender === "female" ? "여성" : "",
+        r.birthdate ?? "",
         r.referral_role === "partner" ? "파트너" : "일반회원",
         r.customer_tiers?.name ?? "일반",
         r.status === "active" ? "정상" : r.status === "suspended" ? "정지" : "탈퇴",
+        r.shipping_name ?? "",
+        r.shipping_address ?? "",
+        r.shipping_phone ?? "",
       ]
         .map((v) => csvEscape(String(v)))
         .join(","),

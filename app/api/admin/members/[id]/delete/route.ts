@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { requireMemberManager } from "@/lib/admin/member-manager";
 
 // 회원 "삭제"는 물리 삭제가 아니라 탈퇴 처리 + 개인정보 익명화다. leads/point_transactions/
 // coupon_redemptions/referral_codes/member_notes가 profiles를 ON DELETE CASCADE 없이
@@ -20,23 +20,6 @@ const ANONYMIZED_FIELDS = [
   "marketing_opt_in",
   "status",
 ];
-
-async function requireMemberManager() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return null;
-
-  const { data: adminUser } = await supabase
-    .from("admin_users")
-    .select("role")
-    .eq("id", user.id)
-    .single();
-
-  if (!adminUser || !["super_admin", "member_manager"].includes(adminUser.role as string)) return null;
-  return user;
-}
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const actor = await requireMemberManager();

@@ -222,16 +222,32 @@ export default async function AdminMemberDetailPage({
       <div className="mt-2 flex items-center justify-between gap-3">
         <h1 className="text-xl font-bold text-[var(--brand-navy)]">{detail.display_name ?? "이름 없음"}</h1>
         {session && (
-          <MemberDeleteButton
-            memberId={detail.id}
-            memberName={detail.display_name ?? "이름 없음"}
-            redirectOnSuccess="/admin/members"
-          />
+          <div className="flex items-center gap-3">
+            {detail.status !== "withdrawn" && (
+              <a
+                href={`/api/admin/members/${detail.id}/export`}
+                className="text-xs font-semibold text-gray-500 hover:text-[var(--brand-navy)]"
+              >
+                정보 다운로드
+              </a>
+            )}
+            <MemberDeleteButton
+              memberId={detail.id}
+              memberName={detail.display_name ?? "이름 없음"}
+              redirectOnSuccess="/admin/members"
+              alreadyWithdrawn={detail.status === "withdrawn"}
+            />
+          </div>
         )}
       </div>
       <p className="mt-1 text-xs text-amber-600">
         이 페이지 열람 기록은 audit_logs에 자동으로 남습니다.
       </p>
+      {detail.status === "withdrawn" && (
+        <p className="mt-3 rounded-xl border border-gray-200 bg-gray-50 p-3 text-sm text-gray-500">
+          탈퇴 처리된 회원입니다. 로그인이 영구 차단되었고 개인식별정보는 익명화되었습니다. 포인트/쿠폰/추천인 이력은 정산 근거 보존을 위해 남아 있습니다.
+        </p>
+      )}
 
       <div className="mt-6 grid gap-4 sm:grid-cols-2">
         <div className="rounded-2xl border border-gray-200 bg-white p-5">
