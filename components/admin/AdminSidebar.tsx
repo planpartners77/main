@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 import { AdminIcon } from "./AdminIcon";
 import { SignOutButton } from "./SignOutButton";
 import { ADMIN_ROLE_LABELS, canAccessMenu, isAdminRole, menuKeyForPath } from "@/lib/admin/permissions";
@@ -21,7 +22,6 @@ interface NavGroup {
 // 자리만 잡아두고, 실제 구현되는 대로 여기 href만 바꾸면 된다.
 const NAV_GROUPS: NavGroup[] = [
   { label: null, items: [{ title: "대시보드", href: "/admin", icon: "dashboard" }] },
-  { label: "통계", items: [{ title: "통계", href: "/admin/statistics", icon: "stats" }] },
   {
     label: "상품·파트너",
     items: [
@@ -62,6 +62,7 @@ const NAV_GROUPS: NavGroup[] = [
   {
     label: "시스템",
     items: [
+      { title: "통계", href: "/admin/statistics", icon: "stats" },
       { title: "보안", href: "/admin/security", icon: "shield" },
       { title: "관리자 관리", href: "/admin/admins", icon: "settings" },
       { title: "간편로그인 관리", href: "/admin/login-methods", icon: "login-key" },
@@ -85,42 +86,83 @@ function visibleNavGroups(role: string): NavGroup[] {
   })).filter((group) => group.items.length > 0);
 }
 
+const SIDEBAR_COLLAPSE_KEY = "admin-sidebar-collapsed-groups";
+
 function NavLinks({ role }: { role: string }) {
   const pathname = usePathname();
   const groups = visibleNavGroups(role);
+  const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>({});
+
+  // 그룹이 많아지면서 한 화면에 다 안 들어와, 접힘 상태를 localStorage에 저장해
+  // 다음 방문에도 유지되게 한다(관리자별 로컬 취향이라 서버 저장은 불필요).
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(SIDEBAR_COLLAPSE_KEY);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      if (saved) setCollapsedGroups(JSON.parse(saved));
+    } catch {
+      // 저장된 값을 못 읽어도 기본값(전부 펼침)으로 동작
+    }
+  }, []);
+
+  function toggleGroup(label: string) {
+    setCollapsedGroups((prev) => {
+      const next = { ...prev, [label]: !prev[label] };
+      try {
+        localStorage.setItem(SIDEBAR_COLLAPSE_KEY, JSON.stringify(next));
+      } catch {
+        // 저장 실패해도 이번 화면에서 접고 펼치는 동작 자체는 그대로 유지
+      }
+      return next;
+    });
+  }
+
   return (
     <>
-      {groups.map((group) => (
-        <div key={group.label ?? "root"}>
-          {group.label && (
-            <p className="px-3 pb-1.5 text-[11px] font-semibold tracking-wider text-white/30">
-              {group.label}
-            </p>
-          )}
-          <div className="space-y-0.5">
-            {group.items.map((item) => {
-              const active =
-                item.href !== "#" &&
-                (pathname === item.href ||
-                  (item.href !== "/admin" && pathname.startsWith(`${item.href}/`)));
-              return (
-                <Link
-                  key={item.title}
-                  href={item.href}
-                  className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition ${
-                    active
-                      ? "bg-white/10 font-semibold text-white"
-                      : "text-white/60 hover:bg-white/5 hover:text-white"
-                  }`}
-                >
-                  <AdminIcon name={item.icon} className="h-4 w-4 shrink-0" />
-                  {item.title}
-                </Link>
-              );
-            })}
+      {groups.map((group) => {
+        const collapsed = group.label ? (collapsedGroups[group.label] ?? false) : false;
+        return (
+          <div key={group.label ?? "root"}>
+            {group.label && (
+              <button
+                type="button"
+                onClick={() => toggleGroup(group.label!)}
+                className="flex w-full items-center justify-between px-3 pb-1.5 text-left text-[11px] font-semibold tracking-wider text-white/30 hover:text-white/50"
+              >
+                <span>{group.label}</span>
+                <AdminIcon
+                  name="chevron-down"
+                  className={`h-3 w-3 shrink-0 transition-transform ${collapsed ? "-rotate-90" : ""}`}
+                />
+              </button>
+            )}
+            {!collapsed && (
+              <div className="space-y-0.5">
+                {group.items.map((item) => {
+                  const active =
+                    item.href !== "#" &&
+                    (pathname === item.href ||
+                      (item.href !== "/admin" && pathname.startsWith(`${item.href}/`)));
+                  return (
+                    <Link
+                      key={item.title}
+                      href={item.href}
+                      className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition ${
+                        active
+                          ? "bg-white/10 font-semibold text-white"
+                          : "text-white/60 hover:bg-white/5 hover:text-white"
+                      }`}
+                    >
+                      <AdminIcon name={item.icon} className="h-4 w-4 shrink-0" />
+                      {item.title}
+                    </Link>
+                  );
+                })}
+              </div>
+            )}
           </div>
-        </div>
-      ))}
+        );
+      })}
     </>
   );
 }

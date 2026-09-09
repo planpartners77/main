@@ -20,6 +20,7 @@ const PATHS: Record<string, string> = {
   "audit-log": "M8 3h8v3H8zM6 6h12v15H6zM9 11h6M9 15h6",
   "login-key": "M15 7a4 4 0 1 0-3.87 4.98L3 20.11V23h3l1-1v-2h2v-2h2l2.02-2.02A4 4 0 0 0 15 7Zm2-2 2 2",
   shield: "M12 2 4 5v6c0 5 3.5 9 8 11 4.5-2 8-6 8-11V5Zm0 4v10M8 11l4 4 4-8",
+  "chevron-down": "M6 9l6 6 6-6",
 };
 
 // 관리자 대시보드 전용 최소 선형 아이콘 세트. components/shared/CategoryIcon와 동일한 스타일.
