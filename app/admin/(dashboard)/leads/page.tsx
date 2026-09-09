@@ -29,26 +29,42 @@ const STATUS_STYLE: Record<string, string> = {
   canceled: "bg-gray-100 text-gray-500",
 };
 
+const PAGE_SIZE = 50;
+
 export default async function AdminLeadsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string }>;
+  searchParams: Promise<{ status?: string; page?: string }>;
 }) {
-  const { status } = await searchParams;
+  const { status, page } = await searchParams;
+  const currentPage = Math.max(1, Number(page) || 1);
+  const from = (currentPage - 1) * PAGE_SIZE;
+  const to = from + PAGE_SIZE - 1;
+
   const supabase = await createClient();
 
+  // 예전에는 .limit(100)만 있고 페이지네이션이 없어, 접수된 리드가 100건을 넘으면 101번째부터는
+  // 화면에서 아예 보이지도, 넘겨볼 수도 없었다(무한정 위쪽 100건만 노출). members/audit-logs
+  // 페이지와 동일한 range() 기반 페이지네이션으로 바꾼다.
   let query = supabase
     .from("leads")
-    .select("id, status, created_at, guest_contact, categories(name, slug), referral_code_id")
-    .order("created_at", { ascending: false })
-    .limit(100);
+    .select("id, status, created_at, guest_contact, categories(name, slug), referral_code_id", { count: "exact" })
+    .order("created_at", { ascending: false });
 
   if (status) {
     query = query.eq("status", status);
   }
 
-  const { data, error } = await query;
+  const { data, error, count } = await query.range(from, to);
   const leads = (data ?? []) as unknown as LeadRow[];
+  const totalPages = Math.max(1, Math.ceil((count ?? 0) / PAGE_SIZE));
+
+  function pageHref(p: number) {
+    const params = new URLSearchParams();
+    if (status) params.set("status", status);
+    params.set("page", String(p));
+    return `/admin/leads?${params.toString()}`;
+  }
 
   return (
     <div>
@@ -137,6 +153,26 @@ export default async function AdminLeadsPage({
               })}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {!error && leads.length > 0 && (
+        <div className="mt-4 flex items-center justify-center gap-3 text-sm">
+          <Link
+            href={pageHref(Math.max(1, currentPage - 1))}
+            className={`rounded-lg border border-gray-300 px-3 py-1.5 ${currentPage <= 1 ? "pointer-events-none opacity-40" : "hover:border-[var(--brand-navy)]"}`}
+          >
+            이전
+          </Link>
+          <span className="text-gray-500">
+            {currentPage} / {totalPages}
+          </span>
+          <Link
+            href={pageHref(Math.min(totalPages, currentPage + 1))}
+            className={`rounded-lg border border-gray-300 px-3 py-1.5 ${currentPage >= totalPages ? "pointer-events-none opacity-40" : "hover:border-[var(--brand-navy)]"}`}
+          >
+            다음
+          </Link>
         </div>
       )}
     </div>

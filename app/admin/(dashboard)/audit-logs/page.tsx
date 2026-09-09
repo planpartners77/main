@@ -59,10 +59,11 @@ export default async function AdminAuditLogsPage({
   let nameById = new Map<string, string | null>();
   if (actorIds.length > 0) {
     const admin = createAdminClient();
-    const { data: usersData } = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 });
-    emailById = new Map((usersData?.users ?? []).map((u) => [u.id, u.email ?? "-"]));
-    const { data: profilesData } = await admin.from("profiles").select("id, display_name").in("id", actorIds);
+    // profiles.email(0039 마이그레이션)을 바로 조회한다 — 이전에는 listUsers({perPage:1000})로
+    // 가입자를 통째로 가져와 매칭했는데 1000명이 넘으면 최근 행위자 이메일이 누락될 수 있었다.
+    const { data: profilesData } = await admin.from("profiles").select("id, display_name, email").in("id", actorIds);
     nameById = new Map((profilesData ?? []).map((p) => [p.id, p.display_name]));
+    emailById = new Map((profilesData ?? []).map((p) => [p.id, p.email ?? "-"]));
   }
 
   function pageHref(p: number) {

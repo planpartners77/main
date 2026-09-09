@@ -4,31 +4,32 @@ import { createClient } from "@/lib/supabase/server";
 import { LEAD_STATUS_OPTIONS } from "@/lib/admin/lead-status";
 import { parseUserAgent } from "@/lib/admin/visitor-parse";
 
-// 대시보드와 동일한 원칙: leads/profiles/settlements/coupons/referral_*/products/partners/reviews/
-// visitor_logs 등 실제 DB 집계만 사용한다.
-// 집계는 각 관리 페이지(referrals/settlements/coupons)와 동일하게 원본 row를 fetch한 뒤
-// JS에서 Map으로 직접 계산하는 방식을 따른다(SQL GROUP BY/RPC 미사용).
+// leads/profiles/settlements/coupon_redemptions/referral_clicks/referral_conversions는
+// 사용자 활동량에 비례해 계속 커지는 테이블이라, 원본 행을 통째로 가져와 JS에서 집계하면
+// (예전 referrals 페이지와 동일한 문제) 데이터가 쌓일수록 페이지가 느려진다. 이 6개 테이블의
+// 집계는 admin_statistics_summary()/coupon_redemption_counts() RPC(0038 마이그레이션, DB의
+// group by/sum)로 옮겼다. products/partners/reviews/coupons/categories/referral_codes는
+// 관리자가 직접 등록하는 소규모 카탈로그 테이블이라(사용자 활동으로 늘어나지 않음) 기존처럼
+// 그대로 fetch해서 화면에서 집계한다.
 
-interface LeadStatRow {
-  id: string;
-  status: string;
-  created_at: string;
-  categories: { name: string } | null;
+interface StatsSummary {
+  leads_total: number;
+  leads_by_status: Record<string, number>;
+  leads_by_category: Record<string, number>;
+  leads_monthly: { key: string; value: number }[];
+  profiles_total: number;
+  profiles_monthly: { key: string; value: number }[];
+  profiles_by_tier: Record<string, number>;
+  profiles_marketing_opted_in: number;
+  settlements_total_amount: number;
+  settlements_by_status_amount: Record<string, number>;
+  settlements_monthly_amount: { key: string; value: number }[];
+  settlements_by_partner_amount: Record<string, number>;
+  referral_counts: Record<string, { clicks: number; conversions: number }>;
 }
 
-interface ProfileStatRow {
-  id: string;
-  created_at: string;
-  marketing_opt_in: boolean;
-  customer_tiers: { name: string | null } | null;
-}
-
-interface SettlementStatRow {
-  id: string;
-  amount: number;
-  status: string;
-  created_at: string;
-  partners: { name: string } | null;
+function monthLabelFromKey(key: string) {
+  return `${Number(key.split("-")[1])}월`;
 }
 
 interface CouponStatRow {
@@ -79,36 +80,6 @@ interface DailyVisitorRow {
   created_at: string;
 }
 
-function monthKey(d: Date) {
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-}
-
-function lastNMonths(n: number) {
-  const now = new Date();
-  return Array.from({ length: n }, (_, i) => {
-    const d = new Date(now.getFullYear(), now.getMonth() - (n - 1 - i), 1);
-    return { key: monthKey(d), label: `${d.getMonth() + 1}월` };
-  });
-}
-
-function bucketByMonth(months: { key: string; label: string }[], rows: { created_at: string }[]) {
-  const counts = new Map(months.map((m) => [m.key, 0]));
-  for (const row of rows) {
-    const key = monthKey(new Date(row.created_at));
-    if (counts.has(key)) counts.set(key, (counts.get(key) ?? 0) + 1);
-  }
-  return months.map((m) => ({ label: m.label, value: counts.get(m.key) ?? 0 }));
-}
-
-function bucketSumByMonth(months: { key: string; label: string }[], rows: { created_at: string; amount: number }[]) {
-  const sums = new Map(months.map((m) => [m.key, 0]));
-  for (const row of rows) {
-    const key = monthKey(new Date(row.created_at));
-    if (sums.has(key)) sums.set(key, (sums.get(key) ?? 0) + row.amount);
-  }
-  return months.map((m) => ({ label: m.label, value: sums.get(m.key) ?? 0 }));
-}
-
 function dayKey(d: Date) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
@@ -146,15 +117,6 @@ function countBy<T>(rows: T[], keyFn: (row: T) => string): Map<string, number> {
   for (const row of rows) {
     const key = keyFn(row);
     map.set(key, (map.get(key) ?? 0) + 1);
-  }
-  return map;
-}
-
-function sumBy<T>(rows: T[], keyFn: (row: T) => string, valueFn: (row: T) => number): Map<string, number> {
-  const map = new Map<string, number>();
-  for (const row of rows) {
-    const key = keyFn(row);
-    map.set(key, (map.get(key) ?? 0) + valueFn(row));
   }
   return map;
 }
@@ -302,28 +264,20 @@ export default async function AdminStatisticsPage({
   daysAgo.setHours(0, 0, 0, 0);
 
   const [
-    { data: leadsData },
-    { data: profilesData },
-    { data: settlementsData },
+    { data: summaryData },
+    { data: redemptionCountsData },
     { data: couponsData },
-    { data: couponRedemptionsData },
     { data: referralCodesData },
-    { data: referralClicksData },
-    { data: referralConversionsData },
     { data: productsData },
     { data: partnersData },
     { data: reviewsData },
     { data: recentVisitorLogsData },
     { data: dailyVisitorLogsData },
   ] = await Promise.all([
-    supabase.from("leads").select("id, status, created_at, categories(name)"),
-    supabase.from("profiles").select("id, created_at, marketing_opt_in, customer_tiers(name)"),
-    supabase.from("settlements").select("id, amount, status, created_at, partners(name)"),
+    supabase.rpc("admin_statistics_summary", { p_month_range: monthRange }),
+    supabase.rpc("coupon_redemption_counts"),
     supabase.from("coupons").select("id, code, valid_until, is_active, max_redemptions"),
-    supabase.from("coupon_redemptions").select("coupon_id"),
     supabase.from("referral_codes").select("id, code, name, type"),
-    supabase.from("referral_clicks").select("code_id"),
-    supabase.from("referral_conversions").select("code_id").eq("conversion_type", "registration"),
     supabase.from("products").select("id, is_active, categories(name)"),
     supabase.from("partners").select("id, contract_status, categories(name)"),
     supabase.from("reviews").select("id, rating, is_active, categories(name)"),
@@ -338,9 +292,7 @@ export default async function AdminStatisticsPage({
       .gte("created_at", daysAgo.toISOString()),
   ]);
 
-  const leads = (leadsData ?? []) as unknown as LeadStatRow[];
-  const profiles = (profilesData ?? []) as unknown as ProfileStatRow[];
-  const settlements = (settlementsData ?? []) as unknown as SettlementStatRow[];
+  const stats = (summaryData ?? {}) as Partial<StatsSummary>;
   const coupons = (couponsData ?? []) as unknown as CouponStatRow[];
   const referralCodes = (referralCodesData ?? []) as unknown as ReferralCodeStatRow[];
   const products = (productsData ?? []) as unknown as ProductStatRow[];
@@ -349,55 +301,50 @@ export default async function AdminStatisticsPage({
   const recentVisitorLogs = (recentVisitorLogsData ?? []) as unknown as VisitorLogRow[];
   const dailyVisitorLogs = (dailyVisitorLogsData ?? []) as unknown as DailyVisitorRow[];
 
-  const MONTHS = lastNMonths(monthRange);
-
   // 1. 리드 현황
-  const leadStatusCounts = countBy(leads, (l) => l.status);
+  const leadsTotal = stats.leads_total ?? 0;
+  const leadStatusByValue = stats.leads_by_status ?? {};
   const leadStatusItems = LEAD_STATUS_OPTIONS.map((opt) => ({
     label: opt.label,
-    value: leadStatusCounts.get(opt.value) ?? 0,
+    value: leadStatusByValue[opt.value] ?? 0,
     colorClass: LEAD_STATUS_COLOR[opt.value],
   }));
-  const leadCategoryItems = toItems(countBy(leads, (l) => l.categories?.name ?? "미분류"), 8);
-  const leadMonthlyItems = bucketByMonth(MONTHS, leads);
+  const leadCategoryItems = toItems(new Map(Object.entries(stats.leads_by_category ?? {})), 8);
+  const leadMonthlyItems = (stats.leads_monthly ?? []).map((m) => ({ label: monthLabelFromKey(m.key), value: m.value }));
 
   // 2. 회원 현황
-  const profileMonthlyItems = bucketByMonth(MONTHS, profiles);
-  const tierItems = toItems(countBy(profiles, (p) => p.customer_tiers?.name ?? "일반"));
-  const marketingOptedIn = profiles.filter((p) => p.marketing_opt_in).length;
-  const marketingRate = profiles.length > 0 ? Math.round((marketingOptedIn / profiles.length) * 100) : 0;
+  const profilesTotal = stats.profiles_total ?? 0;
+  const profileMonthlyItems = (stats.profiles_monthly ?? []).map((m) => ({
+    label: monthLabelFromKey(m.key),
+    value: m.value,
+  }));
+  const tierItems = toItems(new Map(Object.entries(stats.profiles_by_tier ?? {})));
+  const marketingOptedIn = stats.profiles_marketing_opted_in ?? 0;
+  const marketingRate = profilesTotal > 0 ? Math.round((marketingOptedIn / profilesTotal) * 100) : 0;
   const marketingItems = [
     { label: "동의", value: marketingOptedIn, colorClass: "bg-green-500" },
-    { label: "미동의", value: profiles.length - marketingOptedIn, colorClass: "bg-gray-400" },
+    { label: "미동의", value: profilesTotal - marketingOptedIn, colorClass: "bg-gray-400" },
   ];
 
   // 3. 정산 현황
-  const settlementStatusAmount = sumBy(
-    settlements,
-    (s) => s.status,
-    (s) => s.amount,
-  );
+  const settlementStatusAmount = new Map(Object.entries(stats.settlements_by_status_amount ?? {}));
   const settlementStatusItems = (["draft", "approved", "paid", "rejected"] as const).map((status) => ({
     label: SETTLEMENT_STATUS_LABEL[status],
     value: settlementStatusAmount.get(status) ?? 0,
     colorClass: SETTLEMENT_STATUS_COLOR[status],
   }));
-  const settlementMonthlyItems = bucketSumByMonth(MONTHS, settlements);
-  const settlementPartnerItems = toItems(
-    sumBy(
-      settlements,
-      (s) => s.partners?.name ?? "미지정",
-      (s) => s.amount,
-    ),
-    8,
-  );
-  const totalSettlementAmount = settlements.reduce((sum, s) => sum + s.amount, 0);
+  const settlementMonthlyItems = (stats.settlements_monthly_amount ?? []).map((m) => ({
+    label: monthLabelFromKey(m.key),
+    value: m.value,
+  }));
+  const settlementPartnerItems = toItems(new Map(Object.entries(stats.settlements_by_partner_amount ?? {})), 8);
+  const totalSettlementAmount = stats.settlements_total_amount ?? 0;
   const paidSettlementAmount = settlementStatusAmount.get("paid") ?? 0;
 
   // 4. 쿠폰 사용 현황
   const redemptionCountByCoupon = new Map<string, number>();
-  for (const r of couponRedemptionsData ?? []) {
-    redemptionCountByCoupon.set(r.coupon_id, (redemptionCountByCoupon.get(r.coupon_id) ?? 0) + 1);
+  for (const r of redemptionCountsData ?? []) {
+    redemptionCountByCoupon.set(r.coupon_id, r.redemption_count);
   }
   const couponsWithCounts = coupons.map((c) => ({
     ...c,
@@ -416,20 +363,13 @@ export default async function AdminStatisticsPage({
   const totalRedemptions = couponsWithCounts.reduce((sum, c) => sum + c.redemption_count, 0);
 
   // 5. 추천인 성과 (referrals 관리 페이지 기본값과 동일하게 파트너 코드 기준으로 집계)
-  const clickCountByCode = new Map<string, number>();
-  for (const r of referralClicksData ?? []) {
-    clickCountByCode.set(r.code_id, (clickCountByCode.get(r.code_id) ?? 0) + 1);
-  }
-  const conversionCountByCode = new Map<string, number>();
-  for (const r of referralConversionsData ?? []) {
-    conversionCountByCode.set(r.code_id, (conversionCountByCode.get(r.code_id) ?? 0) + 1);
-  }
+  const referralCounts = stats.referral_counts ?? {};
   const partnerReferralCodes = referralCodes
     .filter((c) => c.type === "partner")
     .map((c) => ({
       ...c,
-      clicks: clickCountByCode.get(c.id) ?? 0,
-      conversions: conversionCountByCode.get(c.id) ?? 0,
+      clicks: referralCounts[c.id]?.clicks ?? 0,
+      conversions: referralCounts[c.id]?.conversions ?? 0,
     }));
   const totalReferralClicks = partnerReferralCodes.reduce((sum, c) => sum + c.clicks, 0);
   const totalReferralConversions = partnerReferralCodes.reduce((sum, c) => sum + c.conversions, 0);
@@ -521,9 +461,9 @@ export default async function AdminStatisticsPage({
 
       <Section title="리드 현황" description="상태별 처리 현황과 카테고리·월별 유입 추이">
         <div className="grid gap-3 sm:grid-cols-3">
-          <StatTile label="전체 리드" value={`${leads.length.toLocaleString("ko-KR")}건`} />
-          <StatTile label="접수 대기" value={`${(leadStatusCounts.get("received") ?? 0).toLocaleString("ko-KR")}건`} />
-          <StatTile label="완료" value={`${(leadStatusCounts.get("completed") ?? 0).toLocaleString("ko-KR")}건`} />
+          <StatTile label="전체 리드" value={`${leadsTotal.toLocaleString("ko-KR")}건`} />
+          <StatTile label="접수 대기" value={`${(leadStatusByValue.received ?? 0).toLocaleString("ko-KR")}건`} />
+          <StatTile label="완료" value={`${(leadStatusByValue.completed ?? 0).toLocaleString("ko-KR")}건`} />
         </div>
         <p className="mt-5 text-xs font-semibold text-gray-400">상태별 현황</p>
         <div className="mt-2">
@@ -541,7 +481,7 @@ export default async function AdminStatisticsPage({
 
       <Section title="회원 현황" description="신규가입 추이와 등급·마케팅 동의 분포">
         <div className="grid gap-3 sm:grid-cols-3">
-          <StatTile label="전체 회원" value={`${profiles.length.toLocaleString("ko-KR")}명`} />
+          <StatTile label="전체 회원" value={`${profilesTotal.toLocaleString("ko-KR")}명`} />
           <StatTile
             label="이번 달 신규가입"
             value={`${(profileMonthlyItems.at(-1)?.value ?? 0).toLocaleString("ko-KR")}명`}

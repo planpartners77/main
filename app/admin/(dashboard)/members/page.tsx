@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { createAdminClient } from "@/lib/supabase/admin";
 import { MembersTable, type MemberRow } from "@/components/admin/members/MembersTable";
 
 const PAGE_SIZE = 50;
@@ -30,49 +29,31 @@ export default async function AdminMembersPage({
 
   const supabase = await createClient();
 
-  // 이메일은 profiles에 없어(auth.users 전용) 검색어가 있을 때만 먼저 이메일 일치 회원 id를
-  // Admin API로 찾아둔다 — 목록 페이지의 기존 emailById 조회 패턴과 동일한 원리.
-  let emailMatchIds: string[] = [];
-  if (q?.trim()) {
-    const { data: usersData } = await createAdminClient().auth.admin.listUsers({ page: 1, perPage: 1000 });
-    const needle = q.trim().toLowerCase();
-    emailMatchIds = (usersData?.users ?? [])
-      .filter((u) => u.email?.toLowerCase().includes(needle))
-      .map((u) => u.id);
-  }
-
+  // 예전에는 이메일이 profiles에 없어(auth.users 전용) 검색/표시 때마다 listUsers({perPage:1000})로
+  // 전체 회원을 가져와 매칭했는데, 가입자가 1000명을 넘으면 뒷 페이지 회원은 검색도, 이메일 표시도
+  // 안 되는 버그였다. profiles.email 컬럼(0039 마이그레이션, auth.users와 트리거로 동기화)이
+  // 생긴 뒤로는 display_name/phone과 동일하게 이 쿼리 안에서 바로 검색·조회한다.
   let query = supabase
     .from("profiles")
     .select(
-      "id, display_name, phone, marketing_opt_in, referral_role, status, created_at, auth_provider, kakao_user_id, gender, birthdate, shipping_name, shipping_address, shipping_phone, customer_tiers(name)",
+      "id, email, display_name, phone, marketing_opt_in, referral_role, status, created_at, auth_provider, kakao_user_id, gender, birthdate, shipping_name, shipping_address, shipping_phone, customer_tiers(name)",
       { count: "exact" },
     )
     .order("created_at", { ascending: false });
 
   if (q?.trim()) {
     const needle = q.trim();
-    const orParts = [`display_name.ilike.%${needle}%`, `phone.ilike.%${needle}%`];
-    if (emailMatchIds.length > 0) {
-      orParts.push(`id.in.(${emailMatchIds.join(",")})`);
-    }
-    query = query.or(orParts.join(","));
+    query = query.or(`display_name.ilike.%${needle}%,phone.ilike.%${needle}%,email.ilike.%${needle}%`);
   }
   if (tier && tier !== "all") query = query.eq("tier_id", tier);
   if (status && status !== "all") query = query.eq("status", status);
   if (role && role !== "all") query = query.eq("referral_role", role);
 
   const { data, error, count } = await query.range(from, to);
-  const members = (data ?? []) as unknown as MemberRow[];
+  const members = (data ?? []) as unknown as (MemberRow & { email: string | null })[];
   const totalPages = Math.max(1, Math.ceil((count ?? 0) / PAGE_SIZE));
 
-  let emailById = new Map<string, string>();
-  if (members.length > 0) {
-    const { data: usersData } = await createAdminClient().auth.admin.listUsers({
-      page: 1,
-      perPage: 1000,
-    });
-    emailById = new Map((usersData?.users ?? []).map((u) => [u.id, u.email ?? "-"]));
-  }
+  const emailById = new Map(members.map((m) => [m.id, m.email ?? "-"]));
 
   const { data: tiersData } = await supabase.from("customer_tiers").select("id, name").order("point_earn_rate");
 

@@ -47,18 +47,22 @@ export async function POST(request: Request) {
 
   const admin = createAdminClient();
 
-  // Admin API에 이메일 단건 조회가 없어(getUserByEmail 미제공) listUsers로 찾는다.
-  // 회원 목록 화면과 동일하게 최대 1000명까지만 커버한다.
-  const { data: usersData } = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 });
-  const targetUser = usersData?.users.find((u) => u.email?.toLowerCase() === email);
+  // 예전엔 listUsers({perPage:1000})로 이메일을 찾았는데(Admin API에 getUserByEmail이 없어서),
+  // 회원이 1000명을 넘으면 뒷 페이지 회원은 아예 못 찾는 버그였다. profiles.email(0039 마이그레이션,
+  // auth.users와 트리거로 동기화)을 직접 조회하면 회원 수와 무관하게 정확히 찾는다.
+  const { data: targetProfile } = await admin
+    .from("profiles")
+    .select("id")
+    .eq("email", email)
+    .maybeSingle();
 
-  if (!targetUser) {
+  if (!targetProfile) {
     return NextResponse.json({ error: "user_not_found" }, { status: 404 });
   }
 
   const { error } = await admin
     .from("admin_users")
-    .insert({ id: targetUser.id, role, managed_categories: [] });
+    .insert({ id: targetProfile.id, role, managed_categories: [] });
 
   if (error) {
     if (error.code === "23505") {

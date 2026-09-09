@@ -34,59 +34,36 @@ export default async function AdminReferralsPage({
   const codes = (data ?? []) as ReferralCodeRow[];
 
   // total_clicks/total_registrations 컬럼을 그대로 믿지 않고, 로그 테이블(referral_clicks/
-  // referral_conversions)에서 코드별로 실제 재집계해 화면에는 이 값으로 덮어써 보여준다
+  // referral_conversions/leads)에서 코드별로 실제 재집계해 화면에는 이 값으로 덮어써 보여준다
   // (Bizmobile 관리자 API와 동일하게 "컬럼 신뢰도 문제"를 보완하는 방식).
+  //
+  // 예전에는 이 3개 테이블의 원본 행을 전부 가져와 JS Map으로 집계했는데, 로그가 쌓일수록
+  // (코드 개수 × 코드당 클릭/리드 수에 비례해) DB→서버→브라우저로 옮기는 데이터량이 계속
+  // 늘어나는 구조였다. group by 집계 자체를 DB(referral_code_stats, 0037 마이그레이션)로
+  // 옮겨서 코드별로 이미 집계된 몇 개의 숫자만 받아오도록 바꿨다.
+  // 참고: leads는 담당 카테고리 관리자만 볼 수 있어(is_admin_for_category) 이 함수도 호출자
+  // 권한이 아니라 SQL 자체에서 전체 leads를 스캔한다 — 즉 '주요 채널' 집계는 로그인한 관리자의
+  // 담당 카테고리와 무관하게 전체 리드 기준이며, super_admin이 보는 값과 동일하다(이전 버전의
+  // '일반 관리자는 부분치만 본다'는 제약이 이번 변경으로 사라졌다).
   const codeIds = codes.map((c) => c.id);
-  let clickCounts = new Map<string, number>();
-  let registrationCounts = new Map<string, number>();
-
-  let topChannelByCode = new Map<string, string>();
+  const statsByCode = new Map<string, { click_count: number; registration_count: number; top_channel: string | null }>();
 
   if (codeIds.length > 0) {
-    const [{ data: clicksData }, { data: conversionsData }, { data: leadsData }] = await Promise.all([
-      supabase.from("referral_clicks").select("code_id").in("code_id", codeIds),
-      supabase
-        .from("referral_conversions")
-        .select("code_id")
-        .in("code_id", codeIds)
-        .eq("conversion_type", "registration"),
-      // 리드에 실려온 utm_medium으로 코드별 어느 채널(카카오톡/블로그/문자 등)에서 실제 신청까지
-      // 이어졌는지 본다. leads는 담당 카테고리 관리자만 볼 수 있어(is_admin_for_category), 로그인한
-      // 관리자가 담당하지 않는 카테고리 리드는 이 집계에서 빠질 수 있다 — super_admin은 전체가 잡힌다.
-      supabase.from("leads").select("referral_code_id, utm_medium").in("referral_code_id", codeIds),
-    ]);
-
-    clickCounts = (clicksData ?? []).reduce((map, row) => {
-      map.set(row.code_id, (map.get(row.code_id) ?? 0) + 1);
-      return map;
-    }, new Map<string, number>());
-
-    registrationCounts = (conversionsData ?? []).reduce((map, row) => {
-      map.set(row.code_id, (map.get(row.code_id) ?? 0) + 1);
-      return map;
-    }, new Map<string, number>());
-
-    const channelCountsByCode = new Map<string, Map<string, number>>();
-    for (const row of leadsData ?? []) {
-      if (!row.referral_code_id) continue;
-      const channel = row.utm_medium ?? "(미기록)";
-      const channelCounts = channelCountsByCode.get(row.referral_code_id) ?? new Map<string, number>();
-      channelCounts.set(channel, (channelCounts.get(channel) ?? 0) + 1);
-      channelCountsByCode.set(row.referral_code_id, channelCounts);
+    const { data: statsData } = await supabase.rpc("referral_code_stats", { p_code_ids: codeIds });
+    for (const row of statsData ?? []) {
+      statsByCode.set(row.code_id, {
+        click_count: row.click_count,
+        registration_count: row.registration_count,
+        top_channel: row.top_channel ? `${row.top_channel} ${row.top_channel_count}` : null,
+      });
     }
-    topChannelByCode = new Map(
-      Array.from(channelCountsByCode.entries()).map(([codeId, channelCounts]) => {
-        const [topChannel, topCount] = Array.from(channelCounts.entries()).sort((a, b) => b[1] - a[1])[0];
-        return [codeId, `${topChannel} ${topCount}`];
-      }),
-    );
   }
 
   const codesWithRealCounts = codes.map((c) => ({
     ...c,
-    total_clicks: clickCounts.get(c.id) ?? 0,
-    total_registrations: registrationCounts.get(c.id) ?? 0,
-    top_channel: topChannelByCode.get(c.id) ?? null,
+    total_clicks: statsByCode.get(c.id)?.click_count ?? 0,
+    total_registrations: statsByCode.get(c.id)?.registration_count ?? 0,
+    top_channel: statsByCode.get(c.id)?.top_channel ?? null,
   }));
 
   return (

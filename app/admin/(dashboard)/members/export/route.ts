@@ -1,6 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { createAdminClient } from "@/lib/supabase/admin";
 
 // 회원 목록 화면과 동일한 필터 조건으로 최대 5000명까지 CSV로 내보낸다(엑셀에서 바로 열림).
 // 별도 xlsx 라이브러리 없이 UTF-8 BOM + CSV로 충분 — 회원 목록 화면의 필터/검색 로직을
@@ -21,30 +20,19 @@ export async function GET(request: NextRequest) {
 
   const supabase = await createClient();
 
-  let emailMatchIds: string[] = [];
-  const admin = createAdminClient();
-  const { data: usersData } = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 });
-  const emailById = new Map((usersData?.users ?? []).map((u) => [u.id, u.email ?? "-"]));
-
-  if (q) {
-    const needle = q.toLowerCase();
-    emailMatchIds = (usersData?.users ?? [])
-      .filter((u) => u.email?.toLowerCase().includes(needle))
-      .map((u) => u.id);
-  }
-
+  // members/page.tsx와 동일하게 profiles.email(0039 마이그레이션)을 바로 조회·검색한다 —
+  // listUsers({perPage:1000})는 가입자가 1000명을 넘으면 뒷 페이지 회원이 CSV에서 이메일이
+  // 빠지거나 검색에 안 걸리는 버그였다.
   let query = supabase
     .from("profiles")
     .select(
-      "id, display_name, phone, referral_role, status, created_at, auth_provider, gender, birthdate, shipping_name, shipping_address, shipping_phone, customer_tiers(name)",
+      "id, email, display_name, phone, referral_role, status, created_at, auth_provider, gender, birthdate, shipping_name, shipping_address, shipping_phone, customer_tiers(name)",
     )
     .order("created_at", { ascending: false })
     .limit(EXPORT_LIMIT);
 
   if (q) {
-    const orParts = [`display_name.ilike.%${q}%`, `phone.ilike.%${q}%`];
-    if (emailMatchIds.length > 0) orParts.push(`id.in.(${emailMatchIds.join(",")})`);
-    query = query.or(orParts.join(","));
+    query = query.or(`display_name.ilike.%${q}%,phone.ilike.%${q}%,email.ilike.%${q}%`);
   }
   if (tier && tier !== "all") query = query.eq("tier_id", tier);
   if (status && status !== "all") query = query.eq("status", status);
@@ -55,6 +43,7 @@ export async function GET(request: NextRequest) {
 
   const rows = (data ?? []) as unknown as {
     id: string;
+    email: string | null;
     display_name: string | null;
     phone: string | null;
     referral_role: string;
@@ -90,7 +79,7 @@ export async function GET(request: NextRequest) {
       [
         new Date(r.created_at).toLocaleDateString("ko-KR"),
         r.display_name ?? "",
-        emailById.get(r.id) ?? "",
+        r.email ?? "",
         r.phone ?? "",
         r.auth_provider === "kakao" ? "카카오" : "이메일",
         r.gender === "male" ? "남성" : r.gender === "female" ? "여성" : "",

@@ -33,14 +33,15 @@ export default async function AdminAccountsPage() {
 
   const { data: categoriesData } = await supabase.from("categories").select("id, name").order("name");
 
-  const { data: usersData } = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 });
-  const emailById = new Map((usersData?.users ?? []).map((u) => [u.id, u.email ?? "-"]));
-
+  // profiles.email(0039 마이그레이션)을 바로 조회한다 — 이전에는 listUsers({perPage:1000})로
+  // 전체 가입자를 가져와 매칭했는데, 관리자 수와 무관하게 항상 최대 1000명까지만 커버되는
+  // 불필요하게 넓은 조회였다(관리자는 소수인데 전체 회원을 다 가져옴).
   const { data: profilesData } = await admin
     .from("profiles")
-    .select("id, display_name")
+    .select("id, display_name, email")
     .in("id", adminUsers.map((a) => a.id));
   const nameById = new Map((profilesData ?? []).map((p) => [p.id, p.display_name]));
+  const emailById = new Map((profilesData ?? []).map((p) => [p.id, p.email ?? "-"]));
 
   return (
     <div>
