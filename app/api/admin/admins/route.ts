@@ -37,12 +37,23 @@ export async function POST(request: Request) {
   const actor = await requireSuperAdmin();
   if (!actor) return NextResponse.json({ error: "forbidden" }, { status: 403 });
 
-  const body = (await request.json().catch(() => null)) as { email?: string; role?: string } | null;
+  const body = (await request.json().catch(() => null)) as {
+    email?: string;
+    role?: string;
+    managedCategories?: string[];
+  } | null;
   const email = body?.email?.trim().toLowerCase();
   const role = body?.role as AdminRole | undefined;
+  const managedCategories = body?.managedCategories ?? [];
 
   if (!email || !role || !ADMIN_ROLES.includes(role)) {
     return NextResponse.json({ error: "invalid_input" }, { status: 400 });
+  }
+
+  // 카테고리 매니저는 담당 카테고리를 명시적으로 선택해야 한다 — 빈 배열로 만들면
+  // is_admin_for_category가 항상 false라 아무 카테고리도 못 보는 채로 방치되기 쉽다.
+  if (role === "category_manager" && managedCategories.length === 0) {
+    return NextResponse.json({ error: "category_required" }, { status: 400 });
   }
 
   const admin = createAdminClient();
@@ -62,7 +73,7 @@ export async function POST(request: Request) {
 
   const { error } = await admin
     .from("admin_users")
-    .insert({ id: targetProfile.id, role, managed_categories: [] });
+    .insert({ id: targetProfile.id, role, managed_categories: role === "category_manager" ? managedCategories : [] });
 
   if (error) {
     if (error.code === "23505") {
@@ -87,6 +98,10 @@ export async function PATCH(request: Request) {
 
   if (!id || !role || !ADMIN_ROLES.includes(role as AdminRole)) {
     return NextResponse.json({ error: "invalid_input" }, { status: 400 });
+  }
+
+  if (role === "category_manager" && (managedCategories ?? []).length === 0) {
+    return NextResponse.json({ error: "category_required" }, { status: 400 });
   }
 
   if (role !== "super_admin" && (await countOtherSuperAdmins(id)) === 0) {

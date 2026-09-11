@@ -33,11 +33,48 @@ const ERROR_MESSAGES: Record<string, string> = {
   last_super_admin: "마지막 남은 최고 관리자는 등급을 낮추거나 해제할 수 없습니다.",
   forbidden: "권한이 없습니다.",
   invalid_input: "입력값을 확인해 주세요.",
+  category_required: "카테고리 매니저는 담당 카테고리를 최소 1개 선택해야 합니다.",
 };
 
 function errorMessage(err: unknown) {
   const key = err instanceof Error ? err.message : "";
   return ERROR_MESSAGES[key] ?? key ?? "요청에 실패했습니다.";
+}
+
+// 관리자 추가 폼과 행별 수정에서 모두 쓰는 카테고리 다중 선택 UI. 카테고리 매니저는
+// 반드시 최소 1개를 스스로 선택해야 하며(자동으로 전체가 부여되면 안 됨), 여기서 선택된
+// 목록 그대로가 담당 카테고리(managed_categories)로 저장된다.
+function CategoryCheckboxGroup({
+  categories,
+  selected,
+  onToggle,
+}: {
+  categories: CategoryOption[];
+  selected: string[];
+  onToggle: (id: string) => void;
+}) {
+  return (
+    <div className="flex max-w-xs flex-wrap gap-1.5">
+      {categories.map((c) => (
+        <label
+          key={c.id}
+          className={`cursor-pointer rounded-full border px-2 py-0.5 text-[11px] ${
+            selected.includes(c.id)
+              ? "border-[var(--brand-navy)] bg-[var(--brand-navy)] text-white"
+              : "border-gray-200 text-gray-500"
+          }`}
+        >
+          <input
+            type="checkbox"
+            checked={selected.includes(c.id)}
+            onChange={() => onToggle(c.id)}
+            className="hidden"
+          />
+          {c.name}
+        </label>
+      ))}
+    </div>
+  );
 }
 
 export function AdminUserManager({
@@ -52,16 +89,28 @@ export function AdminUserManager({
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<AdminRole>("member_manager");
+  const [newManagedCategories, setNewManagedCategories] = useState<string[]>([]);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  function handleRoleSelect(next: AdminRole) {
+    setRole(next);
+    // 카테고리 매니저가 아닌 등급으로 바꾸면 남아있던 선택은 의미가 없으므로 초기화한다.
+    if (next !== "category_manager") setNewManagedCategories([]);
+  }
+
   async function handleAdd() {
     if (!email.trim()) return;
+    if (role === "category_manager" && newManagedCategories.length === 0) {
+      setError(errorMessage(new Error("category_required")));
+      return;
+    }
     setPending(true);
     setError(null);
     try {
-      await callApi("POST", { email: email.trim(), role });
+      await callApi("POST", { email: email.trim(), role, managedCategories: newManagedCategories });
       setEmail("");
+      setNewManagedCategories([]);
       router.refresh();
     } catch (err) {
       setError(errorMessage(err));
@@ -112,7 +161,7 @@ export function AdminUserManager({
             <label className="text-xs text-gray-500">등급</label>
             <select
               value={role}
-              onChange={(e) => setRole(e.target.value as AdminRole)}
+              onChange={(e) => handleRoleSelect(e.target.value as AdminRole)}
               className="mt-1 w-40 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm"
             >
               {ADMIN_ROLES.map((r) => (
@@ -131,6 +180,22 @@ export function AdminUserManager({
             {pending ? "추가 중..." : "추가"}
           </button>
         </div>
+        {role === "category_manager" && (
+          <div className="mt-3">
+            <label className="text-xs text-gray-500">담당 카테고리 (최소 1개 선택)</label>
+            <div className="mt-1.5">
+              <CategoryCheckboxGroup
+                categories={categories}
+                selected={newManagedCategories}
+                onToggle={(id) =>
+                  setNewManagedCategories((prev) =>
+                    prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id],
+                  )
+                }
+              />
+            </div>
+          </div>
+        )}
         {error && <p className="mt-3 text-xs text-red-600">{error}</p>}
       </div>
 
@@ -212,26 +277,7 @@ function AdminRowItem({
       </td>
       <td className="px-4 py-3">
         {role === "category_manager" ? (
-          <div className="flex max-w-xs flex-wrap gap-1.5">
-            {categories.map((c) => (
-              <label
-                key={c.id}
-                className={`cursor-pointer rounded-full border px-2 py-0.5 text-[11px] ${
-                  managedCategories.includes(c.id)
-                    ? "border-[var(--brand-navy)] bg-[var(--brand-navy)] text-white"
-                    : "border-gray-200 text-gray-500"
-                }`}
-              >
-                <input
-                  type="checkbox"
-                  checked={managedCategories.includes(c.id)}
-                  onChange={() => toggleCategory(c.id)}
-                  className="hidden"
-                />
-                {c.name}
-              </label>
-            ))}
-          </div>
+          <CategoryCheckboxGroup categories={categories} selected={managedCategories} onToggle={toggleCategory} />
         ) : (
           <span className="text-xs text-gray-300">-</span>
         )}
