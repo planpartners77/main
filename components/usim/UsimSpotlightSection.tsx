@@ -75,10 +75,17 @@ function UsimSpotlightCard({ item }: { item: UsimPlanListItem }) {
 
       <div className="mt-4 flex items-end justify-between border-t border-gray-100 pt-3">
         <p className="text-xs text-gray-400">{durationLabel}</p>
-        <p className="text-2xl font-bold text-[var(--brand-blue)]">
-          {formatWon(price)}
-          <span className="ml-1 text-xs font-medium text-gray-400">/월</span>
-        </p>
+        <div className="text-right">
+          <p className="text-2xl font-bold text-[var(--brand-blue)]">
+            {formatWon(price)}
+            <span className="ml-1 text-xs font-medium text-gray-400">/월</span>
+          </p>
+          {item.promotion && !isLifetimePromotion(item.promotion) && item.base_price != null && (
+            <p className="mt-0.5 text-xs text-gray-400">
+              {promotionDurationMonths(item.promotion)}개월 이후 정가 {formatWon(item.base_price)}
+            </p>
+          )}
+        </div>
       </div>
     </Link>
   );
