@@ -75,41 +75,17 @@ interface VisitorLogRow {
   profiles: { display_name: string | null } | null;
 }
 
-interface DailyVisitorRow {
-  visitor_id: string;
-  created_at: string;
+interface VisitorStats {
+  daily_unique: { key: string; value: number }[];
+  daily_pageviews: { key: string; value: number }[];
+  today_unique_count: number;
+  today_pageview_count: number;
+  period_unique_count: number;
 }
 
-function dayKey(d: Date) {
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-}
-
-function lastNDays(n: number) {
-  const now = new Date();
-  return Array.from({ length: n }, (_, i) => {
-    const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - (n - 1 - i));
-    return { key: dayKey(d), label: `${d.getMonth() + 1}/${d.getDate()}` };
-  });
-}
-
-function bucketUniqueVisitorsByDay(
-  days: { key: string; label: string }[],
-  rows: { created_at: string; visitor_id: string }[],
-) {
-  const sets = new Map(days.map((d) => [d.key, new Set<string>()]));
-  for (const row of rows) {
-    sets.get(dayKey(new Date(row.created_at)))?.add(row.visitor_id);
-  }
-  return days.map((d) => ({ label: d.label, value: sets.get(d.key)?.size ?? 0 }));
-}
-
-function bucketCountByDay(days: { key: string; label: string }[], rows: { created_at: string }[]) {
-  const counts = new Map(days.map((d) => [d.key, 0]));
-  for (const row of rows) {
-    const key = dayKey(new Date(row.created_at));
-    if (counts.has(key)) counts.set(key, (counts.get(key) ?? 0) + 1);
-  }
-  return days.map((d) => ({ label: d.label, value: counts.get(d.key) ?? 0 }));
+function dayLabelFromKey(key: string) {
+  const [, m, d] = key.split("-");
+  return `${Number(m)}/${Number(d)}`;
 }
 
 function countBy<T>(rows: T[], keyFn: (row: T) => string): Map<string, number> {
@@ -259,10 +235,6 @@ export default async function AdminStatisticsPage({
 
   const supabase = await createClient();
 
-  const daysAgo = new Date();
-  daysAgo.setDate(daysAgo.getDate() - (dayRange - 1));
-  daysAgo.setHours(0, 0, 0, 0);
-
   const [
     { data: summaryData },
     { data: redemptionCountsData },
@@ -272,7 +244,7 @@ export default async function AdminStatisticsPage({
     { data: partnersData },
     { data: reviewsData },
     { data: recentVisitorLogsData },
-    { data: dailyVisitorLogsData },
+    { data: visitorStatsData },
   ] = await Promise.all([
     supabase.rpc("admin_statistics_summary", { p_month_range: monthRange }),
     supabase.rpc("coupon_redemption_counts"),
@@ -286,10 +258,7 @@ export default async function AdminStatisticsPage({
       .select("visitor_id, ip, user_agent, path, created_at, profiles(display_name)")
       .order("created_at", { ascending: false })
       .limit(50),
-    supabase
-      .from("visitor_logs")
-      .select("visitor_id, created_at")
-      .gte("created_at", daysAgo.toISOString()),
+    supabase.rpc("admin_visitor_stats", { p_day_range: dayRange }),
   ]);
 
   const stats = (summaryData ?? {}) as Partial<StatsSummary>;
@@ -299,7 +268,7 @@ export default async function AdminStatisticsPage({
   const partners = (partnersData ?? []) as unknown as PartnerStatRow[];
   const reviews = (reviewsData ?? []) as unknown as ReviewStatRow[];
   const recentVisitorLogs = (recentVisitorLogsData ?? []) as unknown as VisitorLogRow[];
-  const dailyVisitorLogs = (dailyVisitorLogsData ?? []) as unknown as DailyVisitorRow[];
+  const visitorStats = (visitorStatsData ?? {}) as Partial<VisitorStats>;
 
   // 1. 리드 현황
   const leadsTotal = stats.leads_total ?? 0;
@@ -410,14 +379,18 @@ export default async function AdminStatisticsPage({
     .slice(0, 8);
   const reviewCategoryCountItems = toItems(countBy(reviews, (r) => r.categories?.name ?? "미분류"), 8);
 
-  // 8. 접속자 현황 (proxy.ts가 waitUntil로 기록하는 visitor_logs 기반)
-  const DAYS = lastNDays(dayRange);
-  const dailyUniqueItems = bucketUniqueVisitorsByDay(DAYS, dailyVisitorLogs);
-  const dailyPageviewItems = bucketCountByDay(DAYS, dailyVisitorLogs);
-  const todayKey = dayKey(new Date());
-  const todayVisitorLogs = dailyVisitorLogs.filter((r) => dayKey(new Date(r.created_at)) === todayKey);
-  const todayUniqueCount = new Set(todayVisitorLogs.map((r) => r.visitor_id)).size;
-  const periodUniqueCount = new Set(dailyVisitorLogs.map((r) => r.visitor_id)).size;
+  // 8. 접속자 현황 (proxy.ts가 waitUntil로 기록하는 visitor_logs 기반, admin_visitor_stats RPC로 집계)
+  const dailyUniqueItems = (visitorStats.daily_unique ?? []).map((d) => ({
+    label: dayLabelFromKey(d.key),
+    value: d.value,
+  }));
+  const dailyPageviewItems = (visitorStats.daily_pageviews ?? []).map((d) => ({
+    label: dayLabelFromKey(d.key),
+    value: d.value,
+  }));
+  const todayUniqueCount = visitorStats.today_unique_count ?? 0;
+  const todayPageviewCount = visitorStats.today_pageview_count ?? 0;
+  const periodUniqueCount = visitorStats.period_unique_count ?? 0;
   const recentVisitorItems = recentVisitorLogs.map((row) => ({
     ...row,
     ...parseUserAgent(row.user_agent),
@@ -626,7 +599,7 @@ export default async function AdminStatisticsPage({
       <Section title="일 접속자 현황" description={`쿠키(pp_visitor_id) 기준 순 방문자·페이지뷰 추이 (최근 ${dayRange}일)`}>
         <div className="grid gap-3 sm:grid-cols-3">
           <StatTile label="오늘 순 방문자" value={`${todayUniqueCount.toLocaleString("ko-KR")}명`} />
-          <StatTile label="오늘 페이지뷰" value={`${todayVisitorLogs.length.toLocaleString("ko-KR")}건`} />
+          <StatTile label="오늘 페이지뷰" value={`${todayPageviewCount.toLocaleString("ko-KR")}건`} />
           <StatTile label={`최근 ${dayRange}일 순 방문자`} value={`${periodUniqueCount.toLocaleString("ko-KR")}명`} />
         </div>
         <p className="mt-5 text-xs font-semibold text-gray-400">일별 순 방문자</p>
