@@ -19,7 +19,7 @@ export default async function MobileDeviceDetailPage({ params }: { params: Promi
   const hasIncentive = (item.incentive_min ?? item.incentive_max ?? item.incentive_exact ?? 0) > 0;
 
   return (
-    <main className="mx-auto max-w-3xl px-4 pb-28 pt-10">
+    <main className="mx-auto max-w-3xl px-4 pb-36 pt-10 sm:pb-10">
       <Link href="/mobile" className="text-sm text-gray-500 hover:text-[var(--brand-navy)]">
         ← 기종 목록
       </Link>
@@ -70,7 +70,7 @@ export default async function MobileDeviceDetailPage({ params }: { params: Promi
         {hasIncentive && <p className="mt-1 text-xs text-gray-500">통신사·개통방식별 지원금이 반영된 예상 구매가입니다.</p>}
       </div>
 
-      <div className="fixed inset-x-0 bottom-0 border-t border-gray-100 bg-white p-4 sm:static sm:mt-10 sm:border-0 sm:p-0">
+      <div className="fixed inset-x-0 bottom-14 z-30 border-t border-gray-100 bg-white p-4 sm:static sm:bottom-auto sm:z-auto sm:mt-10 sm:border-0 sm:p-0">
         {soldOut ? (
           <span className="block w-full rounded-full bg-gray-200 py-3.5 text-center text-sm font-semibold text-gray-500">
             품절된 기종입니다

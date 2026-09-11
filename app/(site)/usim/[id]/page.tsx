@@ -32,7 +32,7 @@ export default async function UsimPlanDetailPage({ params }: { params: Promise<{
   const lifetime = isLifetimePromotion(item.promotion);
 
   return (
-    <main className="mx-auto max-w-3xl px-4 pb-28 pt-10">
+    <main className="mx-auto max-w-3xl px-4 pb-36 pt-10 sm:pb-10">
       <RecordRecentView plan={{ id: item.id, title: item.title, partner_name: item.partner_name, price }} />
 
       <Link href="/usim" className="text-sm text-gray-500 hover:text-[var(--brand-navy)]">
@@ -92,7 +92,7 @@ export default async function UsimPlanDetailPage({ params }: { params: Promise<{
         </div>
       </div>
 
-      <div className="fixed inset-x-0 bottom-0 border-t border-gray-100 bg-white p-4 sm:static sm:mt-10 sm:border-0 sm:p-0">
+      <div className="fixed inset-x-0 bottom-14 z-30 border-t border-gray-100 bg-white p-4 sm:static sm:bottom-auto sm:z-auto sm:mt-10 sm:border-0 sm:p-0">
         <ApplyButton
           categorySlug="usim"
           productId={item.id}

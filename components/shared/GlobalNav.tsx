@@ -260,17 +260,17 @@ export function GlobalNav({ categories }: { categories: CategoryConfig[] }) {
         </div>
       )}
 
-      <nav className="fixed inset-x-0 bottom-0 z-40 flex border-t border-gray-200 bg-white md:hidden">
-        <Link href="/" className="flex flex-1 flex-col items-center py-2 text-xs text-gray-600">
+      <nav className="fixed inset-x-0 bottom-0 z-40 flex h-14 border-t border-gray-200 bg-white md:hidden">
+        <Link href="/" className="flex flex-1 flex-col items-center justify-center text-xs text-gray-600">
           홈
         </Link>
         {/* Phase 2(§12-3)의 "내 지원금 확인하기" 진입 플로우가 만들어지면 그 라우트로 교체 */}
-        <Link href="/" className="flex flex-1 flex-col items-center py-2 text-xs text-gray-600">
+        <Link href="/" className="flex flex-1 flex-col items-center justify-center text-xs text-gray-600">
           맞춤 상품찾기
         </Link>
         <Link
           href="/mypage"
-          className="flex flex-1 flex-col items-center py-2 text-xs text-gray-600"
+          className="flex flex-1 flex-col items-center justify-center text-xs text-gray-600"
         >
           마이페이지
         </Link>
