@@ -42,7 +42,7 @@ function UsimSpotlightCard({ item }: { item: UsimPlanListItem }) {
     ? "정가"
     : isLifetimePromotion(item.promotion)
       ? "평생"
-      : `${promotionDurationMonths(item.promotion)}개월`;
+      : `${promotionDurationMonths(item.promotion)}개월간`;
   const benefits = benefitLines(item);
 
   return (
@@ -73,7 +73,7 @@ function UsimSpotlightCard({ item }: { item: UsimPlanListItem }) {
         </ul>
       )}
 
-      <div className="mt-4 flex items-end justify-between border-t border-gray-100 pt-3">
+      <div className="mt-4 flex items-start justify-between border-t border-gray-100 pt-3">
         <p className="text-xs text-gray-400">{durationLabel}</p>
         <div className="text-right">
           <p className="text-2xl font-bold text-[var(--brand-blue)]">
