@@ -1,6 +1,12 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendTelegramMessage } from "@/lib/telegram";
+import {
+  DEFAULT_TELEGRAM_NOTIFICATION_SETTINGS,
+  normalizeTelegramNotificationSettings,
+  type TelegramNotificationSettings,
+  type TelegramNotificationType,
+} from "@/lib/design/site-settings";
 
 // 회원가입/여행 신청서 접수 완료 직후 클라이언트가 호출하는 알림 트리거.
 // id로 실제 DB 행을 다시 조회해서 메시지를 만든다 — 클라이언트가 보낸 임의의 텍스트를
@@ -17,6 +23,23 @@ export async function POST(request: Request) {
   if (!type || !id) return NextResponse.json({ ok: false }, { status: 400 });
 
   const supabase = createAdminClient();
+
+  // 관리자 > 텔레그램 알림 관리에서 종류별로 끈 알림은 여기서 조기 종료한다 — 전체 스위치가
+  // 꺼져 있으면 개별 leads/profiles 조회조차 하지 않고 바로 스킵(불필요한 DB 조회 절약).
+  if (type in DEFAULT_TELEGRAM_NOTIFICATION_SETTINGS.types) {
+    const { data: settingsRow } = await supabase
+      .from("site_settings")
+      .select("value")
+      .eq("key", "telegram_notifications")
+      .maybeSingle();
+    const notifSettings = normalizeTelegramNotificationSettings(
+      (settingsRow?.value as Partial<TelegramNotificationSettings>) ?? null,
+    );
+    const notifType = type as TelegramNotificationType;
+    if (!notifSettings.masterEnabled || !notifSettings.types[notifType]) {
+      return NextResponse.json({ ok: true, skipped: true });
+    }
+  }
 
   if (type === "signup") {
     const { data } = await supabase

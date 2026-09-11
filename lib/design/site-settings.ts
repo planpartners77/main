@@ -43,6 +43,18 @@ export interface LoginMethodsSettings {
   google: boolean;
 }
 
+export type TelegramNotificationType =
+  | "signup"
+  | "travel_lead"
+  | "usim_lead"
+  | "mobile_lead"
+  | "consult_lead";
+
+export interface TelegramNotificationSettings {
+  masterEnabled: boolean;
+  types: Record<TelegramNotificationType, boolean>;
+}
+
 export interface SeoSettings {
   googleSiteVerification: string | null;
   naverSiteVerification: string | null;
@@ -93,6 +105,35 @@ export const DEFAULT_COMPANY_INFO: CompanyInfo = {
 export const DEFAULT_LOGIN_METHODS_SETTINGS: LoginMethodsSettings = {
   kakao: false,
   google: false,
+};
+
+// 관리자 > 텔레그램 알림 관리 화면에 표시할 알림 종류 메타데이터. app/api/notify가 처리하는
+// type 문자열과 key가 1:1로 대응해야 한다(추가 시 route.ts 분기도 함께 늘려야 함).
+export const TELEGRAM_NOTIFICATION_TYPE_INFO: {
+  key: TelegramNotificationType;
+  label: string;
+  description: string;
+}[] = [
+  { key: "signup", label: "신규 회원가입", description: "이메일/카카오 등으로 새 회원이 가입할 때" },
+  { key: "travel_lead", label: "여행 신청서 접수", description: "여행(CRIS 골프캠프) 신청서가 접수될 때" },
+  { key: "usim_lead", label: "유심 요금제 신청서 접수", description: "유심 신청서폼을 통해 신청서가 접수될 때" },
+  {
+    key: "mobile_lead",
+    label: "휴대폰 개통/기기변경 신청서 접수",
+    description: "휴대폰 신청서폼을 통해 신청서가 접수될 때",
+  },
+  { key: "consult_lead", label: "무료 상담 신청 접수", description: "카테고리 무료 상담 신청이 접수될 때" },
+];
+
+export const DEFAULT_TELEGRAM_NOTIFICATION_SETTINGS: TelegramNotificationSettings = {
+  masterEnabled: true,
+  types: {
+    signup: true,
+    travel_lead: true,
+    usim_lead: true,
+    mobile_lead: true,
+    consult_lead: true,
+  },
 };
 
 export const DEFAULT_SEO_SETTINGS: SeoSettings = {
@@ -146,4 +187,21 @@ export const getLoginMethodsSettings = cache(async (): Promise<LoginMethodsSetti
   const value = (await getSettingValue("login_methods")) as Partial<LoginMethodsSettings> | null;
   if (!value) return DEFAULT_LOGIN_METHODS_SETTINGS;
   return { ...DEFAULT_LOGIN_METHODS_SETTINGS, ...value };
+});
+
+// DB 조회 없이도 쓸 수 있는 순수 함수로 분리 — /api/notify는 이미 만들어 둔 admin 클라이언트로
+// 직접 site_settings를 조회하므로, 여기서 또 다른 supabase 클라이언트를 만들지 않고 이 함수로
+// 정규화만 재사용한다(getTelegramNotificationSettings는 관리자 화면 렌더링 전용).
+export function normalizeTelegramNotificationSettings(
+  value: Partial<TelegramNotificationSettings> | null,
+): TelegramNotificationSettings {
+  return {
+    masterEnabled: value?.masterEnabled ?? DEFAULT_TELEGRAM_NOTIFICATION_SETTINGS.masterEnabled,
+    types: { ...DEFAULT_TELEGRAM_NOTIFICATION_SETTINGS.types, ...value?.types },
+  };
+}
+
+export const getTelegramNotificationSettings = cache(async (): Promise<TelegramNotificationSettings> => {
+  const value = (await getSettingValue("telegram_notifications")) as Partial<TelegramNotificationSettings> | null;
+  return normalizeTelegramNotificationSettings(value);
 });

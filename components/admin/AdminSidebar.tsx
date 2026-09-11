@@ -71,6 +71,7 @@ const NAV_GROUPS: NavGroup[] = [
       { title: "보안", href: "/admin/security", icon: "shield" },
       { title: "관리자 관리", href: "/admin/admins", icon: "settings" },
       { title: "간편로그인 관리", href: "/admin/login-methods", icon: "login-key" },
+      { title: "텔레그램 알림 관리", href: "/admin/notifications", icon: "bell" },
     ],
   },
 ];

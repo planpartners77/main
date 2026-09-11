@@ -50,9 +50,11 @@ export const MENU_KEYS = [
   "admins",
   "login_methods",
   "security",
+  "notifications",
 ] as const;
-// login_methods/security는 ROLE_MENUS에서 super_admin(스프레드로 MENU_KEYS 전체 포함)만 접근 가능 —
-// audit_logs/admins와 동일한 보안 민감 메뉴 취급.
+// login_methods/security/notifications는 ROLE_MENUS에서 super_admin(스프레드로 MENU_KEYS 전체
+// 포함)만 접근 가능 — audit_logs/admins와 동일한 보안 민감 메뉴 취급. 특히 notifications는
+// 전체 스위치로 신청 접수 알림 자체를 끌 수 있어 운영 영향이 크므로 마찬가지로 제한한다.
 
 export type MenuKey = (typeof MENU_KEYS)[number];
 
@@ -105,6 +107,7 @@ const PATH_TO_MENU_ENTRIES: [string, MenuKey][] = [
   ["/admin/admins", "admins"],
   ["/admin/login-methods", "login_methods"],
   ["/admin/security", "security"],
+  ["/admin/notifications", "notifications"],
 ];
 const PATH_TO_MENU = [...PATH_TO_MENU_ENTRIES].sort((a, b) => b[0].length - a[0].length);
 
