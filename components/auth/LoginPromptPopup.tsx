@@ -49,7 +49,7 @@ export function LoginPromptPopup({ kakaoEnabled = false }: { kakaoEnabled?: bool
           3초면 로그인 끝!
         </p>
         <p className="mt-2 text-center text-sm text-gray-500">
-          카카오 계정으로 간편하게 로그인하고 신청 내역과 혜택을 확인하세요.
+          원활한 서비스 이용을 위해 카카오 계정으로 간편하게 로그인하세요
         </p>
         {/* eslint-disable-next-line @next/next/no-html-link-for-pages -- 페이지가 아니라 서버 리다이렉트 라우트(OAuth 시작점)라 next/link 대상이 아님 */}
         <a
