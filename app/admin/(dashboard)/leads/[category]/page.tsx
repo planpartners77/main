@@ -1,16 +1,20 @@
 import Link from "next/link";
+import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { LeadsTable } from "@/components/admin/leads/LeadsTable";
 import { LEAD_STATUS_OPTIONS } from "@/lib/admin/lead-status";
 import { LEADS_PAGE_SIZE, type LeadRow } from "@/lib/admin/leads";
 
-// "전체" 탭 — 카테고리 구분 없이 모든 신청을 모아 보는 마스터 뷰.
-// 카테고리별 세부 목록은 /admin/leads/[category]에서 담당한다.
-export default async function AdminLeadsPage({
+// 신청내역 하위메뉴(카테고리별 탭)의 실제 목록 화면. 카테고리는 이미 문맥으로 드러나므로
+// 목록 자체에는 카테고리 열을 표시하지 않는다(LeadsTable showCategoryColumn=false).
+export default async function AdminLeadsByCategoryPage({
+  params,
   searchParams,
 }: {
+  params: Promise<{ category: string }>;
   searchParams: Promise<{ status?: string; page?: string }>;
 }) {
+  const { category: slug } = await params;
   const { status, page } = await searchParams;
   const currentPage = Math.max(1, Number(page) || 1);
   const from = (currentPage - 1) * LEADS_PAGE_SIZE;
@@ -18,11 +22,20 @@ export default async function AdminLeadsPage({
 
   const supabase = await createClient();
 
+  const { data: category } = await supabase
+    .from("categories")
+    .select("id, name")
+    .eq("slug", slug)
+    .maybeSingle();
+
+  if (!category) notFound();
+
   let query = supabase
     .from("leads")
     .select("id, status, created_at, guest_contact, admin_memo, categories(name, slug), referral_code_id", {
       count: "exact",
     })
+    .eq("category_id", category.id)
     .order("created_at", { ascending: false });
 
   if (status) {
@@ -37,7 +50,7 @@ export default async function AdminLeadsPage({
     const params = new URLSearchParams();
     if (status) params.set("status", status);
     params.set("page", String(p));
-    return `/admin/leads?${params.toString()}`;
+    return `/admin/leads/${slug}?${params.toString()}`;
   }
 
   return (
@@ -46,10 +59,10 @@ export default async function AdminLeadsPage({
         ← 대시보드
       </Link>
       <div className="mt-2 flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-xl font-bold text-[var(--brand-navy)]">신청 내역 · 전체</h1>
+        <h1 className="text-xl font-bold text-[var(--brand-navy)]">신청 내역 · {category.name}</h1>
         <div className="flex flex-wrap gap-1.5">
           <Link
-            href="/admin/leads"
+            href={`/admin/leads/${slug}`}
             className={`rounded-full px-3 py-1.5 text-xs font-semibold ${
               !status ? "bg-[var(--brand-navy)] text-white" : "bg-white text-gray-600 border border-gray-200"
             }`}
@@ -59,7 +72,7 @@ export default async function AdminLeadsPage({
           {LEAD_STATUS_OPTIONS.map((opt) => (
             <Link
               key={opt.value}
-              href={`/admin/leads?status=${opt.value}`}
+              href={`/admin/leads/${slug}?status=${opt.value}`}
               className={`rounded-full px-3 py-1.5 text-xs font-semibold ${
                 status === opt.value
                   ? "bg-[var(--brand-navy)] text-white"
@@ -78,7 +91,7 @@ export default async function AdminLeadsPage({
         </p>
       )}
 
-      {!error && <LeadsTable leads={leads} showCategoryColumn />}
+      {!error && <LeadsTable leads={leads} showCategoryColumn={false} />}
 
       {!error && leads.length > 0 && (
         <div className="mt-4 flex items-center justify-center gap-3 text-sm">
