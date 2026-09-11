@@ -132,6 +132,9 @@ export function UsimApplyForm({ initialPlanId }: { initialPlanId: string | null 
     try {
       const supabase = createClient();
       const { data: category } = await supabase.from("categories").select("id").eq("slug", "usim").maybeSingle();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       const activationLabel = ACTIVATION_TYPES.find((a) => a.value === activationType)?.label ?? activationType;
       const simTypeLabel = SIM_TYPE_OPTIONS.find((s) => s.value === simType)?.label ?? simType;
 
@@ -143,6 +146,7 @@ export function UsimApplyForm({ initialPlanId }: { initialPlanId: string | null 
         id: leadId,
         category_id: category?.id ?? null,
         product_id: planId,
+        user_id: user?.id ?? null,
         status: "received",
         referral_code_id: referral?.codeId ?? null,
         guest_contact: {

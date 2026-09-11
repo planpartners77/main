@@ -81,6 +81,9 @@ export function PhoneApplyForm({ initialDeviceId }: { initialDeviceId: string | 
     try {
       const supabase = createClient();
       const { data: category } = await supabase.from("categories").select("id").eq("slug", "mobile").maybeSingle();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
 
       const leadId = crypto.randomUUID();
       const referral = getStoredReferral();
@@ -90,6 +93,7 @@ export function PhoneApplyForm({ initialDeviceId }: { initialDeviceId: string | 
         id: leadId,
         category_id: category?.id ?? null,
         product_id: deviceId,
+        user_id: user?.id ?? null,
         status: "received",
         referral_code_id: referral?.codeId ?? null,
         guest_contact: {

@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { getMobileDeviceDetail } from "@/lib/mobile/devices-query";
 import { PHONE_STOCK_STATUS_LABELS, storageLabel } from "@/lib/mobile/device-spec";
 import { bestEffectivePrice } from "@/lib/mobile/filters";
+import { ApplyButton } from "@/components/shared/ApplyButton";
 
 function formatWon(value: number) {
   return `${Math.round(value).toLocaleString("ko-KR")}원`;
@@ -74,22 +75,14 @@ export default async function MobileDeviceDetailPage({ params }: { params: Promi
           <span className="block w-full rounded-full bg-gray-200 py-3.5 text-center text-sm font-semibold text-gray-500">
             품절된 기종입니다
           </span>
-        ) : item.apply_url ? (
-          <a
-            href={item.apply_url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="block w-full rounded-full bg-[var(--brand-blue)] py-3.5 text-center text-sm font-semibold text-white shadow-sm shadow-blue-200 hover:bg-[var(--brand-blue-dark)]"
-          >
-            신청하기
-          </a>
         ) : (
-          <Link
-            href={`/apply/mobile?planId=${item.id}`}
+          <ApplyButton
+            categorySlug="mobile"
+            productId={item.id}
+            applyUrl={item.apply_url}
+            internalHref={`/apply/mobile?planId=${item.id}`}
             className="block w-full rounded-full bg-[var(--brand-blue)] py-3.5 text-center text-sm font-semibold text-white shadow-sm shadow-blue-200 hover:bg-[var(--brand-blue-dark)]"
-          >
-            신청하기
-          </Link>
+          />
         )}
       </div>
     </main>

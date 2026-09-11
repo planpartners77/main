@@ -2,23 +2,28 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { LeadsTable } from "@/components/admin/leads/LeadsTable";
+import { ApplyClicksTable } from "@/components/admin/leads/ApplyClicksTable";
 import { LEAD_STATUS_OPTIONS } from "@/lib/admin/lead-status";
 import { LEADS_PAGE_SIZE, type LeadRow } from "@/lib/admin/leads";
+import { APPLY_CLICKS_PAGE_SIZE, type ApplyClickRow } from "@/lib/admin/apply-clicks";
 
 // 신청내역 하위메뉴(카테고리별 탭)의 실제 목록 화면. 카테고리는 이미 문맥으로 드러나므로
-// 목록 자체에는 카테고리 열을 표시하지 않는다(LeadsTable showCategoryColumn=false).
+// 목록 자체에는 카테고리 열을 표시하지 않는다(showCategoryColumn=false).
+// view=clicks면 정식 접수(leads)가 아니라 "신청하기" 클릭 이력(apply_clicks)을 보여준다.
 export default async function AdminLeadsByCategoryPage({
   params,
   searchParams,
 }: {
   params: Promise<{ category: string }>;
-  searchParams: Promise<{ status?: string; page?: string }>;
+  searchParams: Promise<{ status?: string; page?: string; view?: string }>;
 }) {
   const { category: slug } = await params;
-  const { status, page } = await searchParams;
+  const { status, page, view } = await searchParams;
+  const isClicksView = view === "clicks";
+  const pageSize = isClicksView ? APPLY_CLICKS_PAGE_SIZE : LEADS_PAGE_SIZE;
   const currentPage = Math.max(1, Number(page) || 1);
-  const from = (currentPage - 1) * LEADS_PAGE_SIZE;
-  const to = from + LEADS_PAGE_SIZE - 1;
+  const from = (currentPage - 1) * pageSize;
+  const to = from + pageSize - 1;
 
   const supabase = await createClient();
 
@@ -30,25 +35,51 @@ export default async function AdminLeadsByCategoryPage({
 
   if (!category) notFound();
 
-  let query = supabase
-    .from("leads")
-    .select("id, status, created_at, guest_contact, admin_memo, categories(name, slug), referral_code_id", {
-      count: "exact",
-    })
-    .eq("category_id", category.id)
-    .order("created_at", { ascending: false });
+  let leads: LeadRow[] = [];
+  let clicks: ApplyClickRow[] = [];
+  let error: { message: string } | null = null;
+  let count = 0;
 
-  if (status) {
-    query = query.eq("status", status);
+  if (isClicksView) {
+    const result = await supabase
+      .from("apply_clicks")
+      .select("id, created_at, target_url, categories(name, slug), products(title), profiles(display_name, phone)", {
+        count: "exact",
+      })
+      .eq("category_id", category.id)
+      .order("created_at", { ascending: false })
+      .range(from, to);
+    clicks = (result.data ?? []) as unknown as ApplyClickRow[];
+    error = result.error;
+    count = result.count ?? 0;
+  } else {
+    let query = supabase
+      .from("leads")
+      .select("id, status, created_at, guest_contact, admin_memo, categories(name, slug), referral_code_id", {
+        count: "exact",
+      })
+      .eq("category_id", category.id)
+      .order("created_at", { ascending: false });
+
+    if (status) {
+      query = query.eq("status", status);
+    }
+
+    const result = await query.range(from, to);
+    leads = (result.data ?? []) as unknown as LeadRow[];
+    error = result.error;
+    count = result.count ?? 0;
   }
 
-  const { data, error, count } = await query.range(from, to);
-  const leads = (data ?? []) as unknown as LeadRow[];
-  const totalPages = Math.max(1, Math.ceil((count ?? 0) / LEADS_PAGE_SIZE));
+  const totalPages = Math.max(1, Math.ceil(count / pageSize));
 
   function pageHref(p: number) {
     const params = new URLSearchParams();
-    if (status) params.set("status", status);
+    if (isClicksView) {
+      params.set("view", "clicks");
+    } else if (status) {
+      params.set("status", status);
+    }
     params.set("page", String(p));
     return `/admin/leads/${slug}?${params.toString()}`;
   }
@@ -61,6 +92,27 @@ export default async function AdminLeadsByCategoryPage({
       <div className="mt-2 flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-xl font-bold text-[var(--brand-navy)]">신청 내역 · {category.name}</h1>
         <div className="flex flex-wrap gap-1.5">
+          <Link
+            href={`/admin/leads/${slug}`}
+            className={`rounded-full px-3 py-1.5 text-xs font-semibold ${
+              !isClicksView ? "bg-[var(--brand-navy)] text-white" : "bg-white text-gray-600 border border-gray-200"
+            }`}
+          >
+            접수 내역
+          </Link>
+          <Link
+            href={`/admin/leads/${slug}?view=clicks`}
+            className={`rounded-full px-3 py-1.5 text-xs font-semibold ${
+              isClicksView ? "bg-[var(--brand-navy)] text-white" : "bg-white text-gray-600 border border-gray-200"
+            }`}
+          >
+            클릭 이력
+          </Link>
+        </div>
+      </div>
+
+      {!isClicksView && (
+        <div className="mt-3 flex flex-wrap gap-1.5">
           <Link
             href={`/admin/leads/${slug}`}
             className={`rounded-full px-3 py-1.5 text-xs font-semibold ${
@@ -83,17 +135,22 @@ export default async function AdminLeadsByCategoryPage({
             </Link>
           ))}
         </div>
-      </div>
+      )}
 
       {error && (
         <p className="mt-6 rounded-xl border border-red-100 bg-red-50 p-4 text-sm text-red-600">
-          신청 내역을 불러오지 못했습니다: {error.message}
+          {isClicksView ? "클릭 이력을 불러오지 못했습니다" : "신청 내역을 불러오지 못했습니다"}: {error.message}
         </p>
       )}
 
-      {!error && <LeadsTable leads={leads} showCategoryColumn={false} />}
+      {!error &&
+        (isClicksView ? (
+          <ApplyClicksTable clicks={clicks} showCategoryColumn={false} />
+        ) : (
+          <LeadsTable leads={leads} showCategoryColumn={false} />
+        ))}
 
-      {!error && leads.length > 0 && (
+      {!error && (isClicksView ? clicks.length > 0 : leads.length > 0) && (
         <div className="mt-4 flex items-center justify-center gap-3 text-sm">
           <Link
             href={pageHref(Math.max(1, currentPage - 1))}

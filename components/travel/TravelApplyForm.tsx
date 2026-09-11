@@ -338,6 +338,9 @@ export function TravelApplyForm() {
         .select("id")
         .eq("slug", "travel")
         .maybeSingle();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
 
       const sessionLabel = SESSIONS.find((s) => s.id === form.session)?.label ?? form.session;
 
@@ -351,6 +354,7 @@ export function TravelApplyForm() {
       const { error } = await supabase.from("leads").insert({
         id: leadId,
         category_id: category?.id ?? null,
+        user_id: user?.id ?? null,
         status: "received",
         referral_code_id: referral?.codeId ?? null,
         guest_contact: {

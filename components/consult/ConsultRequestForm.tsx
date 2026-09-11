@@ -50,6 +50,9 @@ export function ConsultRequestForm({ categorySlug, categoryName }: { categorySlu
         .select("id")
         .eq("slug", categorySlug)
         .maybeSingle();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
 
       const leadId = crypto.randomUUID();
       const referral = getStoredReferral();
@@ -58,6 +61,7 @@ export function ConsultRequestForm({ categorySlug, categoryName }: { categorySlu
       const { error } = await supabase.from("leads").insert({
         id: leadId,
         category_id: category?.id ?? null,
+        user_id: user?.id ?? null,
         status: "received",
         referral_code_id: referral?.codeId ?? null,
         guest_contact: {

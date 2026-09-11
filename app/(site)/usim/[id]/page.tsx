@@ -7,6 +7,7 @@ import { UsimPlanPriceCard } from "@/components/usim/UsimPlanPriceCard";
 import { UsimPlanInfoTabs } from "@/components/usim/UsimPlanInfoTabs";
 import { PartnerBadge } from "@/components/usim/PartnerBadge";
 import { RecordRecentView } from "@/components/usim/RecordRecentView";
+import { ApplyButton } from "@/components/shared/ApplyButton";
 
 const ACTIVATION_STEPS = [
   { title: "1. 온라인 신청", desc: "신청하기 버튼을 눌러 본인 확인 정보와 원하는 개통일을 입력해요." },
@@ -92,23 +93,13 @@ export default async function UsimPlanDetailPage({ params }: { params: Promise<{
       </div>
 
       <div className="fixed inset-x-0 bottom-0 border-t border-gray-100 bg-white p-4 sm:static sm:mt-10 sm:border-0 sm:p-0">
-        {item.apply_url ? (
-          <a
-            href={item.apply_url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="block w-full rounded-full bg-[var(--brand-blue)] py-3.5 text-center text-sm font-semibold text-white shadow-sm shadow-blue-200 hover:bg-[var(--brand-blue-dark)]"
-          >
-            신청하기
-          </a>
-        ) : (
-          <Link
-            href={`/apply/usim?planId=${item.id}`}
-            className="block w-full rounded-full bg-[var(--brand-blue)] py-3.5 text-center text-sm font-semibold text-white shadow-sm shadow-blue-200 hover:bg-[var(--brand-blue-dark)]"
-          >
-            신청하기
-          </Link>
-        )}
+        <ApplyButton
+          categorySlug="usim"
+          productId={item.id}
+          applyUrl={item.apply_url}
+          internalHref={`/apply/usim?planId=${item.id}`}
+          className="block w-full rounded-full bg-[var(--brand-blue)] py-3.5 text-center text-sm font-semibold text-white shadow-sm shadow-blue-200 hover:bg-[var(--brand-blue-dark)]"
+        />
       </div>
     </main>
   );
