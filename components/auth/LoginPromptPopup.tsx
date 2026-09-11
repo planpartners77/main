@@ -3,10 +3,10 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 
-const FIRST_DELAY_MS = 10_000;
-const REPEAT_INTERVAL_MS = 60_000;
+const FIRST_DELAY_MS = 0;
+const REPEAT_INTERVAL_MS = 10_000;
 
-// 로그인 유도 팝업: 접속 10초 후 1회 노출, 이후 로그인 전까지 1분 간격으로 반복 노출한다.
+// 로그인 유도 팝업: 접속 즉시 1회 노출, 이후 로그인 전까지 10초 간격으로 반복 노출한다.
 // 닫기는 다음 주기까지만 숨기는 것이라 로그인하기 전까지는 계속 다시 뜬다(요청 스펙 그대로).
 export function LoginPromptPopup({ kakaoEnabled = false }: { kakaoEnabled?: boolean }) {
   const [loggedIn, setLoggedIn] = useState<boolean | null>(null);
