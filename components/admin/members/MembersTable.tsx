@@ -36,6 +36,12 @@ const STATUS_LABEL: Record<MemberRow["status"], string> = {
   withdrawn: "탈퇴",
 };
 
+function formatJoinedAt(iso: string) {
+  const d = new Date(iso);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${String(d.getFullYear()).slice(2)}.${pad(d.getMonth() + 1)}.${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+}
+
 export function MembersTable({
   members,
   emailById,
@@ -201,7 +207,7 @@ export function MembersTable({
                   />
                 </td>
                 <td className="whitespace-nowrap px-4 py-3 text-gray-500">
-                  {new Date(member.created_at).toLocaleDateString("ko-KR")}
+                  {formatJoinedAt(member.created_at)}
                 </td>
                 <td className="px-4 py-3 font-medium">{member.display_name ?? "-"}</td>
                 <td className="px-4 py-3 text-gray-500">{emailById.get(member.id) ?? "-"}</td>
