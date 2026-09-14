@@ -2,7 +2,25 @@ import { createClient } from "@/lib/supabase/server";
 import type { ProductDisplayConfig } from "@/lib/design/page-sections";
 import type { DisplayCategory, DisplayProduct, ProductDisplayData } from "@/lib/design/product-display";
 
-const PRODUCT_COLUMNS = "id, title, image_url, base_price, incentive_min, incentive_max, incentive_exact, category_id";
+const PRODUCT_COLUMNS =
+  "id, title, image_url, base_price, incentive_min, incentive_max, incentive_exact, category_id, categories(slug)";
+
+interface RawDisplayProduct {
+  id: string;
+  title: string;
+  image_url: string | null;
+  base_price: number | null;
+  incentive_min: number | null;
+  incentive_max: number | null;
+  incentive_exact: number | null;
+  category_id: string | null;
+  categories: { slug: string } | null;
+}
+
+function toDisplayProduct(row: RawDisplayProduct): DisplayProduct {
+  const { categories, ...rest } = row;
+  return { ...rest, category_slug: categories?.slug ?? null };
+}
 
 // product_display 섹션 하나가 필요로 하는 데이터를 config.mode에 따라 조회한다.
 // - manual: 관리자가 지정한 productIds 순서 그대로(§상품 진열 페이지 — 특정 상품을 큐레이션)
@@ -19,7 +37,8 @@ export async function getProductDisplayData(config: ProductDisplayConfig): Promi
       .select(PRODUCT_COLUMNS)
       .in("id", config.productIds)
       .eq("is_active", true);
-    const byId = new Map((data ?? []).map((p) => [p.id, p as DisplayProduct]));
+    const products = ((data ?? []) as unknown as RawDisplayProduct[]).map(toDisplayProduct);
+    const byId = new Map(products.map((p) => [p.id, p]));
     const ordered = config.productIds.map((id) => byId.get(id)).filter((p): p is DisplayProduct => !!p);
     return { mode: "manual", categories: [], productsByCategory: {}, manualProducts: ordered };
   }
@@ -42,7 +61,7 @@ export async function getProductDisplayData(config: ProductDisplayConfig): Promi
         .eq("is_active", true)
         .order("created_at", { ascending: false })
         .limit(config.limit);
-      productsByCategory[category.id] = (data ?? []) as DisplayProduct[];
+      productsByCategory[category.id] = ((data ?? []) as unknown as RawDisplayProduct[]).map(toDisplayProduct);
     }),
   );
 
@@ -68,5 +87,5 @@ export async function getCategoryDisplayProducts(categorySlug: string, limit = 6
     .eq("is_active", true)
     .order("created_at", { ascending: false })
     .limit(limit);
-  return (data ?? []) as DisplayProduct[];
+  return ((data ?? []) as unknown as RawDisplayProduct[]).map(toDisplayProduct);
 }

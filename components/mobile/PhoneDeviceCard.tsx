@@ -2,6 +2,7 @@ import Link from "next/link";
 import { PHONE_STOCK_STATUS_LABELS } from "@/lib/mobile/device-spec";
 import { storageLabel } from "@/lib/mobile/device-spec";
 import { bestEffectivePrice, type PhoneDeviceListItem } from "@/lib/mobile/filters";
+import { ProductThumbnail } from "@/components/design/ProductThumbnail";
 
 function formatWon(value: number) {
   return `${Math.round(value).toLocaleString("ko-KR")}원`;
@@ -34,16 +35,7 @@ export function PhoneDeviceCard({ item }: { item: PhoneDeviceListItem }) {
         )}
       </div>
 
-      {item.image_url ? (
-        <div className="mt-3 aspect-[4/3] w-full overflow-hidden rounded-xl bg-gray-50">
-          {/* eslint-disable-next-line @next/next/no-img-element -- 외부 URL 이미지, next/image 미사용 컨벤션 */}
-          <img src={item.image_url} alt={item.title} className="h-full w-full object-cover" />
-        </div>
-      ) : (
-        <div className="mt-3 flex aspect-[4/3] w-full items-center justify-center rounded-xl bg-gray-50 text-xs text-gray-300">
-          이미지 준비중
-        </div>
-      )}
+      <ProductThumbnail src={item.image_url} alt={item.title} className="mt-3" />
 
       <p className="mt-3 text-sm font-bold text-[var(--brand-navy)]">{item.title}</p>
       <p className="mt-0.5 text-xs text-gray-500">
