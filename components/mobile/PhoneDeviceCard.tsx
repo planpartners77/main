@@ -35,12 +35,12 @@ export function PhoneDeviceCard({ item }: { item: PhoneDeviceListItem }) {
       </div>
 
       {item.image_url ? (
-        <div className="mt-3 aspect-square w-full overflow-hidden rounded-xl bg-gray-50">
+        <div className="mt-3 aspect-[4/3] w-full overflow-hidden rounded-xl bg-gray-50">
           {/* eslint-disable-next-line @next/next/no-img-element -- 외부 URL 이미지, next/image 미사용 컨벤션 */}
-          <img src={item.image_url} alt={item.title} className="h-full w-full object-contain" />
+          <img src={item.image_url} alt={item.title} className="h-full w-full object-cover" />
         </div>
       ) : (
-        <div className="mt-3 flex aspect-square w-full items-center justify-center rounded-xl bg-gray-50 text-xs text-gray-300">
+        <div className="mt-3 flex aspect-[4/3] w-full items-center justify-center rounded-xl bg-gray-50 text-xs text-gray-300">
           이미지 준비중
         </div>
       )}
