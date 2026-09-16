@@ -18,7 +18,11 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
       <Footer />
       <SitePopupLayer />
       <ReferralCapture />
-      <LoginPromptPopup kakaoEnabled={loginMethods.kakao} />
+      <LoginPromptPopup
+        kakaoEnabled={loginMethods.kakao}
+        firstDelaySeconds={loginMethods.popupFirstDelaySeconds}
+        repeatMinutes={loginMethods.popupRepeatMinutes}
+      />
     </div>
   );
 }

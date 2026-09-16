@@ -4,12 +4,18 @@ import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
-const FIRST_DELAY_MS = 0;
-const REPEAT_INTERVAL_MS = 10_000;
-
-// 로그인 유도 팝업: 접속 즉시 1회 노출, 이후 로그인 전까지 10초 간격으로 반복 노출한다.
+// 로그인 유도 팝업: 접속 후 firstDelaySeconds초 뒤 1회 노출, 이후 로그인 전까지
+// repeatMinutes분 간격으로 반복 노출한다(간편로그인 관리 화면에서 관리자가 설정).
 // 닫기는 다음 주기까지만 숨기는 것이라 로그인하기 전까지는 계속 다시 뜬다(요청 스펙 그대로).
-export function LoginPromptPopup({ kakaoEnabled = false }: { kakaoEnabled?: boolean }) {
+export function LoginPromptPopup({
+  kakaoEnabled = false,
+  firstDelaySeconds,
+  repeatMinutes,
+}: {
+  kakaoEnabled?: boolean;
+  firstDelaySeconds: number;
+  repeatMinutes: number;
+}) {
   const pathname = usePathname();
   const [loggedIn, setLoggedIn] = useState<boolean | null>(null);
   const [visible, setVisible] = useState(false);
@@ -32,13 +38,17 @@ export function LoginPromptPopup({ kakaoEnabled = false }: { kakaoEnabled?: bool
   useEffect(() => {
     if (!kakaoEnabled || loggedIn !== false) return;
 
-    const showTimer = setTimeout(() => setVisible(true), FIRST_DELAY_MS);
-    const repeatTimer = setInterval(() => setVisible(true), FIRST_DELAY_MS + REPEAT_INTERVAL_MS);
+    // 관리자가 0이나 음수를 입력해도 타이머가 폭주하지 않도록 최소값을 둔다.
+    const firstDelayMs = Math.max(0, firstDelaySeconds) * 1000;
+    const repeatMs = Math.max(0.1, repeatMinutes) * 60_000;
+
+    const showTimer = setTimeout(() => setVisible(true), firstDelayMs);
+    const repeatTimer = setInterval(() => setVisible(true), firstDelayMs + repeatMs);
     return () => {
       clearTimeout(showTimer);
       clearInterval(repeatTimer);
     };
-  }, [kakaoEnabled, loggedIn]);
+  }, [kakaoEnabled, loggedIn, firstDelaySeconds, repeatMinutes]);
 
   if (!kakaoEnabled || loggedIn !== false || !visible) return null;
 

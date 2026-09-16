@@ -41,6 +41,9 @@ export interface CompanyInfo {
 export interface LoginMethodsSettings {
   kakao: boolean;
   google: boolean;
+  // 로그인 유도 팝업(LoginPromptPopup) 노출 주기 설정.
+  popupFirstDelaySeconds: number;
+  popupRepeatMinutes: number;
 }
 
 export type TelegramNotificationType =
@@ -102,9 +105,13 @@ export const DEFAULT_COMPANY_INFO: CompanyInfo = {
 };
 
 // 카카오는 심사 완료 전까지 관리자가 직접 켜기 전엔 false, 구글은 연동 전이라 UI에서 비활성.
+// 팝업 주기는 기존 하드코딩 값(즉시 노출)에서 반복 주기만 10초 -> 1분으로 완화해 시딩한다
+// (10초 간격은 너무 잦아 UX상 무리라 판단 — 필요하면 관리자 화면에서 다시 줄이면 됨).
 export const DEFAULT_LOGIN_METHODS_SETTINGS: LoginMethodsSettings = {
   kakao: false,
   google: false,
+  popupFirstDelaySeconds: 0,
+  popupRepeatMinutes: 1,
 };
 
 // 관리자 > 텔레그램 알림 관리 화면에 표시할 알림 종류 메타데이터. app/api/notify가 처리하는

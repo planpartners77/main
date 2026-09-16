@@ -8,6 +8,8 @@ import type { LoginMethodsSettings } from "@/lib/design/site-settings";
 export function LoginMethodsManager({ settings }: { settings: LoginMethodsSettings }) {
   const router = useRouter();
   const [kakaoEnabled, setKakaoEnabled] = useState(settings.kakao);
+  const [firstDelaySeconds, setFirstDelaySeconds] = useState(settings.popupFirstDelaySeconds);
+  const [repeatMinutes, setRepeatMinutes] = useState(settings.popupRepeatMinutes);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
@@ -19,7 +21,14 @@ export function LoginMethodsManager({ settings }: { settings: LoginMethodsSettin
     const supabase = createClient();
     const { error: saveError } = await supabase
       .from("site_settings")
-      .update({ value: { kakao: kakaoEnabled, google: false } })
+      .update({
+        value: {
+          kakao: kakaoEnabled,
+          google: false,
+          popupFirstDelaySeconds: Math.max(0, firstDelaySeconds),
+          popupRepeatMinutes: Math.max(0.1, repeatMinutes),
+        },
+      })
       .eq("key", "login_methods");
 
     setSaving(false);
@@ -61,6 +70,44 @@ export function LoginMethodsManager({ settings }: { settings: LoginMethodsSettin
             />
           </button>
         </label>
+      </div>
+
+      <div className="rounded-2xl border border-gray-200 bg-white p-4">
+        <p className="text-sm font-semibold text-[var(--brand-navy)]">로그인 유도 팝업 노출 주기</p>
+        <p className="mt-0.5 text-xs text-gray-500">
+          카카오 로그인이 꺼져 있거나 이미 로그인한 회원에게는 노출되지 않습니다. 닫아도 로그인하기
+          전까지는 설정한 주기마다 다시 노출됩니다.
+        </p>
+        <div className="mt-3 grid grid-cols-2 gap-3">
+          <label className="text-xs text-gray-500">
+            최초 노출까지 대기 시간(초)
+            <input
+              type="number"
+              min={0}
+              step={1}
+              value={firstDelaySeconds}
+              onChange={(e) => {
+                setFirstDelaySeconds(Number(e.target.value));
+                setSaved(false);
+              }}
+              className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+            />
+          </label>
+          <label className="text-xs text-gray-500">
+            재노출 주기(분)
+            <input
+              type="number"
+              min={0.1}
+              step={0.5}
+              value={repeatMinutes}
+              onChange={(e) => {
+                setRepeatMinutes(Number(e.target.value));
+                setSaved(false);
+              }}
+              className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+            />
+          </label>
+        </div>
       </div>
 
       <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4 opacity-60">
