@@ -2,7 +2,11 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { createClient } from "@/lib/supabase/client";
 import type { PublicPopup } from "@/lib/design/public-queries";
+
+// Tailwind의 md 브레이크포인트(768px)와 맞춘 모바일/PC 판별 기준.
+const MOBILE_MEDIA_QUERY = "(max-width: 767px)";
 
 // layer/bottom_bar는 화면 위치가 겹치지 않아 타입별로 노출 한도를 따로 둔다.
 const MAX_LAYER_POPUPS = 2;
@@ -177,9 +181,27 @@ function BarPopup({
 export function SitePopup({ popups }: { popups: PublicPopup[] }) {
   const [visibleIds, setVisibleIds] = useState<string[]>([]);
   const trackedImpressions = useRef(new Set<string>());
+  // 기기/로그인 상태 타겟팅(device_target, login_target)은 서버에서 판별할 근거가 마땅치
+  // 않아(뷰포트·인증 세션 둘 다 클라이언트 값) 여기서 한 번 더 걸러낸다. null인 동안은
+  // 아직 판별 전이라는 뜻이라, 확정되기 전엔 노출 여부를 정하지 않고 대기한다(깜빡임 방지).
+  const [isMobile, setIsMobile] = useState<boolean | null>(null);
+  const [loggedIn, setLoggedIn] = useState<boolean | null>(null);
 
   useEffect(() => {
-    const eligible = popups.filter((p) => !isDismissedToday(p.id) && !isHiddenThisSession(p.id));
+    setIsMobile(window.matchMedia(MOBILE_MEDIA_QUERY).matches);
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data }) => setLoggedIn(!!data.user));
+  }, []);
+
+  useEffect(() => {
+    if (isMobile === null || loggedIn === null) return;
+    const eligible = popups.filter(
+      (p) =>
+        !isDismissedToday(p.id) &&
+        !isHiddenThisSession(p.id) &&
+        (p.device_target === "all" || (p.device_target === "mobile") === isMobile) &&
+        (p.login_target === "all" || (p.login_target === "member") === loggedIn),
+    );
     const layerIds = eligible
       .filter((p) => p.display_type !== "bottom_bar")
       .slice(0, MAX_LAYER_POPUPS)
@@ -189,7 +211,7 @@ export function SitePopup({ popups }: { popups: PublicPopup[] }) {
       .slice(0, MAX_BAR_POPUPS)
       .map((p) => p.id);
     setVisibleIds([...layerIds, ...barIds]);
-  }, [popups]);
+  }, [popups, isMobile, loggedIn]);
 
   const visiblePopups = popups.filter((p) => visibleIds.includes(p.id));
 

@@ -7,7 +7,7 @@ export default async function DesignPopupsPage() {
     supabase
       .from("popups")
       .select(
-        "id, title, image_url, body, link_url, display_type, category_id, dismiss_days, impression_count, click_count, sort_order, is_active, start_at, end_at",
+        "id, title, image_url, body, link_url, display_type, target_mode, category_ids, device_target, login_target, dismiss_days, impression_count, click_count, sort_order, is_active, start_at, end_at",
       )
       .order("sort_order", { ascending: true }),
     supabase.from("categories").select("id, name").eq("is_active", true).order("name"),

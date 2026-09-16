@@ -12,7 +12,10 @@ export interface PopupRow {
   body: string | null;
   link_url: string | null;
   display_type: "layer" | "bottom_bar";
-  category_id: string | null;
+  target_mode: "all" | "include" | "exclude";
+  category_ids: string[];
+  device_target: "all" | "mobile" | "desktop";
+  login_target: "all" | "guest" | "member";
   dismiss_days: number;
   impression_count: number;
   click_count: number;
@@ -27,13 +30,39 @@ interface CategoryOption {
   name: string;
 }
 
+// 카테고리 트리에는 없지만(홈은 카테고리가 아님) 노출 대상으로 지정할 수 있어야 해서
+// category_ids에 함께 담기는 고정 가상 옵션 — 값 "home"은 0048_popup_multi_target.sql,
+// getActivePopups()의 audienceKey 규칙과 반드시 일치해야 한다.
+const HOME_TARGET = { id: "home", name: "메인페이지" };
+
+const TARGET_MODE_LABEL: Record<PopupRow["target_mode"], string> = {
+  all: "전체(사이트 공통)",
+  include: "선택한 페이지에만 노출",
+  exclude: "선택한 페이지만 제외하고 노출",
+};
+
+const DEVICE_TARGET_LABEL: Record<PopupRow["device_target"], string> = {
+  all: "전체",
+  mobile: "모바일만",
+  desktop: "PC만",
+};
+
+const LOGIN_TARGET_LABEL: Record<PopupRow["login_target"], string> = {
+  all: "전체",
+  guest: "비로그인만",
+  member: "회원만",
+};
+
 const EMPTY_FORM = {
   title: "",
   image_url: "",
   body: "",
   link_url: "",
   display_type: "layer" as "layer" | "bottom_bar",
-  category_id: "",
+  target_mode: "all" as PopupRow["target_mode"],
+  category_ids: [] as string[],
+  device_target: "all" as PopupRow["device_target"],
+  login_target: "all" as PopupRow["login_target"],
   dismiss_days: "1",
   sort_order: "0",
   is_active: true,
@@ -56,6 +85,21 @@ const DISMISS_DAYS_OPTIONS = [
 function dismissDaysLabel(days: number) {
   const match = DISMISS_DAYS_OPTIONS.find((o) => Number(o.value) === days);
   return match ? match.label : `${days}일`;
+}
+
+// 포함/제외 모드는 의미가 반대라 관리자가 헷갈리기 쉬워서, 저장 폼과 목록 둘 다에서
+// "실제로 어디에 뜨는지"를 문장으로 미리 보여준다.
+function describeTarget(mode: PopupRow["target_mode"], ids: string[], categories: CategoryOption[]) {
+  if (mode === "all") return "모든 페이지에 노출됩니다.";
+  const names = ids
+    .map((id) => (id === HOME_TARGET.id ? HOME_TARGET.name : categories.find((c) => c.id === id)?.name))
+    .filter((name): name is string => !!name);
+  if (names.length === 0) {
+    return mode === "include" ? "선택된 페이지가 없어 어디에도 노출되지 않습니다." : "선택된 페이지가 없어 모든 페이지에 노출됩니다.";
+  }
+  return mode === "include"
+    ? `${names.join(", ")} 페이지에만 노출됩니다.`
+    : `${names.join(", ")} 페이지를 제외한 모든 페이지에 노출됩니다.`;
 }
 
 function toDatetimeLocal(value: string | null) {
@@ -128,7 +172,10 @@ export function PopupManager({ popups, categories }: { popups: PopupRow[]; categ
       body: popup.body ?? "",
       link_url: popup.link_url ?? "",
       display_type: popup.display_type,
-      category_id: popup.category_id ?? "",
+      target_mode: popup.target_mode,
+      category_ids: popup.category_ids,
+      device_target: popup.device_target,
+      login_target: popup.login_target,
       dismiss_days: String(popup.dismiss_days),
       sort_order: String(popup.sort_order),
       is_active: popup.is_active,
@@ -146,6 +193,10 @@ export function PopupManager({ popups, categories }: { popups: PopupRow[]; categ
       setError("제목은 필수입니다.");
       return;
     }
+    if (form.target_mode !== "all" && form.category_ids.length === 0) {
+      setError("포함/제외 모드에서는 대상 페이지를 하나 이상 선택해야 합니다.");
+      return;
+    }
 
     setSaving(true);
     setError(null);
@@ -156,7 +207,10 @@ export function PopupManager({ popups, categories }: { popups: PopupRow[]; categ
       body: form.body.trim() || null,
       link_url: form.link_url.trim() || null,
       display_type: form.display_type,
-      category_id: form.category_id || null,
+      target_mode: form.target_mode,
+      category_ids: form.target_mode === "all" ? [] : form.category_ids,
+      device_target: form.device_target,
+      login_target: form.login_target,
       dismiss_days: Number(form.dismiss_days) || 1,
       sort_order: Number(form.sort_order) || 0,
       is_active: form.is_active,
@@ -194,7 +248,8 @@ export function PopupManager({ popups, categories }: { popups: PopupRow[]; categ
     <div>
       <div className="flex items-center justify-between gap-3">
         <p className="text-sm text-gray-500">
-          노출 대상(전체/카테고리)별로 등록하고, 사용자가 &ldquo;보지 않기&rdquo;를 선택하면 팝업별로 설정한 기간 동안 숨겨집니다.
+          노출 대상(전체/페이지 포함/페이지 제외, 메인페이지 포함 다중 선택 가능)별로 등록하고, 사용자가
+          &ldquo;보지 않기&rdquo;를 선택하면 팝업별로 설정한 기간 동안 숨겨집니다.
         </p>
         <button
           onClick={() => (showForm ? setShowForm(false) : startCreate())}
@@ -254,17 +309,70 @@ export function PopupManager({ popups, categories }: { popups: PopupRow[]; categ
               className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
             />
           </label>
+          <div className="text-sm sm:col-span-2">
+            <p>노출 대상</p>
+            <div className="mt-1 flex flex-wrap gap-3 text-xs text-gray-600">
+              {(Object.keys(TARGET_MODE_LABEL) as PopupRow["target_mode"][]).map((mode) => (
+                <label key={mode} className="flex items-center gap-1.5">
+                  <input
+                    type="radio"
+                    name="target_mode"
+                    checked={form.target_mode === mode}
+                    onChange={() => setForm({ ...form, target_mode: mode })}
+                  />
+                  {TARGET_MODE_LABEL[mode]}
+                </label>
+              ))}
+            </div>
+            {form.target_mode !== "all" && (
+              <div className="mt-2 flex flex-wrap gap-3 rounded-lg border border-gray-200 bg-gray-50 p-3 text-xs text-gray-600">
+                {[HOME_TARGET, ...categories].map((c) => (
+                  <label key={c.id} className="flex items-center gap-1.5">
+                    <input
+                      type="checkbox"
+                      checked={form.category_ids.includes(c.id)}
+                      onChange={(e) =>
+                        setForm({
+                          ...form,
+                          category_ids: e.target.checked
+                            ? [...form.category_ids, c.id]
+                            : form.category_ids.filter((id) => id !== c.id),
+                        })
+                      }
+                    />
+                    {c.name}
+                  </label>
+                ))}
+              </div>
+            )}
+            <p className="mt-1.5 text-xs text-gray-400">
+              {describeTarget(form.target_mode, form.category_ids, categories)}
+            </p>
+          </div>
           <label className="text-sm">
-            노출 대상
+            노출 기기
             <select
-              value={form.category_id}
-              onChange={(e) => setForm({ ...form, category_id: e.target.value })}
+              value={form.device_target}
+              onChange={(e) => setForm({ ...form, device_target: e.target.value as PopupRow["device_target"] })}
               className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
             >
-              <option value="">전체(사이트 공통)</option>
-              {categories.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name} 페이지
+              {(Object.keys(DEVICE_TARGET_LABEL) as PopupRow["device_target"][]).map((v) => (
+                <option key={v} value={v}>
+                  {DEVICE_TARGET_LABEL[v]}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="text-sm">
+            노출 로그인 상태
+            <select
+              value={form.login_target}
+              onChange={(e) => setForm({ ...form, login_target: e.target.value as PopupRow["login_target"] })}
+              className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+            >
+              {(Object.keys(LOGIN_TARGET_LABEL) as PopupRow["login_target"][]).map((v) => (
+                <option key={v} value={v}>
+                  {LOGIN_TARGET_LABEL[v]}
                 </option>
               ))}
             </select>
@@ -368,7 +476,7 @@ export function PopupManager({ popups, categories }: { popups: PopupRow[]; categ
                     <td className="px-4 py-3 font-medium">{popup.title}</td>
                     <td className="px-4 py-3 text-gray-500">{DISPLAY_TYPE_LABEL[popup.display_type]}</td>
                     <td className="px-4 py-3 text-gray-500">
-                      {categories.find((c) => c.id === popup.category_id)?.name ?? "전체"}
+                      {describeTarget(popup.target_mode, popup.category_ids, categories)}
                     </td>
                     <td className="px-4 py-3 text-gray-500">{popup.sort_order}</td>
                     <td className="px-4 py-3 text-gray-500">
