@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { getAdminSession } from "@/lib/admin/session";
 import { MembersTable, type MemberRow } from "@/components/admin/members/MembersTable";
 
 const PAGE_SIZE = 50;
@@ -28,6 +29,7 @@ export default async function AdminMembersPage({
   const to = from + PAGE_SIZE - 1;
 
   const supabase = await createClient();
+  const session = await getAdminSession();
 
   // 예전에는 이메일이 profiles에 없어(auth.users 전용) 검색/표시 때마다 listUsers({perPage:1000})로
   // 전체 회원을 가져와 매칭했는데, 가입자가 1000명을 넘으면 뒷 페이지 회원은 검색도, 이메일 표시도
@@ -81,12 +83,14 @@ export default async function AdminMembersPage({
             총 {count ?? 0}명 · 상세보기 열람은 개인정보보호법상 접근기록(audit_logs)에 자동으로 남습니다.
           </p>
         </div>
-        <a
-          href={`/admin/members/export?${exportQuery.toString()}`}
-          className="rounded-full border border-gray-300 px-4 py-2 text-xs font-semibold text-gray-700 hover:border-[var(--brand-navy)] hover:text-[var(--brand-navy)]"
-        >
-          엑셀(CSV) 내보내기
-        </a>
+        {session?.role === "super_admin" && (
+          <a
+            href={`/admin/members/export?${exportQuery.toString()}`}
+            className="rounded-full border border-gray-300 px-4 py-2 text-xs font-semibold text-gray-700 hover:border-[var(--brand-navy)] hover:text-[var(--brand-navy)]"
+          >
+            엑셀(CSV) 내보내기
+          </a>
+        )}
       </div>
 
       <form className="mt-4 flex flex-wrap gap-2" method="get">

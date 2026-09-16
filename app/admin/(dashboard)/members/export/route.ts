@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { getAdminSession } from "@/lib/admin/session";
 
 // 회원 목록 화면과 동일한 필터 조건으로 최대 5000명까지 CSV로 내보낸다(엑셀에서 바로 열림).
 // 별도 xlsx 라이브러리 없이 UTF-8 BOM + CSV로 충분 — 회원 목록 화면의 필터/검색 로직을
@@ -11,7 +12,14 @@ function csvEscape(value: string) {
   return value;
 }
 
+// proxy.ts는 "members" 메뉴 단위로만 접근을 걸러 member_manager도 이 URL에 닿을 수 있으므로,
+// 전체회원 개인정보(연락처/배송지 등)가 담긴 CSV 다운로드는 여기서 최고관리자로 한 번 더 좁힌다.
 export async function GET(request: NextRequest) {
+  const session = await getAdminSession();
+  if (!session || session.role !== "super_admin") {
+    return NextResponse.json({ error: "최고관리자만 사용할 수 있는 기능입니다." }, { status: 403 });
+  }
+
   const { searchParams } = new URL(request.url);
   const q = searchParams.get("q")?.trim();
   const tier = searchParams.get("tier");
