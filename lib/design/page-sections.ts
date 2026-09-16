@@ -133,3 +133,8 @@ export const PAGE_TEMPLATES: PageTemplate[] = [
     sections: ["hero", "rich_text", "product_display", "cta"],
   },
 ];
+
+// 공개 라우트(app/(site)/pages/[slug])가 URL 한 구간만 받으므로, 슬러그에 "/"가 들어가면
+// (예: "LP/DRIVE") DB에는 저장돼도 해당 주소가 라우트에 매칭되지 않아 항상 404가 난다.
+export const SLUG_PATTERN = /^[a-z0-9-]+$/;
+export const SLUG_HELP_TEXT = "슬러그는 영문 소문자, 숫자, 하이픈(-)만 사용할 수 있습니다.";

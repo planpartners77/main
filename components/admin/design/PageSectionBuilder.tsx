@@ -8,6 +8,8 @@ import {
   SECTION_LABELS,
   SECTION_HAS_CONFIG,
   defaultSectionConfig,
+  SLUG_PATTERN,
+  SLUG_HELP_TEXT,
   type SectionType,
   type ProductDisplayConfig,
   type UsimSpotlightConfig,
@@ -50,6 +52,10 @@ export function PageSectionBuilder({
     event.preventDefault();
     if (!meta.title.trim() || (!isHome && !meta.slug.trim())) {
       setMetaError("제목과 슬러그는 필수입니다.");
+      return;
+    }
+    if (!isHome && !SLUG_PATTERN.test(meta.slug.trim())) {
+      setMetaError(SLUG_HELP_TEXT);
       return;
     }
     setMetaSaving(true);
@@ -113,6 +119,7 @@ export function PageSectionBuilder({
               onChange={(e) => setMeta({ ...meta, slug: e.target.value.trim() })}
               className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm disabled:bg-gray-50 disabled:text-gray-400"
             />
+            {!isHome && <span className="mt-1 block text-xs text-gray-400">{SLUG_HELP_TEXT}</span>}
           </label>
           <label className="text-sm">
             상태

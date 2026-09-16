@@ -4,7 +4,7 @@ import { useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { PAGE_TEMPLATES, defaultSectionConfig } from "@/lib/design/page-sections";
+import { PAGE_TEMPLATES, defaultSectionConfig, SLUG_PATTERN, SLUG_HELP_TEXT } from "@/lib/design/page-sections";
 import type { PageRow } from "@/lib/design/pages-query";
 
 const EMPTY_FORM = { title: "", slug: "", template: PAGE_TEMPLATES[0].key };
@@ -26,6 +26,10 @@ export function PageListManager({ pages }: { pages: PageRow[] }) {
     }
     if (slug === "home") {
       setError("'home' 슬러그는 홈페이지 전용이라 새로 만들 수 없습니다.");
+      return;
+    }
+    if (!SLUG_PATTERN.test(slug)) {
+      setError(SLUG_HELP_TEXT);
       return;
     }
 
@@ -129,6 +133,7 @@ export function PageListManager({ pages }: { pages: PageRow[] }) {
               className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
               placeholder="summer-event"
             />
+            <span className="mt-1 block text-xs text-gray-400">{SLUG_HELP_TEXT}</span>
           </label>
           <label className="text-sm">
             템플릿
