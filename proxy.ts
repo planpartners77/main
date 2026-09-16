@@ -19,6 +19,17 @@ function shouldLogVisit(request: NextRequest) {
 }
 
 export async function proxy(request: NextRequest, event: NextFetchEvent) {
+  // URL 대소문자에 따라 다른 화면이 뜨는 문제(예: /lp vs /LP)를 막기 위해 대문자가 섞인
+  // 경로는 소문자로 308 리다이렉트한다. 라우팅/카테고리 slug는 모두 소문자 규칙이므로
+  // 대문자 버전은 오타로 간주해도 안전하다.
+  const { pathname } = request.nextUrl;
+  const lowerPathname = pathname.toLowerCase();
+  if (lowerPathname !== pathname) {
+    const url = request.nextUrl.clone();
+    url.pathname = lowerPathname;
+    return NextResponse.redirect(url, 308);
+  }
+
   // SitePopupLayer(app/(site)/layout.tsx)가 카테고리별 팝업을 가리려면 현재 경로를 알아야
   // 하는데, 레이아웃은 page.tsx와 달리 pathname을 직접 받지 못한다 — 요청 헤더로 전달해
   // 서버 컴포넌트의 headers()에서 읽을 수 있게 한다(응답 헤더가 아니라 요청 헤더에 심어야 함).
