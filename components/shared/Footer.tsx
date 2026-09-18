@@ -36,6 +36,9 @@ export async function Footer() {
               {item.label}
             </Link>
           ))}
+          <a href="mailto:planpartners77@gmail.com" className="ml-auto text-gray-300 hover:text-white">
+            제휴문의 : planpartners77@gmail.com
+          </a>
         </div>
 
         <p className="mt-6 font-medium text-white">{info.introText}</p>
