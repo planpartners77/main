@@ -43,7 +43,7 @@ export function TravelSpotlight() {
               href="/travel"
               className="mt-2 inline-flex w-fit items-center gap-1 rounded-full bg-[var(--brand-blue)] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[var(--brand-blue-dark)]"
             >
-              자세히 보기
+              무료 체험 신청하기
               <span aria-hidden="true">→</span>
             </Link>
           </div>
