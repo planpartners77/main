@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { LeadsTable } from "@/components/admin/leads/LeadsTable";
 import { ApplyClicksTable } from "@/components/admin/leads/ApplyClicksTable";
 import { LEAD_STATUS_OPTIONS } from "@/lib/admin/lead-status";
-import { LEADS_PAGE_SIZE, type LeadRow } from "@/lib/admin/leads";
+import { LEADS_PAGE_SIZE, LEAD_DETAIL_SELECT_COLUMNS, type LeadRow } from "@/lib/admin/leads";
 import { APPLY_CLICKS_PAGE_SIZE, type ApplyClickRow } from "@/lib/admin/apply-clicks";
 
 // 신청내역 하위메뉴(카테고리별 탭)의 실제 목록 화면. 카테고리는 이미 문맥으로 드러나므로
@@ -55,7 +55,7 @@ export default async function AdminLeadsByCategoryPage({
   } else {
     let query = supabase
       .from("leads")
-      .select("id, status, created_at, guest_contact, admin_memo, categories(name, slug), referral_code_id", {
+      .select(LEAD_DETAIL_SELECT_COLUMNS, {
         count: "exact",
       })
       .eq("category_id", category.id)

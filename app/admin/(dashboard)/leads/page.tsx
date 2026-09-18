@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { LeadsTable } from "@/components/admin/leads/LeadsTable";
 import { ApplyClicksTable } from "@/components/admin/leads/ApplyClicksTable";
 import { LEAD_STATUS_OPTIONS } from "@/lib/admin/lead-status";
-import { LEADS_PAGE_SIZE, type LeadRow } from "@/lib/admin/leads";
+import { LEADS_PAGE_SIZE, LEAD_DETAIL_SELECT_COLUMNS, type LeadRow } from "@/lib/admin/leads";
 import { APPLY_CLICKS_PAGE_SIZE, type ApplyClickRow } from "@/lib/admin/apply-clicks";
 
 // "전체" 탭 — 카테고리 구분 없이 모든 신청을 모아 보는 마스터 뷰.
@@ -43,7 +43,7 @@ export default async function AdminLeadsPage({
   } else {
     let query = supabase
       .from("leads")
-      .select("id, status, created_at, guest_contact, admin_memo, categories(name, slug), referral_code_id", {
+      .select(LEAD_DETAIL_SELECT_COLUMNS, {
         count: "exact",
       })
       .order("created_at", { ascending: false });
