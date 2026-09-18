@@ -1,12 +1,41 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendTelegramMessage } from "@/lib/telegram";
+import { getFieldLabel, getConsentLabel, formatFieldValue } from "@/lib/admin/lead-field-labels";
 import {
   DEFAULT_TELEGRAM_NOTIFICATION_SETTINGS,
   normalizeTelegramNotificationSettings,
   type TelegramNotificationSettings,
   type TelegramNotificationType,
 } from "@/lib/design/site-settings";
+
+// Telegram HTML parse_mode는 <, >, &를 태그로 해석하므로 사용자가 입력한 자유 텍스트
+// (주소/직업/문의내용 등)에 이 문자가 섞이면 메시지 전송이 깨질 수 있어 이스케이프한다.
+function escapeHtml(text: string): string {
+  return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+// guest_contact/consent은 신청서마다 필드가 달라 하드코딩된 일부 필드만 골라 보여주면
+// 새 폼이 추가되거나 필드가 늘어날 때마다 이 파일을 고쳐야 한다. 관리자 상세보기 패널
+// (lib/admin/lead-field-labels.ts)과 동일한 라벨 매핑을 재사용해 제출된 내용 전체를
+// 빠짐없이 텔레그램 메시지에 담는다 — "상담 접수 시 전체 내용을 알림에 포함" 원칙.
+function buildContactLines(categorySlug: string | undefined, contact: Record<string, unknown>): string[] {
+  return Object.entries(contact)
+    .filter(([key, value]) => {
+      if (key === "channel") return false;
+      if (value === null || value === undefined || value === "") return false;
+      if (Array.isArray(value) && value.length === 0) return false;
+      return true;
+    })
+    .map(([key, value]) => `${escapeHtml(getFieldLabel(categorySlug, key))}: ${escapeHtml(formatFieldValue(value))}`);
+}
+
+function buildConsentLines(consent: Record<string, unknown> | null | undefined): string[] {
+  if (!consent) return [];
+  return Object.entries(consent).map(
+    ([key, value]) => `${escapeHtml(getConsentLabel(key))}: ${escapeHtml(formatFieldValue(value))}`,
+  );
+}
 
 // 회원가입/여행 신청서 접수 완료 직후 클라이언트가 호출하는 알림 트리거.
 // id로 실제 DB 행을 다시 조회해서 메시지를 만든다 — 클라이언트가 보낸 임의의 텍스트를
@@ -62,31 +91,19 @@ export async function POST(request: Request) {
   if (type === "travel_lead") {
     const { data } = await supabase
       .from("leads")
-      .select("guest_contact, created_at")
+      .select("guest_contact, consent, created_at, categories(slug)")
       .eq("id", id)
       .maybeSingle();
     if (!data) return NextResponse.json({ ok: false }, { status: 404 });
 
-    const c = (data.guest_contact ?? {}) as Record<string, unknown>;
-    const notes = Array.isArray(c.notes) ? (c.notes as string[]).join(", ") : null;
+    const categorySlug = (data.categories as unknown as { slug: string } | null)?.slug;
+    const contact = (data.guest_contact ?? {}) as Record<string, unknown>;
     await sendTelegramMessage(
       [
         "✈️ <b>여행 신청서 접수</b> (CRIS 골프캠프)",
-        `아이 정보: ${c.childInfo ?? "-"}`,
-        `영어 닉네임: ${c.nickname ?? "-"}`,
-        `보호자: ${c.guardianName ?? "-"}${c.guardianNameEn ? ` (${c.guardianNameEn})` : ""}`,
-        `연락처: ${c.phone ?? "-"}`,
-        `집 주소: ${c.address ?? "-"}`,
-        `참가 회차: ${c.session ?? "-"}`,
-        `캠프 경험: ${c.experience ?? "-"}${c.experienceDetail ? ` (${c.experienceDetail})` : ""}`,
-        c.heardFrom
-          ? `추천인: ${c.heardFrom}${c.heardFromDetail ? ` (${c.heardFromDetail})` : ""}`
-          : null,
-        notes ? `학생 특이사항: ${notes}${c.notesDetail ? ` (${c.notesDetail})` : ""}` : null,
-        `사진/영상 촬영 동의: ${c.mediaConsent ?? "-"}`,
-      ]
-        .filter(Boolean)
-        .join("\n"),
+        ...buildContactLines(categorySlug, contact),
+        ...buildConsentLines(data.consent as Record<string, unknown> | null),
+      ].join("\n"),
     );
     return NextResponse.json({ ok: true });
   }
@@ -94,23 +111,20 @@ export async function POST(request: Request) {
   if (type === "usim_lead") {
     const { data } = await supabase
       .from("leads")
-      .select("guest_contact, created_at, products(title)")
+      .select("guest_contact, consent, created_at, categories(slug), products(title)")
       .eq("id", id)
       .maybeSingle();
     if (!data) return NextResponse.json({ ok: false }, { status: 404 });
 
-    const c = (data.guest_contact ?? {}) as Record<string, unknown>;
+    const categorySlug = (data.categories as unknown as { slug: string } | null)?.slug;
+    const contact = (data.guest_contact ?? {}) as Record<string, unknown>;
     const planTitle = (data.products as unknown as { title: string } | null)?.title ?? "-";
     await sendTelegramMessage(
       [
         "📱 <b>유심 요금제 신청</b>",
-        `요금제: ${planTitle}`,
-        `신청자: ${c.applicantName ?? "-"}`,
-        `생년월일: ${c.birthDate ?? "-"}`,
-        `연락처: ${c.phone ?? "-"}`,
-        `개통방식: ${c.activationTypeLabel ?? "-"}`,
-        `유심타입: ${c.simTypeLabel ?? "-"}`,
-        `희망 개통일: ${c.preferredDate ?? "-"}`,
+        `요금제: ${escapeHtml(planTitle)}`,
+        ...buildContactLines(categorySlug, contact),
+        ...buildConsentLines(data.consent as Record<string, unknown> | null),
       ].join("\n"),
     );
     return NextResponse.json({ ok: true });
@@ -119,23 +133,20 @@ export async function POST(request: Request) {
   if (type === "mobile_lead") {
     const { data } = await supabase
       .from("leads")
-      .select("guest_contact, created_at, products(title)")
+      .select("guest_contact, consent, created_at, categories(slug), products(title)")
       .eq("id", id)
       .maybeSingle();
     if (!data) return NextResponse.json({ ok: false }, { status: 404 });
 
-    const c = (data.guest_contact ?? {}) as Record<string, unknown>;
+    const categorySlug = (data.categories as unknown as { slug: string } | null)?.slug;
+    const contact = (data.guest_contact ?? {}) as Record<string, unknown>;
     const deviceTitle = (data.products as unknown as { title: string } | null)?.title ?? "-";
     await sendTelegramMessage(
       [
         "📱 <b>휴대폰 개통/기기변경 신청</b>",
-        `기종: ${deviceTitle}`,
-        `신청자: ${c.name ?? "-"}`,
-        `생년월일: ${c.birthDate ?? "-"}`,
-        `연락처: ${c.phone ?? "-"}`,
-        `통신사: ${c.carrier ?? "-"}`,
-        `개통방식: ${c.activationType ?? "-"}`,
-        `희망 개통일: ${c.preferredDate ?? "-"}`,
+        `기종: ${escapeHtml(deviceTitle)}`,
+        ...buildContactLines(categorySlug, contact),
+        ...buildConsentLines(data.consent as Record<string, unknown> | null),
       ].join("\n"),
     );
     return NextResponse.json({ ok: true });
@@ -144,23 +155,24 @@ export async function POST(request: Request) {
   if (type === "consult_lead") {
     const { data } = await supabase
       .from("leads")
-      .select("guest_contact, created_at, categories(name)")
+      .select("guest_contact, consent, created_at, categories(slug, name), products(title)")
       .eq("id", id)
       .maybeSingle();
     if (!data) return NextResponse.json({ ok: false }, { status: 404 });
 
-    const c = (data.guest_contact ?? {}) as Record<string, string | null | undefined>;
-    const categoryName = (data.categories as unknown as { name: string } | null)?.name ?? "-";
+    const categorySlug = (data.categories as unknown as { slug: string; name: string } | null)?.slug;
+    const categoryName = (data.categories as unknown as { slug: string; name: string } | null)?.name ?? "-";
+    const productTitle = (data.products as unknown as { title: string } | null)?.title ?? null;
+    const contact = (data.guest_contact ?? {}) as Record<string, unknown>;
     await sendTelegramMessage(
       [
         "📞 <b>상담 신청 접수</b>",
-        `카테고리: ${categoryName}`,
-        `이름: ${c.name ?? "-"}`,
-        `연락처: ${c.phone ?? "-"}`,
-        `희망 시간대: ${c.preferredTime ?? "-"}`,
-        c.memo ? `문의: ${c.memo}` : null,
+        `카테고리: ${escapeHtml(categoryName)}`,
+        productTitle ? `상품/페이지: ${escapeHtml(productTitle)}` : null,
+        ...buildContactLines(categorySlug, contact),
+        ...buildConsentLines(data.consent as Record<string, unknown> | null),
       ]
-        .filter(Boolean)
+        .filter((line): line is string => line !== null)
         .join("\n"),
     );
     return NextResponse.json({ ok: true });

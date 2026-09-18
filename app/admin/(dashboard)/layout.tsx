@@ -32,10 +32,16 @@ export default async function AdminDashboardLayout({
   }
 
   const supabase = await createClient();
-  const { data: categories } = await supabase
-    .from("categories")
-    .select("id, slug, name")
-    .eq("is_active", true);
+  // "신청 내역" 메뉴는 원래 is_active(공개 사이트 노출 여부)만 기준으로 삼았는데, 랜딩PG(lp)처럼
+  // 개별 URL로만 접속하는 카테고리는 공개 카테고리 네비에 올리지 않으려 is_active=false로
+  // 두다 보니 리드가 들어와도 신청내역 탭 자체가 생기지 않는 문제가 있었다. is_active와 무관하게
+  // "실제로 리드가 존재하는 카테고리"도 함께 노출해 이 둘을 분리한다.
+  const [{ data: allCategories }, { data: leadCategoryRows }] = await Promise.all([
+    supabase.from("categories").select("id, slug, name, is_active"),
+    supabase.from("leads").select("category_id").not("category_id", "is", null),
+  ]);
+  const categoryIdsWithLeads = new Set((leadCategoryRows ?? []).map((row) => row.category_id));
+  const categories = (allCategories ?? []).filter((c) => c.is_active || categoryIdsWithLeads.has(c.id));
 
   return (
     <div className="flex min-h-screen flex-col bg-gray-50 md:flex-row">
