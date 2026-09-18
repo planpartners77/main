@@ -188,7 +188,7 @@ export function CrisGolfProgram() {
             href="/apply/travel"
             className="mt-6 inline-block w-full rounded-full bg-[var(--brand-blue)] px-8 py-4 text-center text-base font-bold text-white shadow-md shadow-blue-200 transition hover:bg-[var(--brand-blue-dark)] sm:w-auto"
           >
-            상담신청하기
+            상담 신청하기
           </Link>
         </div>
       </section>
