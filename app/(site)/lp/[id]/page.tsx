@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getLandingPageDetail } from "@/lib/landing/pages-query";
 import { LandingLeadForm } from "@/components/landing/LandingLeadForm";
+import { InsuranceConsultForm } from "@/components/landing/InsuranceConsultForm";
 
 export default async function LandingPageDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -23,7 +24,11 @@ export default async function LandingPageDetailPage({ params }: { params: Promis
       )}
 
       <div className="mt-10">
-        <LandingLeadForm productId={item.id} productTitle={item.title} leadForm={item.extra.lead_form} />
+        {item.extra.form_type === "insurance_consult" ? (
+          <InsuranceConsultForm productId={item.id} productTitle={item.title} />
+        ) : (
+          <LandingLeadForm productId={item.id} productTitle={item.title} leadForm={item.extra.lead_form} />
+        )}
       </div>
     </main>
   );

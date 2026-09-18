@@ -31,13 +31,20 @@ export const EMPTY_LEAD_FORM_EXTRA: LeadFormExtra = {
   success_message: null,
 };
 
+// "simple"은 기존 4필드(이름/연락처/시간대/문의내용) 범용 상담폼, "insurance_consult"는
+// 보험 상담용 전용 폼(다중 보험종류 선택, 성명 분리, 통신사, 가입 전 알릴의무 등)이다.
+// 상품마다 필드 구성 자체가 다를 수 있어 LeadFormExtra(카피 오버라이드)와 별개로 둔다.
+export type LandingFormType = "simple" | "insurance_consult";
+
 export interface LandingPageExtra {
   detail_html: string;
+  form_type: LandingFormType;
   lead_form: LeadFormExtra;
 }
 
 export const EMPTY_LANDING_PAGE_EXTRA: LandingPageExtra = {
   detail_html: "",
+  form_type: "simple",
   lead_form: EMPTY_LEAD_FORM_EXTRA,
 };
 
@@ -67,6 +74,7 @@ export function normalizeLandingPageExtra(raw: Record<string, unknown> | null | 
   const r = raw ?? {};
   return {
     detail_html: typeof r.detail_html === "string" ? r.detail_html : "",
+    form_type: r.form_type === "insurance_consult" ? "insurance_consult" : "simple",
     lead_form: normalizeLeadFormExtra(r.lead_form as Record<string, unknown> | null | undefined),
   };
 }

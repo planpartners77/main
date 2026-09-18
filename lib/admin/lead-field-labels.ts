@@ -40,6 +40,21 @@ const CATEGORY_LABELS: Record<string, Record<string, string>> = {
     activationType: "개통 유형",
     carrier: "통신사",
   },
+  lp: {
+    lastName: "성",
+    firstName: "이름",
+    address: "주소",
+    job: "직업",
+    carrier: "통신사",
+    insuranceTypes: "상담 가능 보험",
+    insuranceTypeOther: "기타 보험상품명",
+    priorHypertension: "고혈압 진료 이력",
+    priorDiabetes: "당뇨 진료 이력",
+    priorHyperlipidemia: "고지혈증 진료 이력",
+    priorJointDisease: "관절질환 진료 이력",
+    priorOtherLabel: "기타 진료 항목",
+    priorOtherDetail: "기타 진료 상세",
+  },
 };
 
 const CONSENT_LABELS: Record<string, string> = {
@@ -47,6 +62,7 @@ const CONSENT_LABELS: Record<string, string> = {
   thirdParty: "제3자 정보제공 동의",
   terms: "이용약관 동의",
   marketing: "마케팅 활용 동의",
+  sensitiveHealth: "건강정보(민감정보) 수집·이용 동의",
 };
 
 // camelCase -> "Camel Case" 형태로 최소한의 가독성을 확보하는 fallback.

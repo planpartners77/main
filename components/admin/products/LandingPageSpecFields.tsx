@@ -56,6 +56,31 @@ export function LandingPageSpecFields({
         </p>
       </div>
 
+      <div className="grid gap-2 rounded-xl border border-dashed border-[var(--brand-blue)]/40 bg-[var(--surface-tint)]/40 p-4">
+        <p className="text-xs font-bold text-[var(--brand-blue-dark)]">상담 신청 폼 종류</p>
+        <div className="flex flex-wrap gap-3 text-sm">
+          <label className="flex items-center gap-1.5">
+            <input
+              type="radio"
+              name="form_type"
+              checked={value.form_type === "simple"}
+              onChange={() => onChange({ ...value, form_type: "simple" })}
+            />
+            간단 상담 신청 (이름/연락처/시간대/문의내용)
+          </label>
+          <label className="flex items-center gap-1.5">
+            <input
+              type="radio"
+              name="form_type"
+              checked={value.form_type === "insurance_consult"}
+              onChange={() => onChange({ ...value, form_type: "insurance_consult" })}
+            />
+            보험 상담 신청 (보험종류/성명/생년월일/통신사/가입 전 알릴의무 등)
+          </label>
+        </div>
+      </div>
+
+      {value.form_type === "simple" && (
       <div className="grid gap-2 rounded-xl border border-dashed border-[var(--brand-blue)]/40 bg-[var(--surface-tint)]/40 p-4 sm:grid-cols-2">
         <p className="text-xs font-bold text-[var(--brand-blue-dark)] sm:col-span-2">
           상담 신청 폼 문구 (비워두면 기본 문구 사용)
@@ -143,6 +168,7 @@ export function LandingPageSpecFields({
           />
         </label>
       </div>
+      )}
     </div>
   );
 }
