@@ -21,7 +21,7 @@ const MENU_LINKS = [
 ];
 
 // 소셜 채널은 관리자 SNS 관리 화면(site_settings.sns_links)에서 url·enabled를 설정하며,
-// 계정이 아직 없거나 비활성 상태인 채널은 임의 URL 없이 "오픈 예정" 텍스트로 표시한다
+// 계정이 아직 없거나 비활성 상태인 채널은 임의 URL 없이 링크 없는 텍스트로만 표시한다
 // (§ 정보 정확성 원칙 — 가짜 URL 금지).
 // 가이드 §12-2 Footer 구성: 메뉴 링크 + 상단 고정 문구 + 카테고리별 법적 고지 영역 + 법적 문서 링크.
 export async function Footer() {
@@ -67,7 +67,7 @@ export async function Footer() {
                 {sns.label}
               </a>
             ) : (
-              <span key={sns.platform}>{sns.label} (오픈 예정)</span>
+              <span key={sns.platform}>{sns.label}</span>
             ),
           )}
         </div>
