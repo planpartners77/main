@@ -23,7 +23,7 @@ export default async function LandingPageDetailPage({ params }: { params: Promis
       )}
 
       <div className="mt-10">
-        <LandingLeadForm productId={item.id} productTitle={item.title} />
+        <LandingLeadForm productId={item.id} productTitle={item.title} leadForm={item.extra.lead_form} />
       </div>
     </main>
   );

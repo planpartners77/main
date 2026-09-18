@@ -365,7 +365,7 @@ export function ProductManager({
           ) : isMobileCategory ? (
             <MobileDeviceSpecFields value={phoneExtra} onChange={setPhoneExtra} />
           ) : isLpCategory ? (
-            <LandingPageSpecFields value={landingExtra} onChange={setLandingExtra} />
+            <LandingPageSpecFields value={landingExtra} onChange={setLandingExtra} productTitle={form.title} />
           ) : (
             <label className="text-sm sm:col-span-2">
               추가 정보(JSON, 선택 — 카테고리별 상이한 스펙)
