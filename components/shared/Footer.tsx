@@ -48,7 +48,6 @@ export async function Footer() {
           <LegalRow label="상호" value={info.companyName} />
           <LegalRow label="대표자" value={info.ceo} />
           <LegalRow label="사업자등록번호" value={info.bizRegNo} />
-          <LegalRow label="법인등록번호" value={info.corpRegNo} />
           <LegalRow label="주소" value={info.address} />
           <LegalRow label="업태/종목" value={`${info.bizType} / ${info.bizItem}`} />
           <LegalRow label="통신판매중개업 신고번호" value={info.mailOrderRegNo} />
