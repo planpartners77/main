@@ -42,7 +42,7 @@ function formatPhone(raw: string) {
 // 주민등록번호는 개인정보보호법상 수집이 제한된 고유식별정보라 수집하지 않고
 // 생년월일로 대체한다(usim/mobile 신청폼과 동일한 선례). 건강 관련 알릴의무 항목은
 // 민감정보라 privacy/thirdParty와 별도의 동의(sensitiveHealth)를 추가로 받는다.
-export function InsuranceConsultForm({ productId, productTitle }: { productId: string; productTitle: string }) {
+export function InsuranceConsultForm({ productId }: { productId: string }) {
   const [insuranceTypes, setInsuranceTypes] = useState<string[]>([]);
   const [insuranceTypeOther, setInsuranceTypeOther] = useState("");
   const [lastName, setLastName] = useState("");
@@ -187,7 +187,7 @@ export function InsuranceConsultForm({ productId, productTitle }: { productId: s
 
   return (
     <form onSubmit={handleSubmit} className="rounded-2xl border border-gray-200 bg-white p-6">
-      <p className="text-sm font-semibold text-[var(--brand-navy)]">{productTitle} 상담 신청</p>
+      <p className="text-sm font-semibold text-[var(--brand-navy)]">기타 보험 상담신청</p>
       <p className="mt-1 text-xs text-gray-500">
         셀프가입이 아닌 상담 예약 신청입니다. 즉시 결제·가입은 진행되지 않습니다.
       </p>

@@ -25,7 +25,7 @@ export default async function LandingPageDetailPage({ params }: { params: Promis
 
       <div className="mt-10">
         {item.extra.form_type === "insurance_consult" ? (
-          <InsuranceConsultForm productId={item.id} productTitle={item.title} />
+          <InsuranceConsultForm productId={item.id} />
         ) : (
           <LandingLeadForm productId={item.id} productTitle={item.title} leadForm={item.extra.lead_form} />
         )}
