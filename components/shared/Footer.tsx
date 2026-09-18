@@ -53,8 +53,6 @@ export async function Footer() {
           <LegalRow label="업태/종목" value={`${info.bizType} / ${info.bizItem}`} />
           <LegalRow label="통신판매중개업 신고번호" value={info.mailOrderRegNo} />
           <LegalRow label="개인정보 보호책임자" value={info.privacyOfficer} />
-          <LegalRow label="보험 모집인 등록번호" value={info.insuranceAgentRegNo} />
-          <LegalRow label="상조 선불식 할부거래업 등록번호" value={info.funeralInstallmentRegNo} />
         </div>
 
         <div className="mt-6 flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500">
