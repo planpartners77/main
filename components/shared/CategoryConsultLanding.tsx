@@ -79,11 +79,9 @@ export function CategoryConsultLanding({
               return (
                 <div key={product.id} className="rounded-2xl border border-gray-200 bg-white p-4">
                   <Link href={detailHref} className="flex gap-4">
-                    <ProductThumbnail
-                      src={product.imageUrl}
-                      alt={product.title}
-                      className="w-24 shrink-0 sm:w-28"
-                    />
+                    <div className="w-24 shrink-0 sm:w-28">
+                      <ProductThumbnail src={product.imageUrl} alt={product.title} />
+                    </div>
                     <div className="min-w-0 flex-1">
                       <p className="line-clamp-2 text-sm font-semibold text-[var(--brand-navy)]">{product.title}</p>
                       <p className="mt-1 text-xs text-gray-500">
