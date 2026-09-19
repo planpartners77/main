@@ -9,6 +9,8 @@ import { MobileDeviceSpecFields, parsePhoneExtra } from "./MobileDeviceSpecField
 import { EMPTY_PHONE_DEVICE_EXTRA, type PhoneDeviceExtra } from "@/lib/mobile/device-spec";
 import { LandingPageSpecFields, parseLandingExtra } from "./LandingPageSpecFields";
 import { EMPTY_LANDING_PAGE_EXTRA, type LandingPageExtra } from "@/lib/landing/page-spec";
+import { InsurancePlanSpecFields, parseInsuranceExtra } from "./InsurancePlanSpecFields";
+import { EMPTY_INSURANCE_PLAN_EXTRA, type InsurancePlanExtra } from "@/lib/insurance/plan-spec";
 
 export interface ProductRow {
   id: string;
@@ -99,6 +101,7 @@ export function ProductManager({
   const [usimExtra, setUsimExtra] = useState<UsimPlanExtra>(EMPTY_USIM_PLAN_EXTRA);
   const [phoneExtra, setPhoneExtra] = useState<PhoneDeviceExtra>(EMPTY_PHONE_DEVICE_EXTRA);
   const [landingExtra, setLandingExtra] = useState<LandingPageExtra>(EMPTY_LANDING_PAGE_EXTRA);
+  const [insuranceExtra, setInsuranceExtra] = useState<InsurancePlanExtra>(EMPTY_INSURANCE_PLAN_EXTRA);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [categoryFilter, setCategoryFilter] = useState("");
@@ -109,6 +112,7 @@ export function ProductManager({
   const isUsimCategory = selectedCategory?.slug === "usim";
   const isMobileCategory = selectedCategory?.slug === "mobile";
   const isLpCategory = selectedCategory?.slug === "lp";
+  const isInsuranceCategory = selectedCategory?.slug === "insurance";
 
   const displayedProducts = useMemo(() => {
     const filtered = categoryFilter
@@ -122,6 +126,7 @@ export function ProductManager({
     setUsimExtra(EMPTY_USIM_PLAN_EXTRA);
     setPhoneExtra(EMPTY_PHONE_DEVICE_EXTRA);
     setLandingExtra(EMPTY_LANDING_PAGE_EXTRA);
+    setInsuranceExtra(EMPTY_INSURANCE_PLAN_EXTRA);
     setEditingId(null);
     setShowForm(true);
     setError(null);
@@ -157,6 +162,11 @@ export function ProductManager({
     } else {
       setLandingExtra(EMPTY_LANDING_PAGE_EXTRA);
     }
+    if (category?.slug === "insurance") {
+      setInsuranceExtra(parseInsuranceExtra(JSON.stringify(product.extra ?? {})));
+    } else {
+      setInsuranceExtra(EMPTY_INSURANCE_PLAN_EXTRA);
+    }
     setShowForm(true);
     setError(null);
   }
@@ -185,6 +195,8 @@ export function ProductManager({
       extraParsed = phoneExtra as unknown as Record<string, unknown>;
     } else if (isLpCategory) {
       extraParsed = landingExtra as unknown as Record<string, unknown>;
+    } else if (isInsuranceCategory) {
+      extraParsed = insuranceExtra as unknown as Record<string, unknown>;
     } else {
       try {
         extraParsed = form.extra.trim() ? JSON.parse(form.extra) : {};
@@ -366,6 +378,8 @@ export function ProductManager({
             <MobileDeviceSpecFields value={phoneExtra} onChange={setPhoneExtra} />
           ) : isLpCategory ? (
             <LandingPageSpecFields value={landingExtra} onChange={setLandingExtra} productTitle={form.title} />
+          ) : isInsuranceCategory ? (
+            <InsurancePlanSpecFields value={insuranceExtra} onChange={setInsuranceExtra} />
           ) : (
             <label className="text-sm sm:col-span-2">
               추가 정보(JSON, 선택 — 카테고리별 상이한 스펙)

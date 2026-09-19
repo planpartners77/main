@@ -23,16 +23,12 @@ const PROCESS_STEPS = [
 ] as const;
 
 // 가이드 §12-5 상담필수형 템플릿. /insurance, /funeral이 이 컴포넌트를 공유한다.
-// 모집인 등록번호 등 아직 확보되지 않은 실제 고지 데이터는 빈 값으로 두고, 그 자리를
-// "등록 예정" 표시로만 남겨 추후 실제 값이 들어오면 바로 대체할 수 있게 한다.
 export function CategoryConsultLanding({
   category,
   products,
-  registrationNumber = null,
 }: {
   category: CategoryConfig;
   products: ConsultProduct[];
-  registrationNumber?: string | null;
 }) {
   return (
     <main className="pb-16">
@@ -65,10 +61,6 @@ export function CategoryConsultLanding({
           <div className="rounded-2xl border border-gray-200 bg-white p-5 text-sm text-gray-600">
             가입 이후에도 완전판매 모니터링(해피콜) 및 청약철회 절차를 통해 불완전판매를 방지합니다.
           </div>
-        </div>
-        <div className="mt-3 rounded-2xl border border-dashed border-gray-300 bg-gray-50 p-5 text-xs text-gray-500">
-          <p className="font-semibold text-gray-600">모집인 등록번호 및 자격 정보</p>
-          <p className="mt-1">{registrationNumber ?? "등록 예정 — 확인되는 대로 표기합니다."}</p>
         </div>
       </section>
 
