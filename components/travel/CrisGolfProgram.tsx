@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 
 // 파트너사 "여기캠프(나무투어)"가 제공하는 CRIS(태국 치앙라이) 국제학교 골프 체험 프로그램.
@@ -111,7 +112,15 @@ function ImageGrid({
       {items.map((item) => (
         <div key={item.src} className="overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm">
           {/* 임시 원본 사진 — 정식 계약/에셋 확보 후 image_url(외부 URL)로 교체 예정 */}
-          <img src={item.src} alt={item.label} className={`w-full ${imgHeight} object-cover`} loading="lazy" />
+          <div className={`relative w-full ${imgHeight}`}>
+            <Image
+              src={item.src}
+              alt={item.label}
+              fill
+              sizes="(max-width: 640px) 50vw, 20vw"
+              className="object-cover"
+            />
+          </div>
           <div className="whitespace-pre-line bg-[var(--brand-navy)] px-2 py-2.5 text-center text-xs font-semibold leading-snug text-white">
             {item.label}
           </div>
@@ -148,11 +157,14 @@ export function CrisGolfProgram() {
             <span aria-hidden="true">↗</span>
           </a>
 
-          <div className="mt-6 overflow-hidden rounded-2xl">
-            <img
+          <div className="relative mt-6 aspect-[1343/727] w-full overflow-hidden rounded-2xl">
+            <Image
               src="/travel/hero.jpg"
               alt="치앙라이 국제학교 골프 프로그램"
-              className="aspect-[1343/727] w-full object-cover"
+              fill
+              sizes="(max-width: 640px) 100vw, 1024px"
+              className="object-cover"
+              priority
             />
           </div>
 
@@ -456,11 +468,13 @@ export function CrisGolfProgram() {
           title="교육과정"
           desc="유치원부터 고등과정까지, 실제 재학생들이 생활하는 캠퍼스와 커리큘럼입니다."
         />
-        <div className="mb-4 overflow-hidden rounded-2xl shadow-sm">
-          <img
+        <div className="relative mb-4 h-56 w-full overflow-hidden rounded-2xl shadow-sm sm:h-72">
+          <Image
             src="/travel/campus-cover.jpg"
             alt="CRIS 캠퍼스 전경"
-            className="h-56 w-full object-cover sm:h-72"
+            fill
+            sizes="(max-width: 640px) 100vw, 1024px"
+            className="object-cover"
           />
         </div>
         <ImageGrid items={CURRICULUM} cols="grid-cols-2 sm:grid-cols-5" />

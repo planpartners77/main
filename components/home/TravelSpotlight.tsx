@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 
 const BENEFITS = [
@@ -16,11 +17,13 @@ export function TravelSpotlight() {
         <h2 className="text-xl font-bold text-[var(--brand-navy)]">지금 인기 있는 여행 프로그램</h2>
 
         <div className="mt-6 rounded-3xl bg-white p-3 shadow-sm sm:flex sm:items-center sm:p-4">
-          <div className="sm:w-1/2">
-            <img
+          <div className="relative aspect-[1343/727] w-full overflow-hidden rounded-2xl sm:w-1/2">
+            <Image
               src="/travel/hero.jpg"
               alt="태국 치앙라이 CRIS 국제학교 골프 프로그램"
-              className="aspect-[1343/727] w-full rounded-2xl object-cover"
+              fill
+              sizes="(max-width: 640px) 100vw, 50vw"
+              className="object-cover"
             />
           </div>
 
