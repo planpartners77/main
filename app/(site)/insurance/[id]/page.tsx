@@ -69,6 +69,14 @@ export default async function InsurancePlanDetailPage({ params }: { params: Prom
           <ConsultRequestForm categorySlug="insurance" categoryName="보험" productId={row.id} productTitle={row.title} />
         </div>
       </div>
+
+      {/* 상세 내용이 길어도 폼으로 바로 갈 수 있는 고정 버튼. 모바일 하단 탭바(약 64px) 위에 띄운다. */}
+      <a
+        href="#consult"
+        className="fixed bottom-20 right-4 z-30 rounded-full bg-[var(--brand-blue)] px-5 py-3 text-sm font-semibold text-white shadow-lg hover:bg-[var(--brand-blue-dark)] md:bottom-6"
+      >
+        상담 신청하기
+      </a>
     </main>
   );
 }

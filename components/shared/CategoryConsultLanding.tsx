@@ -76,35 +76,32 @@ export function CategoryConsultLanding({
                 const detailHref = `/${category.slug}/${product.id}`;
                 const insurerName = product.partnerName ?? product.insurer;
                 return (
-                  <div key={product.id} className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
-                    <Link href={detailHref} className="flex gap-4">
-                      <div className="w-24 shrink-0 sm:w-28">
-                        <ProductThumbnail src={product.imageUrl} alt={product.title} />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        {insurerName && (
-                          <span className="inline-block rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-[var(--brand-blue)]">
-                            {insurerName}
-                          </span>
-                        )}
-                        <p className="mt-1 line-clamp-2 text-base font-bold leading-snug text-[var(--brand-navy)]">
-                          {product.title}
-                        </p>
-                        {product.monthlyPremium && (
-                          <p className="mt-1 text-lg font-bold text-[var(--brand-blue)]">{product.monthlyPremium}</p>
-                        )}
-                        {product.coverageSummary && (
-                          <p className="mt-1 line-clamp-2 text-sm text-gray-600">{product.coverageSummary}</p>
-                        )}
-                      </div>
-                    </Link>
-                    <Link
-                      href={`${detailHref}#consult`}
-                      className="mt-3 block rounded-full bg-[var(--brand-blue)] px-4 py-2.5 text-center text-sm font-semibold text-white hover:bg-[var(--brand-blue-dark)]"
-                    >
-                      이 플랜 상담하기
-                    </Link>
-                  </div>
+                  <Link
+                    key={product.id}
+                    href={detailHref}
+                    className="flex gap-4 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm transition hover:border-[var(--brand-blue)] hover:shadow-md"
+                  >
+                    <div className="w-24 shrink-0 sm:w-28">
+                      <ProductThumbnail src={product.imageUrl} alt={product.title} />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      {insurerName && (
+                        <span className="inline-block rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-[var(--brand-blue)]">
+                          {insurerName}
+                        </span>
+                      )}
+                      <p className="mt-1 line-clamp-2 text-base font-bold leading-snug text-[var(--brand-navy)]">
+                        {product.title}
+                      </p>
+                      {product.monthlyPremium && (
+                        <p className="mt-1 text-lg font-bold text-[var(--brand-blue)]">{product.monthlyPremium}</p>
+                      )}
+                      {product.coverageSummary && (
+                        <p className="mt-1 line-clamp-2 text-sm text-gray-600">{product.coverageSummary}</p>
+                      )}
+                      <p className="mt-2 text-xs font-medium text-gray-500">자세히 보기 ›</p>
+                    </div>
+                  </Link>
                 );
               })}
             </div>
