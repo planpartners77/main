@@ -6,12 +6,14 @@ export interface InsurancePlanExtra {
   insurer: string;
   coverage_summary: string;
   monthly_premium: string;
+  detail_html: string;
 }
 
 export const EMPTY_INSURANCE_PLAN_EXTRA: InsurancePlanExtra = {
   insurer: "",
   coverage_summary: "",
   monthly_premium: "",
+  detail_html: "",
 };
 
 // DB에서 읽은 extra(Record<string, unknown>)를 안전하게 InsurancePlanExtra로 정규화한다.
@@ -22,5 +24,6 @@ export function normalizeInsurancePlanExtra(raw: Record<string, unknown> | null 
     insurer: typeof r.insurer === "string" ? r.insurer : "",
     coverage_summary: typeof r.coverage_summary === "string" ? r.coverage_summary : "",
     monthly_premium: typeof r.monthly_premium === "string" ? r.monthly_premium : "",
+    detail_html: typeof r.detail_html === "string" ? r.detail_html : "",
   };
 }

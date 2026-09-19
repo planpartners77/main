@@ -17,7 +17,7 @@ export default async function InsurancePage() {
   const { data } = categoryRow
     ? await supabase
         .from("products")
-        .select("id, title, extra, partners(name)")
+        .select("id, title, image_url, extra, partners(name)")
         .eq("is_active", true)
         .eq("category_id", categoryRow.id)
         .order("created_at", { ascending: true })
@@ -26,11 +26,13 @@ export default async function InsurancePage() {
   const products: ConsultProduct[] = ((data ?? []) as unknown as Array<{
     id: string;
     title: string;
+    image_url: string | null;
     extra: Record<string, unknown> | null;
     partners: { name: string } | null;
   }>).map((p) => ({
     id: p.id,
     title: p.title,
+    imageUrl: p.image_url,
     partnerName: p.partners?.name ?? null,
     insurer: (p.extra?.insurer as string | undefined) ?? null,
     coverageSummary: (p.extra?.coverage_summary as string | undefined) ?? null,

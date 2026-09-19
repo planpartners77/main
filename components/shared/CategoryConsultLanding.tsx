@@ -1,10 +1,12 @@
 import Link from "next/link";
 import type { CategoryConfig } from "@/lib/categories";
 import { TrackBadge } from "@/components/shared/TrackBadge";
+import { ProductThumbnail } from "@/components/design/ProductThumbnail";
 
 export interface ConsultProduct {
   id: string;
   title: string;
+  imageUrl: string | null;
   partnerName: string | null;
   insurer: string | null;
   coverageSummary: string | null;
@@ -72,27 +74,36 @@ export function CategoryConsultLanding({
           </p>
         ) : (
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
-            {products.map((product) => (
-              <div key={product.id} className="rounded-2xl border border-gray-200 bg-white p-5">
-                <p className="text-sm font-semibold text-[var(--brand-navy)]">{product.title}</p>
-                {product.coverageSummary && (
-                  <p className="mt-2 text-sm text-gray-600">{product.coverageSummary}</p>
-                )}
-                {product.monthlyPremium && (
-                  <p className="mt-2 text-xs text-gray-500">보험료: {product.monthlyPremium}</p>
-                )}
-                <p className="mt-3 text-[11px] text-gray-400">
-                  본 상품은 {product.partnerName ?? product.insurer ?? "제휴사"}의 상품이며, 플랜파트너스는
-                  비교·중개 서비스를 제공합니다.
-                </p>
-                <Link
-                  href={`/consult/${category.slug}?product=${product.id}`}
-                  className="mt-4 inline-block rounded-full bg-[var(--brand-blue)] px-4 py-2 text-xs font-semibold text-white hover:bg-[var(--brand-blue-dark)]"
-                >
-                  이 플랜 상담하기
-                </Link>
-              </div>
-            ))}
+            {products.map((product) => {
+              const detailHref = `/${category.slug}/${product.id}`;
+              return (
+                <div key={product.id} className="rounded-2xl border border-gray-200 bg-white p-4">
+                  <Link href={detailHref} className="flex gap-4">
+                    <ProductThumbnail
+                      src={product.imageUrl}
+                      alt={product.title}
+                      className="w-24 shrink-0 sm:w-28"
+                    />
+                    <div className="min-w-0 flex-1">
+                      <p className="line-clamp-2 text-sm font-semibold text-[var(--brand-navy)]">{product.title}</p>
+                      <p className="mt-1 text-xs text-gray-500">
+                        {product.partnerName ?? product.insurer ?? "제휴사"}
+                        {product.monthlyPremium && ` · ${product.monthlyPremium}`}
+                      </p>
+                      {product.coverageSummary && (
+                        <p className="mt-1.5 line-clamp-2 text-xs text-gray-500">{product.coverageSummary}</p>
+                      )}
+                    </div>
+                  </Link>
+                  <Link
+                    href={`${detailHref}#consult`}
+                    className="mt-3 inline-block rounded-full bg-[var(--brand-blue)] px-4 py-2 text-xs font-semibold text-white hover:bg-[var(--brand-blue-dark)]"
+                  >
+                    이 플랜 상담하기
+                  </Link>
+                </div>
+              );
+            })}
           </div>
         )}
       </section>
