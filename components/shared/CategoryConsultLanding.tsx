@@ -85,6 +85,12 @@ export function CategoryConsultLanding({
                   본 상품은 {product.partnerName ?? product.insurer ?? "제휴사"}의 상품이며, 플랜파트너스는
                   비교·중개 서비스를 제공합니다.
                 </p>
+                <Link
+                  href={`/consult/${category.slug}?product=${product.id}`}
+                  className="mt-4 inline-block rounded-full bg-[var(--brand-blue)] px-4 py-2 text-xs font-semibold text-white hover:bg-[var(--brand-blue-dark)]"
+                >
+                  이 플랜 상담하기
+                </Link>
               </div>
             ))}
           </div>

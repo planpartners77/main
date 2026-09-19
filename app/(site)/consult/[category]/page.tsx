@@ -1,16 +1,27 @@
 import { notFound } from "next/navigation";
 import { getCategory } from "@/lib/categories";
+import { createClient } from "@/lib/supabase/server";
 import { TrackBadge } from "@/components/shared/TrackBadge";
 import { ConsultRequestForm } from "@/components/consult/ConsultRequestForm";
 
 export default async function ConsultPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ category: string }>;
+  searchParams: Promise<{ product?: string }>;
 }) {
   const { category: slug } = await params;
+  const { product: productId } = await searchParams;
   const category = getCategory(slug);
   if (!category) notFound();
+
+  let productTitle: string | null = null;
+  if (productId) {
+    const supabase = await createClient();
+    const { data } = await supabase.from("products").select("title").eq("id", productId).maybeSingle();
+    productTitle = data?.title ?? null;
+  }
 
   return (
     <main className="mx-auto max-w-2xl px-4 py-16">
@@ -20,7 +31,12 @@ export default async function ConsultPage({
         아래 정보를 남겨주시면 담당 상담사가 순차적으로 연락드립니다. 셀프가입이나 즉시 결제는 진행되지 않습니다.
       </p>
       <div className="mt-6">
-        <ConsultRequestForm categorySlug={category.slug} categoryName={category.name} />
+        <ConsultRequestForm
+          categorySlug={category.slug}
+          categoryName={category.name}
+          productId={productTitle ? productId : undefined}
+          productTitle={productTitle}
+        />
       </div>
     </main>
   );

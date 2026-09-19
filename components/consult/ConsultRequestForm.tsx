@@ -15,7 +15,17 @@ function formatPhone(raw: string) {
   return `${digits.slice(0, 3)}-${digits.slice(3, 7)}-${digits.slice(7)}`;
 }
 
-export function ConsultRequestForm({ categorySlug, categoryName }: { categorySlug: string; categoryName: string }) {
+export function ConsultRequestForm({
+  categorySlug,
+  categoryName,
+  productId,
+  productTitle,
+}: {
+  categorySlug: string;
+  categoryName: string;
+  productId?: string;
+  productTitle?: string | null;
+}) {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [preferredTime, setPreferredTime] = useState<string>(PREFERRED_TIME_OPTIONS[0]);
@@ -61,6 +71,7 @@ export function ConsultRequestForm({ categorySlug, categoryName }: { categorySlu
       const { error } = await supabase.from("leads").insert({
         id: leadId,
         category_id: category?.id ?? null,
+        product_id: productId ?? null,
         user_id: user?.id ?? null,
         status: "received",
         referral_code_id: referral?.codeId ?? null,
@@ -119,7 +130,9 @@ export function ConsultRequestForm({ categorySlug, categoryName }: { categorySlu
 
   return (
     <form onSubmit={handleSubmit} className="rounded-2xl border border-gray-200 bg-white p-6">
-      <p className="text-sm font-semibold text-[var(--brand-navy)]">{categoryName} 무료 상담 신청</p>
+      <p className="text-sm font-semibold text-[var(--brand-navy)]">
+        {productTitle ? `${productTitle} 상담 신청` : `${categoryName} 무료 상담 신청`}
+      </p>
       <p className="mt-1 text-xs text-gray-500">셀프가입이 아닌 상담 예약 신청입니다. 즉시 결제·가입은 진행되지 않습니다.</p>
 
       <div className="mt-4 grid gap-3">
