@@ -42,14 +42,6 @@ export function CategoryConsultLanding({
             {category.name}은 상품 구조와 약관이 복잡해 온라인 셀프가입만으로는 충분한 설명을 드리기 어렵습니다.
             플랜파트너스는 등록된 상담사가 필요한 보장 내용을 확인해 드리는 상담 중심 서비스를 제공합니다.
           </p>
-          <div className="mt-6">
-            <Link
-              href={`/consult/${category.slug}`}
-              className="inline-block rounded-full bg-[var(--brand-blue)] px-6 py-3 text-sm font-semibold text-white hover:bg-[var(--brand-blue-dark)]"
-            >
-              무료 상담 예약하기
-            </Link>
-          </div>
         </div>
       </section>
 
