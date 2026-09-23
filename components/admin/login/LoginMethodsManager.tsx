@@ -10,6 +10,7 @@ export function LoginMethodsManager({ settings }: { settings: LoginMethodsSettin
   const [kakaoEnabled, setKakaoEnabled] = useState(settings.kakao);
   const [firstDelaySeconds, setFirstDelaySeconds] = useState(settings.popupFirstDelaySeconds);
   const [repeatMinutes, setRepeatMinutes] = useState(settings.popupRepeatMinutes);
+  const [closeButtonDelaySeconds, setCloseButtonDelaySeconds] = useState(settings.popupCloseButtonDelaySeconds);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
@@ -27,6 +28,7 @@ export function LoginMethodsManager({ settings }: { settings: LoginMethodsSettin
           google: false,
           popupFirstDelaySeconds: Math.max(0, firstDelaySeconds),
           popupRepeatMinutes: Math.max(0.1, repeatMinutes),
+          popupCloseButtonDelaySeconds: Math.max(0, closeButtonDelaySeconds),
         },
       })
       .eq("key", "login_methods");
@@ -106,6 +108,23 @@ export function LoginMethodsManager({ settings }: { settings: LoginMethodsSettin
               }}
               className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
             />
+          </label>
+          <label className="text-xs text-gray-500">
+            닫기 버튼 노출까지 대기 시간(초)
+            <input
+              type="number"
+              min={0}
+              step={1}
+              value={closeButtonDelaySeconds}
+              onChange={(e) => {
+                setCloseButtonDelaySeconds(Number(e.target.value));
+                setSaved(false);
+              }}
+              className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+            />
+            <span className="mt-0.5 block text-[11px] text-gray-400">
+              0이면 즉시 닫을 수 있습니다. 팝업이 다시 뜰 때마다 이 시간이 다시 적용됩니다.
+            </span>
           </label>
         </div>
       </div>

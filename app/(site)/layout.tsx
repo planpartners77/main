@@ -22,6 +22,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
         kakaoEnabled={loginMethods.kakao}
         firstDelaySeconds={loginMethods.popupFirstDelaySeconds}
         repeatMinutes={loginMethods.popupRepeatMinutes}
+        closeButtonDelaySeconds={loginMethods.popupCloseButtonDelaySeconds}
       />
     </div>
   );

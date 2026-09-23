@@ -11,14 +11,17 @@ export function LoginPromptPopup({
   kakaoEnabled = false,
   firstDelaySeconds,
   repeatMinutes,
+  closeButtonDelaySeconds = 0,
 }: {
   kakaoEnabled?: boolean;
   firstDelaySeconds: number;
   repeatMinutes: number;
+  closeButtonDelaySeconds?: number;
 }) {
   const pathname = usePathname();
   const [loggedIn, setLoggedIn] = useState<boolean | null>(null);
   const [visible, setVisible] = useState(false);
+  const [canClose, setCanClose] = useState(false);
   // 상품 상세 등 지금 보고 있던 페이지로 로그인 후 되돌아오기 위한 값. useSearchParams()는 이
   // 레이아웃 전체(모든 페이지)를 Suspense 경계 없이는 못 쓰게 강제하므로(ReferralCapture.tsx와
   // 동일한 이유로 회피) window.location에서 직접 읽는다 — 서버 렌더 시엔 항상 loggedIn===null이라
@@ -50,19 +53,35 @@ export function LoginPromptPopup({
     };
   }, [kakaoEnabled, loggedIn, firstDelaySeconds, repeatMinutes]);
 
+  // 노출될 때마다 닫기 버튼을 closeButtonDelaySeconds초 뒤에 다시 보여준다(재노출 주기마다 매번 적용).
+  // setState를 effect 본문에서 동기 호출하지 않도록(react-hooks/set-state-in-effect) 숨김/노출
+  // 둘 다 타이머 콜백 안에서 실행한다 — 0초 설정이면 두 타이머가 같은 tick에 순서대로 실행되어
+  // 즉시 노출된 것과 동일하게 동작한다.
+  useEffect(() => {
+    if (!visible) return;
+    const hideTimer = setTimeout(() => setCanClose(false), 0);
+    const revealTimer = setTimeout(() => setCanClose(true), Math.max(0, closeButtonDelaySeconds) * 1000);
+    return () => {
+      clearTimeout(hideTimer);
+      clearTimeout(revealTimer);
+    };
+  }, [visible, closeButtonDelaySeconds]);
+
   if (!kakaoEnabled || loggedIn !== false || !visible) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 px-4 pb-8 sm:items-center sm:pb-4">
       <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl">
-        <button
-          type="button"
-          onClick={() => setVisible(false)}
-          aria-label="닫기"
-          className="ml-auto block text-lg text-gray-400 hover:text-gray-600"
-        >
-          ×
-        </button>
+        {canClose && (
+          <button
+            type="button"
+            onClick={() => setVisible(false)}
+            aria-label="닫기"
+            className="ml-auto block text-lg text-gray-400 hover:text-gray-600"
+          >
+            ×
+          </button>
+        )}
         <p className="text-center text-lg font-bold text-[var(--brand-navy)]">
           3초면 로그인 끝!
         </p>

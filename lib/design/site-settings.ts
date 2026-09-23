@@ -44,6 +44,8 @@ export interface LoginMethodsSettings {
   // 로그인 유도 팝업(LoginPromptPopup) 노출 주기 설정.
   popupFirstDelaySeconds: number;
   popupRepeatMinutes: number;
+  // 팝업이 뜬 뒤 "닫기" 버튼이 노출되기까지 대기 시간(초). 0이면 즉시 노출.
+  popupCloseButtonDelaySeconds: number;
 }
 
 export type TelegramNotificationType =
@@ -112,6 +114,7 @@ export const DEFAULT_LOGIN_METHODS_SETTINGS: LoginMethodsSettings = {
   google: false,
   popupFirstDelaySeconds: 0,
   popupRepeatMinutes: 1,
+  popupCloseButtonDelaySeconds: 0,
 };
 
 // 관리자 > 텔레그램 알림 관리 화면에 표시할 알림 종류 메타데이터. app/api/notify가 처리하는
