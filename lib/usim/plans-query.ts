@@ -92,6 +92,9 @@ export async function getUsimPlanList(): Promise<UsimPlanListItem[]> {
       .select(SELECT_COLUMNS)
       .eq("category_id", category.id)
       .eq("is_active", true)
+      // 목록에서만 뺀 "미진열" 상품을 걸러낸다. 상세페이지(getUsimPlanDetail)는 이 필터를
+      // 두지 않아 직접 링크로는 그대로 접근된다.
+      .eq("is_listed", true)
       .order("created_at", { ascending: false }),
     getLeadCounts(supabase),
   ]);

@@ -19,6 +19,7 @@ export default async function InsurancePage() {
         .from("products")
         .select("id, title, image_url, extra, partners(name)")
         .eq("is_active", true)
+        .eq("is_listed", true)
         .eq("category_id", categoryRow.id)
         .order("created_at", { ascending: true })
     : { data: [] };

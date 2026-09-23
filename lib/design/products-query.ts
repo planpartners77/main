@@ -36,7 +36,9 @@ export async function getProductDisplayData(config: ProductDisplayConfig): Promi
       .from("products")
       .select(PRODUCT_COLUMNS)
       .in("id", config.productIds)
-      .eq("is_active", true);
+      .eq("is_active", true)
+      // 관리자가 큐레이션한 상품이라도 "미진열" 상품은 진열 섹션(홈 등)에도 노출하지 않는다.
+      .eq("is_listed", true);
     const products = ((data ?? []) as unknown as RawDisplayProduct[]).map(toDisplayProduct);
     const byId = new Map(products.map((p) => [p.id, p]));
     const ordered = config.productIds.map((id) => byId.get(id)).filter((p): p is DisplayProduct => !!p);
@@ -59,6 +61,7 @@ export async function getProductDisplayData(config: ProductDisplayConfig): Promi
         .select(PRODUCT_COLUMNS)
         .eq("category_id", category.id)
         .eq("is_active", true)
+        .eq("is_listed", true)
         .order("created_at", { ascending: false })
         .limit(config.limit);
       productsByCategory[category.id] = ((data ?? []) as unknown as RawDisplayProduct[]).map(toDisplayProduct);
@@ -85,6 +88,7 @@ export async function getCategoryDisplayProducts(categorySlug: string, limit = 6
     .select(PRODUCT_COLUMNS)
     .eq("category_id", category.id)
     .eq("is_active", true)
+    .eq("is_listed", true)
     .order("created_at", { ascending: false })
     .limit(limit);
   return ((data ?? []) as unknown as RawDisplayProduct[]).map(toDisplayProduct);

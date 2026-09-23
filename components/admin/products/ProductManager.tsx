@@ -25,6 +25,7 @@ export interface ProductRow {
   apply_url: string | null;
   extra: Record<string, unknown>;
   is_active: boolean;
+  is_listed: boolean;
   categories: { name: string } | null;
   partners: { name: string } | null;
 }
@@ -52,6 +53,7 @@ const EMPTY_FORM = {
   image_url: "",
   apply_url: "",
   is_active: true,
+  is_listed: true,
   extra: "{}",
 };
 
@@ -105,6 +107,7 @@ export function ProductManager({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [categoryFilter, setCategoryFilter] = useState("");
+  const [listedFilter, setListedFilter] = useState<"" | "listed" | "unlisted">("");
   const [sortKey, setSortKey] = useState<SortKey>("category");
 
   const visiblePartners = partners.filter((p) => !form.category_id || p.category_id === form.category_id);
@@ -115,11 +118,16 @@ export function ProductManager({
   const isInsuranceCategory = selectedCategory?.slug === "insurance";
 
   const displayedProducts = useMemo(() => {
-    const filtered = categoryFilter
+    let filtered = categoryFilter
       ? products.filter((p) => p.category_id === categoryFilter)
       : products;
+    if (listedFilter === "listed") {
+      filtered = filtered.filter((p) => p.is_listed);
+    } else if (listedFilter === "unlisted") {
+      filtered = filtered.filter((p) => !p.is_listed);
+    }
     return sortProducts(filtered, sortKey);
-  }, [products, categoryFilter, sortKey]);
+  }, [products, categoryFilter, listedFilter, sortKey]);
 
   function startCreate() {
     setForm(EMPTY_FORM);
@@ -145,6 +153,7 @@ export function ProductManager({
       image_url: product.image_url ?? "",
       apply_url: product.apply_url ?? "",
       is_active: product.is_active,
+      is_listed: product.is_listed,
       extra: JSON.stringify(product.extra ?? {}, null, 2),
     });
     if (category?.slug === "usim") {
@@ -220,6 +229,7 @@ export function ProductManager({
       image_url: form.image_url.trim() || null,
       apply_url: form.apply_url.trim() || null,
       is_active: form.is_active,
+      is_listed: form.is_listed,
       extra: extraParsed,
     };
 
@@ -250,6 +260,12 @@ export function ProductManager({
   async function toggleActive(product: ProductRow) {
     const supabase = createClient();
     await supabase.from("products").update({ is_active: !product.is_active }).eq("id", product.id);
+    router.refresh();
+  }
+
+  async function toggleListed(product: ProductRow) {
+    const supabase = createClient();
+    await supabase.from("products").update({ is_listed: !product.is_listed }).eq("id", product.id);
     router.refresh();
   }
 
@@ -371,6 +387,16 @@ export function ProductManager({
               onChange={(e) => setForm({ ...form, is_active: e.target.checked })}
             />
             활성화
+            <span className="text-xs text-gray-400">(끄면 직접 링크로도 접근 불가)</span>
+          </label>
+          <label className="flex items-center gap-2 self-end text-sm">
+            <input
+              type="checkbox"
+              checked={form.is_listed}
+              onChange={(e) => setForm({ ...form, is_listed: e.target.checked })}
+            />
+            진열
+            <span className="text-xs text-gray-400">(꺼도 직접 링크 접근은 유지)</span>
           </label>
           {isUsimCategory ? (
             <UsimPlanSpecFields value={usimExtra} onChange={setUsimExtra} />
@@ -443,6 +469,18 @@ export function ProductManager({
                 ))}
               </select>
             </label>
+            <label className="text-sm text-gray-500">
+              진열{" "}
+              <select
+                value={listedFilter}
+                onChange={(e) => setListedFilter(e.target.value as "" | "listed" | "unlisted")}
+                className="ml-1 rounded-lg border border-gray-300 px-2.5 py-1.5 text-sm"
+              >
+                <option value="">전체</option>
+                <option value="listed">진열중</option>
+                <option value="unlisted">미진열</option>
+              </select>
+            </label>
             <span className="text-xs text-gray-400">{displayedProducts.length}개 상품</span>
           </div>
 
@@ -457,6 +495,7 @@ export function ProductManager({
                 <th className="px-4 py-3">기본가</th>
                 <th className="px-4 py-3">인센티브</th>
                 <th className="px-4 py-3">상태</th>
+                <th className="px-4 py-3">진열</th>
                 <th className="px-4 py-3" />
               </tr>
             </thead>
@@ -488,6 +527,17 @@ export function ProductManager({
                       }`}
                     >
                       {product.is_active ? "활성" : "비활성"}
+                    </button>
+                  </td>
+                  <td className="px-4 py-3">
+                    <button
+                      onClick={() => toggleListed(product)}
+                      title="꺼도 직접 링크 접근은 유지됩니다"
+                      className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                        product.is_listed ? "bg-blue-50 text-[var(--brand-blue)]" : "bg-gray-100 text-gray-500"
+                      }`}
+                    >
+                      {product.is_listed ? "진열중" : "미진열"}
                     </button>
                   </td>
                   <td className="px-4 py-3">
