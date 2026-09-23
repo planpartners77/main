@@ -21,6 +21,7 @@ export interface PhoneDeviceListItem {
   partner_id: string | null;
   partner_name: string | null;
   partner_logo_url: string | null;
+  is_listed: boolean;
 }
 
 // 지원금 확정값(로그인 회원)이 있으면 그 값으로, 없으면 상한값 기준으로 "최대 혜택가"를 계산한다.

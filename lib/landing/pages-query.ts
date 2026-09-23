@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { normalizeLandingPageExtra, type LandingPageExtra } from "./page-spec";
 
@@ -6,6 +7,7 @@ export interface LandingPageListItem {
   title: string;
   image_url: string | null;
   extra: LandingPageExtra;
+  is_listed: boolean;
 }
 
 interface RawProduct {
@@ -13,9 +15,10 @@ interface RawProduct {
   title: string;
   image_url: string | null;
   extra: Record<string, unknown>;
+  is_listed: boolean;
 }
 
-const SELECT_COLUMNS = "id, title, image_url, extra";
+const SELECT_COLUMNS = "id, title, image_url, extra, is_listed";
 
 function toListItem(row: RawProduct): LandingPageListItem {
   return {
@@ -23,6 +26,7 @@ function toListItem(row: RawProduct): LandingPageListItem {
     title: row.title,
     image_url: row.image_url,
     extra: normalizeLandingPageExtra(row.extra),
+    is_listed: row.is_listed,
   };
 }
 
@@ -44,9 +48,11 @@ export async function getLandingPageList(): Promise<LandingPageListItem[]> {
   return ((data ?? []) as unknown as RawProduct[]).map(toListItem);
 }
 
-export async function getLandingPageDetail(id: string): Promise<LandingPageListItem | null> {
+// generateMetadata와 페이지 본문이 같은 상품을 각각 조회하므로, 한 요청 안에서는
+// 한 번만 쿼리하도록 React cache()로 묶는다.
+export const getLandingPageDetail = cache(async (id: string): Promise<LandingPageListItem | null> => {
   const supabase = await createClient();
   const { data } = await supabase.from("products").select(SELECT_COLUMNS).eq("id", id).eq("is_active", true).maybeSingle();
   if (!data) return null;
   return toListItem(data as unknown as RawProduct);
-}
+});

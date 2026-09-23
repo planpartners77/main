@@ -39,6 +39,7 @@ export interface UsimPlanListItem {
   partner_name: string | null;
   partner_logo_url: string | null;
   promotion: UsimPlanPromotion | null;
+  is_listed: boolean;
 }
 
 // 페이백 1개월차 지급액(카드에 강조 표시할 "실질 월 납부액" 계산용). month=0(평생) 스케줄은 그 금액을 매달 적용.

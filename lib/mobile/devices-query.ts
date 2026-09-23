@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { normalizePhoneDeviceExtra } from "./device-spec";
 import type { PhoneDeviceListItem } from "./filters";
@@ -14,10 +15,11 @@ interface RawProduct {
   extra: Record<string, unknown>;
   partner_id: string | null;
   partners: { name: string; logo_url: string | null } | null;
+  is_listed: boolean;
 }
 
 const SELECT_COLUMNS =
-  "id, title, image_url, apply_url, base_price, incentive_min, incentive_max, incentive_exact, extra, partner_id, partners(name, logo_url)";
+  "id, title, image_url, apply_url, base_price, incentive_min, incentive_max, incentive_exact, extra, partner_id, partners(name, logo_url), is_listed";
 
 function toListItem(row: RawProduct): PhoneDeviceListItem {
   return {
@@ -33,6 +35,7 @@ function toListItem(row: RawProduct): PhoneDeviceListItem {
     partner_id: row.partner_id,
     partner_name: row.partners?.name ?? null,
     partner_logo_url: row.partners?.logo_url ?? null,
+    is_listed: row.is_listed,
   };
 }
 
@@ -54,9 +57,11 @@ export async function getMobileDeviceList(): Promise<PhoneDeviceListItem[]> {
   return ((data ?? []) as unknown as RawProduct[]).map(toListItem);
 }
 
-export async function getMobileDeviceDetail(id: string): Promise<PhoneDeviceListItem | null> {
+// generateMetadata와 페이지 본문이 같은 상품을 각각 조회하므로, 한 요청 안에서는
+// 한 번만 쿼리하도록 React cache()로 묶는다.
+export const getMobileDeviceDetail = cache(async (id: string): Promise<PhoneDeviceListItem | null> => {
   const supabase = await createClient();
   const { data } = await supabase.from("products").select(SELECT_COLUMNS).eq("id", id).eq("is_active", true).maybeSingle();
   if (!data) return null;
   return toListItem(data as unknown as RawProduct);
-}
+});

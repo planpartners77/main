@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
 import { getUsimPlanDetail } from "@/lib/usim/plans-query";
 import { callLabel, dataLabel, smsLabel } from "@/lib/usim/plan-spec";
 import { effectiveMonthlyPrice, isLifetimePromotion, promotionDurationMonths } from "@/lib/usim/filters";
@@ -19,6 +20,15 @@ const ACTIVATION_STEPS = [
 
 function formatWon(value: number) {
   return `${Math.round(value).toLocaleString("ko-KR")}원`;
+}
+
+// 진열 목록에서는 뺐지만 직접 링크로는 열어둔 상품(is_listed=false)은 검색엔진에는
+// 노출하지 않는다 — 접근 자체는 계속 허용된다.
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params;
+  const item = await getUsimPlanDetail(id);
+  if (!item) return {};
+  return item.is_listed ? {} : { robots: { index: false, follow: false } };
 }
 
 export default async function UsimPlanDetailPage({ params }: { params: Promise<{ id: string }> }) {

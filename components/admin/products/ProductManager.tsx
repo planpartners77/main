@@ -26,7 +26,7 @@ export interface ProductRow {
   extra: Record<string, unknown>;
   is_active: boolean;
   is_listed: boolean;
-  categories: { name: string } | null;
+  categories: { name: string; slug: string } | null;
   partners: { name: string } | null;
 }
 
@@ -60,6 +60,15 @@ const EMPTY_FORM = {
 function formatWon(value: number | null) {
   return value != null ? `${value.toLocaleString("ko-KR")}원` : "-";
 }
+
+// 상품 상세페이지(/[slug]/[id])가 있는 카테고리만 직접 링크를 복사할 수 있다.
+// internet/rental/travel 등은 카테고리 페이지 하나만 있고 상품별 상세페이지가 없다.
+const DETAIL_PATH_BY_CATEGORY_SLUG: Record<string, string> = {
+  mobile: "/mobile",
+  usim: "/usim",
+  insurance: "/insurance",
+  lp: "/lp",
+};
 
 type SortKey = "title" | "category" | "price_asc" | "price_desc";
 
@@ -109,6 +118,7 @@ export function ProductManager({
   const [categoryFilter, setCategoryFilter] = useState("");
   const [listedFilter, setListedFilter] = useState<"" | "listed" | "unlisted">("");
   const [sortKey, setSortKey] = useState<SortKey>("category");
+  const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const visiblePartners = partners.filter((p) => !form.category_id || p.category_id === form.category_id);
   const selectedCategory = categories.find((c) => c.id === form.category_id);
@@ -267,6 +277,19 @@ export function ProductManager({
     const supabase = createClient();
     await supabase.from("products").update({ is_listed: !product.is_listed }).eq("id", product.id);
     router.refresh();
+  }
+
+  async function copyDetailLink(product: ProductRow) {
+    const prefix = product.categories ? DETAIL_PATH_BY_CATEGORY_SLUG[product.categories.slug] : undefined;
+    if (!prefix) return;
+    const url = `${window.location.origin}${prefix}/${product.id}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopiedId(product.id);
+      setTimeout(() => setCopiedId((current) => (current === product.id ? null : current)), 1500);
+    } catch {
+      alert(url);
+    }
   }
 
   return (
@@ -542,6 +565,17 @@ export function ProductManager({
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex justify-end gap-3 text-xs font-semibold">
+                      {!product.is_listed &&
+                        product.categories &&
+                        DETAIL_PATH_BY_CATEGORY_SLUG[product.categories.slug] && (
+                          <button
+                            onClick={() => copyDetailLink(product)}
+                            title="미진열 상품의 직접 접근 링크를 복사합니다"
+                            className="text-amber-600 hover:opacity-70"
+                          >
+                            {copiedId === product.id ? "복사됨!" : "링크 복사"}
+                          </button>
+                        )}
                       <button onClick={() => startEdit(product)} className="text-gray-500 hover:text-[var(--brand-navy)]">
                         수정
                       </button>

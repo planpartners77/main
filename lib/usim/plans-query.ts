@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { normalizeUsimPlanExtra, type PromotionType } from "./plan-spec";
 import type { UsimPlanListItem, UsimPlanPromotion } from "./filters";
@@ -24,6 +25,7 @@ interface RawProduct {
   partner_id: string | null;
   partners: { name: string; logo_url: string | null } | null;
   plan_promotions: RawPromotion[] | null;
+  is_listed: boolean;
 }
 
 // 한 요금제에 활성 프로모션이 여러 개 등록된 경우(관리자 실수 등) 노출 순서가
@@ -64,11 +66,12 @@ function toListItem(row: RawProduct, leadCount: number): UsimPlanListItem {
     partner_name: row.partners?.name ?? null,
     partner_logo_url: row.partners?.logo_url ?? null,
     promotion: pickActivePromotion(row.plan_promotions),
+    is_listed: row.is_listed,
   };
 }
 
 const SELECT_COLUMNS =
-  "id, title, image_url, apply_url, base_price, extra, partner_id, partners(name, logo_url), plan_promotions(id, label, type, total_amount, schedule, valid_from, valid_until, is_active, created_at)";
+  "id, title, image_url, apply_url, base_price, extra, partner_id, partners(name, logo_url), plan_promotions(id, label, type, total_amount, schedule, valid_from, valid_until, is_active, created_at), is_listed";
 
 // "n명 선택" 표시는 관리자 수동 입력이 아니라 실제 leads 건수를 집계한 값이어야 하므로,
 // leads 테이블을 직접 읽을 수 없는 공개 페이지에서도 상품별 집계만 안전하게 가져온다.
@@ -102,7 +105,9 @@ export async function getUsimPlanList(): Promise<UsimPlanListItem[]> {
   return ((data ?? []) as unknown as RawProduct[]).map((row) => toListItem(row, leadCounts.get(row.id) ?? 0));
 }
 
-export async function getUsimPlanDetail(id: string): Promise<UsimPlanListItem | null> {
+// generateMetadata와 페이지 본문이 같은 상품을 각각 조회하므로, 한 요청 안에서는
+// 한 번만 쿼리하도록 React cache()로 묶는다.
+export const getUsimPlanDetail = cache(async (id: string): Promise<UsimPlanListItem | null> => {
   const supabase = await createClient();
   const [{ data }, leadCounts] = await Promise.all([
     supabase.from("products").select(SELECT_COLUMNS).eq("id", id).eq("is_active", true).maybeSingle(),
@@ -111,4 +116,4 @@ export async function getUsimPlanDetail(id: string): Promise<UsimPlanListItem | 
   if (!data) return null;
   const row = data as unknown as RawProduct;
   return toListItem(row, leadCounts.get(row.id) ?? 0);
-}
+});

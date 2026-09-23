@@ -1,29 +1,50 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
+import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { normalizeInsurancePlanExtra } from "@/lib/insurance/plan-spec";
 import { ConsultRequestForm } from "@/components/consult/ConsultRequestForm";
 
-export default async function InsurancePlanDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
+type InsurancePlanRow = {
+  id: string;
+  title: string;
+  image_url: string | null;
+  extra: Record<string, unknown> | null;
+  is_active: boolean;
+  is_listed: boolean;
+  categories: { slug: string } | null;
+  partners: { name: string } | null;
+};
+
+// generateMetadata와 페이지 본문이 같은 상품을 각각 조회하므로, 한 요청 안에서는
+// 한 번만 쿼리하도록 React cache()로 묶는다.
+const getRow = cache(async (id: string): Promise<InsurancePlanRow | null> => {
   const supabase = await createClient();
   const { data } = await supabase
     .from("products")
-    .select("id, title, image_url, extra, is_active, categories(slug), partners(name)")
+    .select("id, title, image_url, extra, is_active, is_listed, categories(slug), partners(name)")
     .eq("id", id)
     .maybeSingle();
+  const row = data as unknown as InsurancePlanRow | null;
+  if (!row || row.categories?.slug !== "insurance" || !row.is_active) return null;
+  return row;
+});
 
-  const row = data as unknown as {
-    id: string;
-    title: string;
-    image_url: string | null;
-    extra: Record<string, unknown> | null;
-    is_active: boolean;
-    categories: { slug: string } | null;
-    partners: { name: string } | null;
-  } | null;
+// 진열 목록에서는 뺐지만 직접 링크로는 열어둔 상품(is_listed=false)은 검색엔진에는
+// 노출하지 않는다 — 접근 자체는 계속 허용된다.
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params;
+  const row = await getRow(id);
+  if (!row) return {};
+  return row.is_listed ? {} : { robots: { index: false, follow: false } };
+}
 
-  if (!row || row.categories?.slug !== "insurance" || !row.is_active) notFound();
+export default async function InsurancePlanDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const row = await getRow(id);
+
+  if (!row) notFound();
 
   const extra = normalizeInsurancePlanExtra(row.extra);
 
