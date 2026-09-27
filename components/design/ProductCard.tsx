@@ -20,7 +20,7 @@ export function ProductCard({ product, isLoggedIn }: { product: DisplayProduct; 
 
   if (href) {
     return (
-      <Link href={href} className="block overflow-hidden rounded-2xl border border-gray-200 bg-white transition hover:-translate-y-0.5 hover:border-[var(--brand-blue)]/30 hover:shadow-md">
+      <Link href={href} className="block overflow-hidden rounded-2xl border border-gray-200 bg-white transition duration-200 hover:-translate-y-0.5 hover:border-[var(--brand-blue)]/30 hover:shadow-md">
         {content}
       </Link>
     );

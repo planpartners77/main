@@ -26,7 +26,7 @@
   --color-brand-urgent: var(--brand-urgent);
   --color-surface-tint: var(--surface-tint);
   --color-surface-tint-strong: var(--surface-tint-strong);
-  --font-sans: var(--font-geist-sans);
+  --font-sans: var(--font-pretendard), -apple-system, BlinkMacSystemFont, "Malgun Gothic", sans-serif;
   --font-mono: var(--font-geist-mono);
 }
 
@@ -71,4 +71,29 @@ body {
   border: 2px solid #ffffff;
   box-shadow: 0 1px 3px rgba(16, 35, 61, 0.35);
   cursor: pointer;
+}
+
+/* 신청/가입 완료 화면 공통 체크 아이콘(components/shared/SuccessCheck.tsx) 애니메이션.
+   pathLength=1을 사용해 실제 path 좌표와 무관하게 항상 0→1로 정확히 그려지도록 한다. */
+@keyframes success-pop {
+  0% {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.08);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+@keyframes success-check-draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
 }

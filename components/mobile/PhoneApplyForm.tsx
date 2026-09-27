@@ -4,6 +4,8 @@ import { useEffect, useState, type FormEvent } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { getStoredReferral, getStoredUtm } from "@/lib/referral/client";
 import { PHONE_ACTIVATION_TYPES, PHONE_CARRIERS } from "@/lib/mobile/device-spec";
+import { SuccessCheck } from "@/components/shared/SuccessCheck";
+import { Spinner } from "@/components/shared/Spinner";
 
 const RE_PHONE = /^010-\d{4}-\d{4}$/;
 
@@ -137,9 +139,7 @@ export function PhoneApplyForm({ initialDeviceId }: { initialDeviceId: string | 
   if (submitted) {
     return (
       <div className="mt-8 rounded-2xl border border-gray-100 bg-white p-10 text-center shadow-sm">
-        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[var(--brand-mint)]/15 text-2xl text-[var(--brand-mint)]">
-          ✓
-        </div>
+        <SuccessCheck />
         <p className="mt-4 text-base font-bold text-[var(--brand-navy)]">신청서가 접수되었습니다</p>
         <p className="mt-2 text-sm text-gray-500">남겨주신 연락처로 담당자가 확인 후 개통 절차를 안내드리겠습니다.</p>
       </div>
@@ -285,8 +285,9 @@ export function PhoneApplyForm({ initialDeviceId }: { initialDeviceId: string | 
       <button
         type="submit"
         disabled={submitting}
-        className="w-full rounded-full bg-[var(--brand-blue)] py-3.5 text-sm font-semibold text-white shadow-sm shadow-blue-200 transition hover:bg-[var(--brand-blue-dark)] disabled:opacity-60"
+        className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[var(--brand-blue)] py-3.5 text-sm font-semibold text-white shadow-sm shadow-blue-200 transition hover:bg-[var(--brand-blue-dark)] disabled:opacity-60"
       >
+        {submitting && <Spinner />}
         {submitting ? "제출 중..." : "신청서 제출하기"}
       </button>
     </form>

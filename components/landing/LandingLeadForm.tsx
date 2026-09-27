@@ -4,6 +4,8 @@ import { useState, type FormEvent } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { getStoredReferral, getStoredUtm } from "@/lib/referral/client";
 import type { LeadFormExtra } from "@/lib/landing/page-spec";
+import { SuccessCheck } from "@/components/shared/SuccessCheck";
+import { Spinner } from "@/components/shared/Spinner";
 
 const DEFAULT_PREFERRED_TIME_OPTIONS = ["평일 오전", "평일 오후", "저녁(18시 이후)", "주말"];
 const DEFAULT_SUBTITLE = "셀프가입이 아닌 상담 예약 신청입니다. 즉시 결제·가입은 진행되지 않습니다.";
@@ -134,6 +136,7 @@ export function LandingLeadForm({
   if (submitted) {
     return (
       <div className="rounded-2xl border border-gray-200 bg-white p-8 text-center">
+        <SuccessCheck className="mb-4" />
         <p className="text-lg font-bold text-[var(--brand-navy)]">{successTitle}</p>
         <p className="mt-2 text-sm text-gray-600">{successMessage}</p>
       </div>
@@ -216,8 +219,9 @@ export function LandingLeadForm({
       <button
         type="submit"
         disabled={submitting}
-        className="mt-5 w-full rounded-full bg-[var(--brand-blue)] px-5 py-3 text-sm font-semibold text-white hover:bg-[var(--brand-blue-dark)] disabled:opacity-50"
+        className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-full bg-[var(--brand-blue)] px-5 py-3 text-sm font-semibold text-white hover:bg-[var(--brand-blue-dark)] disabled:opacity-50"
       >
+        {submitting && <Spinner />}
         {submitting ? "접수 중..." : buttonLabel}
       </button>
     </form>

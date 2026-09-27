@@ -48,7 +48,7 @@ function UsimSpotlightCard({ item }: { item: UsimPlanListItem }) {
   return (
     <Link
       href={`/usim/${item.id}`}
-      className="flex flex-col rounded-2xl border border-gray-200 bg-white p-5 transition hover:border-[var(--brand-blue)]/50 hover:shadow-sm"
+      className="flex flex-col rounded-2xl border border-gray-200 bg-white p-5 transition duration-200 hover:-translate-y-0.5 hover:border-[var(--brand-blue)]/30 hover:shadow-md"
     >
       <PartnerBadge name={item.partner_name} logoUrl={item.partner_logo_url} />
 

@@ -16,7 +16,7 @@ export function PhoneDeviceCard({ item }: { item: PhoneDeviceListItem }) {
   return (
     <Link
       href={`/mobile/${item.id}`}
-      className={`block rounded-2xl border border-gray-100 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-[var(--brand-blue)]/30 hover:shadow-md ${
+      className={`block rounded-2xl border border-gray-100 bg-white p-4 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-[var(--brand-blue)]/30 hover:shadow-md ${
         soldOut ? "opacity-60" : ""
       }`}
     >

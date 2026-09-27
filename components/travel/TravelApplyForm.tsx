@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { getStoredReferral, getStoredUtm } from "@/lib/referral/client";
+import { SuccessCheck } from "@/components/shared/SuccessCheck";
+import { Spinner } from "@/components/shared/Spinner";
 
 // CRIS 골프 체험 프로그램 신청 페이지. 원본(vscode_pplan/index.html, ppartners 배포본)의
 // 신청서 항목·검증 로직·회차 일정을 그대로 유지하되 PlanPartners 블루 컨셉으로 재구성했다.
@@ -531,9 +533,7 @@ export function TravelApplyForm() {
 
         {submitted ? (
           <div className="mt-8 rounded-2xl border border-gray-100 bg-white p-10 text-center shadow-sm">
-            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[var(--brand-mint)]/15 text-2xl text-[var(--brand-mint)]">
-              ✓
-            </div>
+            <SuccessCheck />
             <p className="mt-4 text-base font-bold text-[var(--brand-navy)]">신청서가 접수되었습니다</p>
             <p className="mt-2 text-sm text-gray-500">
               남겨주신 연락처로 담당자가 확인 후 빠르게 안내드리겠습니다.
@@ -912,8 +912,9 @@ export function TravelApplyForm() {
             <button
               type="submit"
               disabled={submitting}
-              className="w-full rounded-full bg-[var(--brand-blue)] py-3.5 text-sm font-semibold text-white shadow-sm shadow-blue-200 transition hover:bg-[var(--brand-blue-dark)] disabled:opacity-60"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[var(--brand-blue)] py-3.5 text-sm font-semibold text-white shadow-sm shadow-blue-200 transition hover:bg-[var(--brand-blue-dark)] disabled:opacity-60"
             >
+              {submitting && <Spinner />}
               {submitting ? "제출 중..." : "신청서 제출하기"}
             </button>
             <p className="text-center text-xs text-gray-400">담당자가 순차적으로 연락드립니다</p>

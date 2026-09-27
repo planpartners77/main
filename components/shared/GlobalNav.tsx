@@ -169,15 +169,27 @@ export function GlobalNav({ categories }: { categories: CategoryConfig[] }) {
         </Link>
       </header>
 
-      {menuOpen && (
-        <div className="fixed inset-0 z-50 md:hidden">
+      {/* 열림/닫힘 모두 항상 마운트해 두고 opacity/translate에 transition을 걸어 슬라이드
+          인/아웃시킨다 — 조건부 언마운트(menuOpen && ...) 방식은 닫힐 때 애니메이션을 줄
+          기회가 없어서 순수 CSS 트랜지션만으로 처리 가능한 이 방식을 쓴다(추가 JS/라이브러리 없음). */}
+      <div
+        aria-hidden={!menuOpen}
+        className={`fixed inset-0 z-50 transition-opacity duration-300 md:hidden ${
+          menuOpen ? "opacity-100" : "pointer-events-none opacity-0"
+        }`}
+      >
           <button
             type="button"
             aria-label="메뉴 닫기"
+            tabIndex={menuOpen ? 0 : -1}
             onClick={() => setMenuOpen(false)}
             className="absolute inset-0 bg-black/40"
           />
-          <div className="absolute inset-y-0 right-0 flex w-72 max-w-[80%] flex-col overflow-y-auto bg-white p-5 shadow-xl">
+          <div
+            className={`absolute inset-y-0 right-0 flex w-72 max-w-[80%] flex-col overflow-y-auto bg-white p-5 shadow-xl transition-transform duration-300 ease-out ${
+              menuOpen ? "translate-x-0" : "translate-x-full"
+            }`}
+          >
             <div className="flex items-center justify-between">
               <span className="text-sm font-semibold text-[var(--brand-navy)]">메뉴</span>
               <button
@@ -257,24 +269,56 @@ export function GlobalNav({ categories }: { categories: CategoryConfig[] }) {
               )}
             </div>
           </div>
-        </div>
-      )}
+      </div>
 
       <nav className="fixed inset-x-0 bottom-0 z-40 flex h-14 border-t border-gray-200 bg-white md:hidden">
-        <Link href="/" className="flex flex-1 flex-col items-center justify-center text-xs text-gray-600">
+        <Link href="/" className="flex flex-1 flex-col items-center justify-center gap-0.5 text-xs text-gray-600">
+          <HomeIcon />
           홈
         </Link>
         {/* Phase 2(§12-3)의 "내 지원금 확인하기" 진입 플로우가 만들어지면 그 라우트로 교체 */}
-        <Link href="/" className="flex flex-1 flex-col items-center justify-center text-xs text-gray-600">
+        <Link href="/" className="flex flex-1 flex-col items-center justify-center gap-0.5 text-xs text-gray-600">
+          <SearchIcon />
           맞춤 상품찾기
         </Link>
         <Link
           href="/mypage"
-          className="flex flex-1 flex-col items-center justify-center text-xs text-gray-600"
+          className="flex flex-1 flex-col items-center justify-center gap-0.5 text-xs text-gray-600"
         >
+          <UserIcon />
           마이페이지
         </Link>
       </nav>
     </>
+  );
+}
+
+// 하단 탭바 전용 인라인 SVG 아이콘. 아이콘 폰트/라이브러리 없이 24x24 stroke 아이콘 3개만
+// 인라인으로 두면 별도 요청 없이 번들에 텍스트로 포함되어 가볍다.
+function HomeIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.8} aria-hidden="true">
+      <path d="M4 11.5 12 4l8 7.5" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M6 10v9h12v-9" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M10 19v-5h4v5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function SearchIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.8} aria-hidden="true">
+      <circle cx="11" cy="11" r="6.5" />
+      <path d="m20 20-4.3-4.3" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function UserIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.8} aria-hidden="true">
+      <circle cx="12" cy="8" r="3.5" />
+      <path d="M5 20c1.2-3.6 4-5.5 7-5.5s5.8 1.9 7 5.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
   );
 }

@@ -17,6 +17,7 @@ import { getActiveBanners } from "@/lib/design/public-queries";
 import { getCategoryTree } from "@/lib/design/category-tree";
 import { getProductDisplayData } from "@/lib/design/products-query";
 import { createClient } from "@/lib/supabase/server";
+import { ScrollReveal } from "@/components/shared/ScrollReveal";
 import type { PageSectionRow } from "@/lib/design/pages-query";
 import type {
   HeroSectionConfig,
@@ -147,9 +148,18 @@ export async function PageRenderer({ sections }: { sections: PageSectionRow[] })
 
   return (
     <>
-      {sections.map((section) => (
-        <Section key={section.id} section={section} isLoggedIn={isLoggedIn} />
-      ))}
+      {sections.map((section) => {
+        // Hero/카테고리 퀵네비는 항상 최초 뷰포트 안에 있어 리빌 애니메이션이 오히려
+        // 깜빡임처럼 보이므로 제외하고, 그 아래 섹션들만 스크롤 리빌을 적용한다.
+        if (section.type === "hero" || section.type === "category_nav") {
+          return <Section key={section.id} section={section} isLoggedIn={isLoggedIn} />;
+        }
+        return (
+          <ScrollReveal key={section.id}>
+            <Section section={section} isLoggedIn={isLoggedIn} />
+          </ScrollReveal>
+        );
+      })}
     </>
   );
 }

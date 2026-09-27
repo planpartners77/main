@@ -3,6 +3,8 @@
 import { useState, type FormEvent } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { getStoredReferral, getStoredUtm } from "@/lib/referral/client";
+import { SuccessCheck } from "@/components/shared/SuccessCheck";
+import { Spinner } from "@/components/shared/Spinner";
 
 const INSURANCE_TYPE_OPTIONS = [
   "종신보험",
@@ -176,6 +178,7 @@ export function InsuranceConsultForm({ productId }: { productId: string }) {
   if (submitted) {
     return (
       <div className="rounded-2xl border border-gray-200 bg-white p-8 text-center">
+        <SuccessCheck className="mb-4" />
         <p className="text-lg font-bold text-[var(--brand-navy)]">상담 신청이 접수되었습니다.</p>
         <p className="mt-2 text-sm text-gray-600">
           담당 상담사가 배정되어 남겨주신 연락처로 순차 연락드립니다. 가입이 확정되는 경우 청약철회 절차도 함께
@@ -382,8 +385,9 @@ export function InsuranceConsultForm({ productId }: { productId: string }) {
       <button
         type="submit"
         disabled={submitting}
-        className="mt-5 w-full rounded-full bg-[var(--brand-blue)] px-5 py-3 text-sm font-semibold text-white hover:bg-[var(--brand-blue-dark)] disabled:opacity-50"
+        className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-full bg-[var(--brand-blue)] px-5 py-3 text-sm font-semibold text-white hover:bg-[var(--brand-blue-dark)] disabled:opacity-50"
       >
+        {submitting && <Spinner />}
         {submitting ? "접수 중..." : "무료 상담 예약하기"}
       </button>
     </form>

@@ -1,12 +1,23 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist_Mono } from "next/font/google";
+import localFont from "next/font/local";
 import { getSeoSettings } from "@/lib/design/site-settings";
 import { CustomHeadScript } from "@/components/CustomHeadScript";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
+// Geist(next/font/google)는 latin 서브셋만 있어 한글 텍스트가 전부 OS 기본 폰트(맑은 고딕 등)로
+// 폴백되고 있었다 — 본문 폰트를 한글 웹폰트 Pretendard로 교체(§디자인 품질 개선 1단계).
+// 용량 절약을 위해 variable/전체 웨이트 대신 실사용 빈도가 가장 높은 Regular/Bold 2개만
+// 정적 웨이트로 로드하고, font-medium/font-semibold는 브라우저의 최근접 웨이트 매칭으로
+// Regular/Bold에 자연스럽게 붙는다(별도 웨이트 파일 다운로드 없음 = 서버/전송량 절감).
+// 파일은 node_modules 경로 의존을 피하려고 app/fonts/pretendard에 직접 커밋해 둔 것.
+const pretendard = localFont({
+  variable: "--font-pretendard",
+  display: "swap",
+  src: [
+    { path: "./fonts/pretendard/Pretendard-Regular.woff2", weight: "400", style: "normal" },
+    { path: "./fonts/pretendard/Pretendard-Bold.woff2", weight: "700", style: "normal" },
+  ],
 });
 
 const geistMono = Geist_Mono({
@@ -74,7 +85,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="ko"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${pretendard.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
         <CustomHeadScript html={seo.headScript} />

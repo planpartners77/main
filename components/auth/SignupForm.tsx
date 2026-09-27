@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { getReferralCodeForSignup } from "@/lib/referral/client";
+import { SuccessCheck } from "@/components/shared/SuccessCheck";
+import { Spinner } from "@/components/shared/Spinner";
 
 // 회원가입 시 서비스 이용약관·개인정보처리방침 동의(필수)와 마케팅 정보 수신 동의(선택)를
 // 함께 받는다(§12-2 Footer 법적 문서와 동일 항목). 프로필 행(profiles)은 클라이언트가 직접
@@ -124,9 +126,7 @@ export function SignupForm({ kakaoEnabled = false }: { kakaoEnabled?: boolean })
   if (done) {
     return (
       <div className="mt-8 rounded-2xl border border-gray-100 bg-white p-10 text-center shadow-sm">
-        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[var(--brand-mint)]/15 text-2xl text-[var(--brand-mint)]">
-          ✓
-        </div>
+        <SuccessCheck />
         <p className="mt-4 text-base font-bold text-[var(--brand-navy)]">회원가입 신청이 완료되었습니다</p>
         <p className="mt-2 text-sm text-gray-500">
           {email}로 인증 메일을 보내드렸습니다. 메일함에서 인증을 완료한 뒤 로그인해 주세요.
@@ -383,8 +383,9 @@ export function SignupForm({ kakaoEnabled = false }: { kakaoEnabled?: boolean })
       <button
         type="submit"
         disabled={loading || !allRequiredAgreed}
-        className="w-full rounded-full bg-[var(--brand-blue)] py-3 text-sm font-semibold text-white shadow-sm shadow-blue-200 transition hover:bg-[var(--brand-blue-dark)] disabled:opacity-60"
+        className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[var(--brand-blue)] py-3 text-sm font-semibold text-white shadow-sm shadow-blue-200 transition hover:bg-[var(--brand-blue-dark)] disabled:opacity-60"
       >
+        {loading && <Spinner />}
         {loading ? "가입 처리 중..." : "회원가입"}
       </button>
       </form>
