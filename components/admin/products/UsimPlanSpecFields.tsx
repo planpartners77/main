@@ -12,6 +12,7 @@ import {
   type UsimPlanExtra,
   type UsimPlanExtraCost,
 } from "@/lib/usim/plan-spec";
+import { ProductDetailHtmlField } from "./ProductDetailHtmlField";
 
 function toggleInArray<T>(arr: T[], value: T): T[] {
   return arr.includes(value) ? arr.filter((v) => v !== value) : [...arr, value];
@@ -43,9 +44,11 @@ export function parseUsimExtra(raw: string): UsimPlanExtra {
 export function UsimPlanSpecFields({
   value,
   onChange,
+  resetKey,
 }: {
   value: UsimPlanExtra;
   onChange: (next: UsimPlanExtra) => void;
+  resetKey?: number | string;
 }) {
   function set<K extends keyof UsimPlanExtra>(key: K, v: UsimPlanExtra[K]) {
     onChange({ ...value, [key]: v });
@@ -386,6 +389,14 @@ export function UsimPlanSpecFields({
           </div>
         )}
       </div>
+
+      <ProductDetailHtmlField
+        key={resetKey}
+        html={value.detail_html}
+        show={value.show_detail_html}
+        onChangeHtml={(html) => set("detail_html", html)}
+        onChangeShow={(show) => set("show_detail_html", show)}
+      />
     </div>
   );
 }

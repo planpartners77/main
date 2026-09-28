@@ -5,6 +5,8 @@ import { getMobileDeviceDetail } from "@/lib/mobile/devices-query";
 import { PHONE_STOCK_STATUS_LABELS, storageLabel } from "@/lib/mobile/device-spec";
 import { bestEffectivePrice } from "@/lib/mobile/filters";
 import { ApplyButton } from "@/components/shared/ApplyButton";
+import { ProductDetailFallbackNotice } from "@/components/shared/ProductDetailFallbackNotice";
+import { sanitizeDetailHtml } from "@/lib/content/sanitize-detail-html";
 
 function formatWon(value: number) {
   return `${Math.round(value).toLocaleString("ko-KR")}원`;
@@ -79,6 +81,16 @@ export default async function MobileDeviceDetailPage({ params }: { params: Promi
         </div>
         {hasIncentive && <p className="mt-1 text-xs text-gray-500">통신사·개통방식별 지원금이 반영된 예상 구매가입니다.</p>}
       </div>
+
+      {item.extra.show_detail_html && item.extra.detail_html ? (
+        // 관리자 전용 입력값이지만 저장된 HTML이 그대로 서버 렌더링되므로 sanitize-html로 한 번 걸러낸다.
+        <div
+          className="prose prose-sm mt-6 max-w-none"
+          dangerouslySetInnerHTML={{ __html: sanitizeDetailHtml(item.extra.detail_html) }}
+        />
+      ) : (
+        <ProductDetailFallbackNotice />
+      )}
 
       <div className="fixed inset-x-0 bottom-14 z-30 border-t border-gray-100 bg-white p-4 sm:static sm:bottom-auto sm:z-auto sm:mt-10 sm:border-0 sm:p-0">
         {soldOut ? (

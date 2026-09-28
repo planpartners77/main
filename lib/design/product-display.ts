@@ -14,10 +14,17 @@ export interface DisplayProduct {
   category_slug: string | null;
 }
 
-// /mobile, /usim, /lp, /insurance처럼 products 테이블 행을 그대로 상세 페이지로 보여주는
-// 카테고리만 여기 등록한다. 상조·여행·이벤트 등은 아직 개별 상세 페이지가 없어
-// 상담/신청 플로우로만 연결되므로 제외.
-const CATEGORY_SLUGS_WITH_DETAIL_PAGE = new Set(["mobile", "usim", "lp", "insurance"]);
+// products 테이블 행을 그대로 상세 페이지로 보여주는 카테고리만 여기 등록한다.
+// travel은 상품과 무관한 별도 정적 콘텐츠 페이지라 상품별 상세 페이지가 없어 제외.
+const CATEGORY_SLUGS_WITH_DETAIL_PAGE = new Set([
+  "mobile",
+  "usim",
+  "lp",
+  "insurance",
+  "internet",
+  "rental",
+  "funeral",
+]);
 
 export function productDetailHref(product: DisplayProduct): string | null {
   if (!product.category_slug || !CATEGORY_SLUGS_WITH_DETAIL_PAGE.has(product.category_slug)) return null;

@@ -38,12 +38,14 @@ export type LandingFormType = "simple" | "insurance_consult";
 
 export interface LandingPageExtra {
   detail_html: string;
+  show_detail_html: boolean;
   form_type: LandingFormType;
   lead_form: LeadFormExtra;
 }
 
 export const EMPTY_LANDING_PAGE_EXTRA: LandingPageExtra = {
   detail_html: "",
+  show_detail_html: false,
   form_type: "simple",
   lead_form: EMPTY_LEAD_FORM_EXTRA,
 };
@@ -74,6 +76,7 @@ export function normalizeLandingPageExtra(raw: Record<string, unknown> | null | 
   const r = raw ?? {};
   return {
     detail_html: typeof r.detail_html === "string" ? r.detail_html : "",
+    show_detail_html: r.show_detail_html === true,
     form_type: r.form_type === "insurance_consult" ? "insurance_consult" : "simple",
     lead_form: normalizeLeadFormExtra(r.lead_form as Record<string, unknown> | null | undefined),
   };

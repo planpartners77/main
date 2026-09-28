@@ -12,6 +12,7 @@ import {
   type PhoneStockStatus,
 } from "@/lib/mobile/device-spec";
 import { normalizePhoneDeviceExtra } from "@/lib/mobile/device-spec";
+import { ProductDetailHtmlField } from "./ProductDetailHtmlField";
 
 export function parsePhoneExtra(json: string): PhoneDeviceExtra {
   try {
@@ -28,9 +29,11 @@ function toggleInArray<T>(arr: T[], value: T): T[] {
 export function MobileDeviceSpecFields({
   value,
   onChange,
+  resetKey,
 }: {
   value: PhoneDeviceExtra;
   onChange: (next: PhoneDeviceExtra) => void;
+  resetKey?: number | string;
 }) {
   function set<K extends keyof PhoneDeviceExtra>(key: K, v: PhoneDeviceExtra[K]) {
     onChange({ ...value, [key]: v });
@@ -161,6 +164,14 @@ export function MobileDeviceSpecFields({
         />
         eSIM 지원
       </label>
+
+      <ProductDetailHtmlField
+        key={resetKey}
+        html={value.detail_html}
+        show={value.show_detail_html}
+        onChangeHtml={(html) => set("detail_html", html)}
+        onChangeShow={(show) => set("show_detail_html", show)}
+      />
     </div>
   );
 }

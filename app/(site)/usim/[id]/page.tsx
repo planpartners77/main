@@ -9,6 +9,8 @@ import { UsimPlanInfoTabs } from "@/components/usim/UsimPlanInfoTabs";
 import { PartnerBadge } from "@/components/usim/PartnerBadge";
 import { RecordRecentView } from "@/components/usim/RecordRecentView";
 import { ApplyButton } from "@/components/shared/ApplyButton";
+import { ProductDetailFallbackNotice } from "@/components/shared/ProductDetailFallbackNotice";
+import { sanitizeDetailHtml } from "@/lib/content/sanitize-detail-html";
 
 const ACTIVATION_STEPS = [
   { title: "1. 온라인 신청", desc: "신청하기 버튼을 눌러 본인 확인 정보와 원하는 개통일을 입력해요." },
@@ -89,6 +91,16 @@ export default async function UsimPlanDetailPage({ params }: { params: Promise<{
       )}
 
       <UsimPlanInfoTabs extra={item.extra} />
+
+      {item.extra.show_detail_html && item.extra.detail_html ? (
+        // 관리자 전용 입력값이지만 저장된 HTML이 그대로 서버 렌더링되므로 sanitize-html로 한 번 걸러낸다.
+        <div
+          className="prose prose-sm mt-6 max-w-none"
+          dangerouslySetInnerHTML={{ __html: sanitizeDetailHtml(item.extra.detail_html) }}
+        />
+      ) : (
+        <ProductDetailFallbackNotice />
+      )}
 
       <div className="mt-6">
         <h2 className="text-sm font-bold text-[var(--brand-navy)]">신청 및 개통 과정</h2>

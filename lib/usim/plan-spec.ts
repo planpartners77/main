@@ -83,6 +83,8 @@ export interface UsimPlanExtra {
   eligibility_minor: boolean;
   eligibility_foreigner: boolean;
   selected_count: number;
+  detail_html: string;
+  show_detail_html: boolean;
 }
 
 export const EMPTY_USIM_PLAN_EXTRA: UsimPlanExtra = {
@@ -106,6 +108,8 @@ export const EMPTY_USIM_PLAN_EXTRA: UsimPlanExtra = {
   eligibility_minor: false,
   eligibility_foreigner: false,
   selected_count: 0,
+  detail_html: "",
+  show_detail_html: false,
 };
 
 // DB에서 읽은 extra(Record<string, unknown>)를 안전하게 UsimPlanExtra로 정규화한다.
@@ -143,6 +147,8 @@ export function normalizeUsimPlanExtra(raw: Record<string, unknown> | null | und
     eligibility_minor: r.eligibility_minor === true,
     eligibility_foreigner: r.eligibility_foreigner === true,
     selected_count: typeof r.selected_count === "number" ? r.selected_count : 0,
+    detail_html: typeof r.detail_html === "string" ? r.detail_html : "",
+    show_detail_html: r.show_detail_html === true,
   };
 }
 

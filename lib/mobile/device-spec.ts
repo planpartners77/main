@@ -32,6 +32,8 @@ export interface PhoneDeviceExtra {
   self_provided_available: boolean; // 자급제(단말기만 구매) 가능 여부
   esim_available: boolean;
   stock_status: PhoneStockStatus;
+  detail_html: string;
+  show_detail_html: boolean;
 }
 
 export const EMPTY_PHONE_DEVICE_EXTRA: PhoneDeviceExtra = {
@@ -45,6 +47,8 @@ export const EMPTY_PHONE_DEVICE_EXTRA: PhoneDeviceExtra = {
   self_provided_available: false,
   esim_available: false,
   stock_status: "in_stock",
+  detail_html: "",
+  show_detail_html: false,
 };
 
 // DB에서 읽은 extra(Record<string, unknown>)를 안전하게 PhoneDeviceExtra로 정규화한다.
@@ -71,6 +75,8 @@ export function normalizePhoneDeviceExtra(raw: Record<string, unknown> | null | 
     stock_status: (["in_stock", "low_stock", "sold_out"] as const).includes(r.stock_status as PhoneStockStatus)
       ? (r.stock_status as PhoneStockStatus)
       : "in_stock",
+    detail_html: typeof r.detail_html === "string" ? r.detail_html : "",
+    show_detail_html: r.show_detail_html === true,
   };
 }
 

@@ -4,6 +4,8 @@ import type { Metadata } from "next";
 import { getLandingPageDetail } from "@/lib/landing/pages-query";
 import { LandingLeadForm } from "@/components/landing/LandingLeadForm";
 import { InsuranceConsultForm } from "@/components/landing/InsuranceConsultForm";
+import { ProductDetailFallbackNotice } from "@/components/shared/ProductDetailFallbackNotice";
+import { sanitizeDetailHtml } from "@/lib/content/sanitize-detail-html";
 
 // 진열 목록에서는 뺐지만 직접 링크로는 열어둔 상품(is_listed=false)은 검색엔진에는
 // 노출하지 않는다 — 접근 자체는 계속 허용된다.
@@ -25,12 +27,14 @@ export default async function LandingPageDetailPage({ params }: { params: Promis
         ← 목록으로
       </Link>
 
-      {item.extra.detail_html ? (
-        // 관리자만 입력 가능한 상세페이지 HTML. CustomHeadScript와 동일한 신뢰 수준으로
-        // sanitize 없이 원본 그대로 렌더링한다(사용자 입력이 아닌 관리자 전용 입력값).
-        <div className="mt-6" dangerouslySetInnerHTML={{ __html: item.extra.detail_html }} />
+      {item.extra.show_detail_html && item.extra.detail_html ? (
+        // 관리자 전용 입력값이지만 저장된 HTML이 그대로 서버 렌더링되므로 sanitize-html로 한 번 걸러낸다.
+        <div
+          className="prose prose-sm mt-6 max-w-none"
+          dangerouslySetInnerHTML={{ __html: sanitizeDetailHtml(item.extra.detail_html) }}
+        />
       ) : (
-        <p className="mt-6 text-sm text-gray-400">등록된 상세 콘텐츠가 없습니다.</p>
+        <ProductDetailFallbackNotice />
       )}
 
       <div className="mt-10">

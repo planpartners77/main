@@ -11,6 +11,7 @@ import { LandingPageSpecFields, parseLandingExtra } from "./LandingPageSpecField
 import { EMPTY_LANDING_PAGE_EXTRA, type LandingPageExtra } from "@/lib/landing/page-spec";
 import { InsurancePlanSpecFields, parseInsuranceExtra } from "./InsurancePlanSpecFields";
 import { EMPTY_INSURANCE_PLAN_EXTRA, type InsurancePlanExtra } from "@/lib/insurance/plan-spec";
+import { GenericCategorySpecFields } from "./GenericCategorySpecFields";
 
 export interface ProductRow {
   id: string;
@@ -54,7 +55,6 @@ const EMPTY_FORM = {
   apply_url: "",
   is_active: true,
   is_listed: true,
-  extra: "{}",
 };
 
 function formatWon(value: number | null) {
@@ -62,12 +62,15 @@ function formatWon(value: number | null) {
 }
 
 // 상품 상세페이지(/[slug]/[id])가 있는 카테고리만 직접 링크를 복사할 수 있다.
-// internet/rental/travel 등은 카테고리 페이지 하나만 있고 상품별 상세페이지가 없다.
+// travel은 카테고리 페이지 하나만 있고 상품별 상세페이지가 없다.
 const DETAIL_PATH_BY_CATEGORY_SLUG: Record<string, string> = {
   mobile: "/mobile",
   usim: "/usim",
   insurance: "/insurance",
   lp: "/lp",
+  internet: "/internet",
+  rental: "/rental",
+  funeral: "/funeral",
 };
 
 type SortKey = "title" | "category" | "price_asc" | "price_desc";
@@ -113,6 +116,8 @@ export function ProductManager({
   const [phoneExtra, setPhoneExtra] = useState<PhoneDeviceExtra>(EMPTY_PHONE_DEVICE_EXTRA);
   const [landingExtra, setLandingExtra] = useState<LandingPageExtra>(EMPTY_LANDING_PAGE_EXTRA);
   const [insuranceExtra, setInsuranceExtra] = useState<InsurancePlanExtra>(EMPTY_INSURANCE_PLAN_EXTRA);
+  const [otherExtra, setOtherExtra] = useState<Record<string, unknown>>({});
+  const [formResetKey, setFormResetKey] = useState(0);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [categoryFilter, setCategoryFilter] = useState("");
@@ -145,9 +150,11 @@ export function ProductManager({
     setPhoneExtra(EMPTY_PHONE_DEVICE_EXTRA);
     setLandingExtra(EMPTY_LANDING_PAGE_EXTRA);
     setInsuranceExtra(EMPTY_INSURANCE_PLAN_EXTRA);
+    setOtherExtra({});
     setEditingId(null);
     setShowForm(true);
     setError(null);
+    setFormResetKey((k) => k + 1);
   }
 
   function loadProductIntoForm(product: ProductRow, title: string) {
@@ -164,7 +171,6 @@ export function ProductManager({
       apply_url: product.apply_url ?? "",
       is_active: product.is_active,
       is_listed: product.is_listed,
-      extra: JSON.stringify(product.extra ?? {}, null, 2),
     });
     if (category?.slug === "usim") {
       setUsimExtra(parseUsimExtra(JSON.stringify(product.extra ?? {})));
@@ -186,8 +192,10 @@ export function ProductManager({
     } else {
       setInsuranceExtra(EMPTY_INSURANCE_PLAN_EXTRA);
     }
+    setOtherExtra(product.extra ?? {});
     setShowForm(true);
     setError(null);
+    setFormResetKey((k) => k + 1);
   }
 
   function startEdit(product: ProductRow) {
@@ -217,12 +225,7 @@ export function ProductManager({
     } else if (isInsuranceCategory) {
       extraParsed = insuranceExtra as unknown as Record<string, unknown>;
     } else {
-      try {
-        extraParsed = form.extra.trim() ? JSON.parse(form.extra) : {};
-      } catch {
-        setError("추가 정보(extra)는 올바른 JSON 형식이어야 합니다.");
-        return;
-      }
+      extraParsed = otherExtra;
     }
 
     setSaving(true);
@@ -422,24 +425,20 @@ export function ProductManager({
             <span className="text-xs text-gray-400">(꺼도 직접 링크 접근은 유지)</span>
           </label>
           {isUsimCategory ? (
-            <UsimPlanSpecFields value={usimExtra} onChange={setUsimExtra} />
+            <UsimPlanSpecFields value={usimExtra} onChange={setUsimExtra} resetKey={formResetKey} />
           ) : isMobileCategory ? (
-            <MobileDeviceSpecFields value={phoneExtra} onChange={setPhoneExtra} />
+            <MobileDeviceSpecFields value={phoneExtra} onChange={setPhoneExtra} resetKey={formResetKey} />
           ) : isLpCategory ? (
-            <LandingPageSpecFields value={landingExtra} onChange={setLandingExtra} productTitle={form.title} />
+            <LandingPageSpecFields
+              value={landingExtra}
+              onChange={setLandingExtra}
+              productTitle={form.title}
+              resetKey={formResetKey}
+            />
           ) : isInsuranceCategory ? (
-            <InsurancePlanSpecFields value={insuranceExtra} onChange={setInsuranceExtra} />
+            <InsurancePlanSpecFields value={insuranceExtra} onChange={setInsuranceExtra} resetKey={formResetKey} />
           ) : (
-            <label className="text-sm sm:col-span-2">
-              추가 정보(JSON, 선택 — 카테고리별 상이한 스펙)
-              <textarea
-                value={form.extra}
-                onChange={(e) => setForm({ ...form, extra: e.target.value })}
-                rows={4}
-                spellCheck={false}
-                className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 font-mono text-xs"
-              />
-            </label>
+            <GenericCategorySpecFields key={formResetKey} value={otherExtra} onChange={setOtherExtra} />
           )}
 
           {error && <p className="text-sm text-red-600 sm:col-span-2">{error}</p>}

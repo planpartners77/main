@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@plugin "@tailwindcss/typography";
 
 /* 디자인 토큰 (가이드 §5-1, 2026-08-31 벤치마킹 캡처 기준 컬러 컨셉으로 업데이트).
    어두운 남색 블록 대신 밝은 블루 액센트 + 옅은 틴트 배경 중심으로 전환. */

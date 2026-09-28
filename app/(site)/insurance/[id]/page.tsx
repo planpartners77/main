@@ -5,6 +5,8 @@ import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { normalizeInsurancePlanExtra } from "@/lib/insurance/plan-spec";
 import { ConsultRequestForm } from "@/components/consult/ConsultRequestForm";
+import { ProductDetailFallbackNotice } from "@/components/shared/ProductDetailFallbackNotice";
+import { sanitizeDetailHtml } from "@/lib/content/sanitize-detail-html";
 
 type InsurancePlanRow = {
   id: string;
@@ -72,15 +74,19 @@ export default async function InsurancePlanDetailPage({ params }: { params: Prom
 
       {/* 2단: 상세 콘텐츠 */}
       <div className="mt-8">
-        {extra.detail_html ? (
-          // 관리자만 입력 가능한 상세페이지 HTML. LandingPageDetailPage와 동일한 신뢰 수준으로
-          // sanitize 없이 원본 그대로 렌더링한다(사용자 입력이 아닌 관리자 전용 입력값).
-          <div dangerouslySetInnerHTML={{ __html: extra.detail_html }} />
+        {extra.show_detail_html && extra.detail_html ? (
+          // 관리자 전용 입력값이지만 저장된 HTML이 그대로 서버 렌더링되므로 sanitize-html로 한 번 걸러낸다.
+          <div
+            className="prose prose-sm max-w-none"
+            dangerouslySetInnerHTML={{ __html: sanitizeDetailHtml(extra.detail_html) }}
+          />
         ) : extra.coverage_summary ? (
           <div className="rounded-2xl border border-gray-200 bg-white p-5 text-sm leading-relaxed text-gray-600">
             {extra.coverage_summary}
           </div>
-        ) : null}
+        ) : (
+          <ProductDetailFallbackNotice className="" />
+        )}
       </div>
 
       {/* 3단: 상담 신청 폼 */}
