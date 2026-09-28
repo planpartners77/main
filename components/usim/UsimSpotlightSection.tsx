@@ -95,22 +95,20 @@ export function UsimSpotlightSection({ title, items }: { title: string; items: U
   if (items.length === 0) return null;
 
   return (
-    <section className="bg-white py-14">
-      <div className="mx-auto max-w-5xl px-4">
-        <h2 className="text-xl font-bold text-[var(--brand-navy)]">{title}</h2>
+    <div className="mx-auto max-w-5xl px-4">
+      <h2 className="text-xl font-bold text-[var(--brand-navy)]">{title}</h2>
 
-        <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
-          {items.map((item) => (
-            <UsimSpotlightCard key={item.id} item={item} />
-          ))}
-        </div>
-
-        <div className="mt-6 text-center">
-          <Link href="/usim" className="text-sm font-semibold text-[var(--brand-blue)] hover:underline">
-            요금제 더보기 &gt;
-          </Link>
-        </div>
+      <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+        {items.map((item) => (
+          <UsimSpotlightCard key={item.id} item={item} />
+        ))}
       </div>
-    </section>
+
+      <div className="mt-6 text-center">
+        <Link href="/usim" className="text-sm font-semibold text-[var(--brand-blue)] hover:underline">
+          요금제 더보기 &gt;
+        </Link>
+      </div>
+    </div>
   );
 }

@@ -24,7 +24,7 @@ export function ReviewsSection({ categories, reviews }: { categories: ReviewCate
   const visibleReviews = reviews.filter((r) => activeCategory && r.category_id === activeCategory.id);
 
   return (
-    <section className="mx-auto max-w-5xl px-4 py-14">
+    <div className="mx-auto max-w-5xl px-4">
       <h2 className="text-xl font-bold text-[var(--brand-navy)]">고객들의 리얼 후기</h2>
 
       <div className="mt-4 flex gap-2 overflow-x-auto pb-1">
@@ -62,6 +62,6 @@ export function ReviewsSection({ categories, reviews }: { categories: ReviewCate
           ))}
         </div>
       )}
-    </section>
+    </div>
   );
 }

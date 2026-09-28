@@ -205,48 +205,50 @@ export function CrisGolfProgram() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-5xl px-4 py-14">
-        <SectionHead
-          eyebrow="PROGRAM"
-          title="학업과 골프, 두 가지를 동시에 확인하는 1주"
-          desc={`등록 전에 국제학교 생활을 미리 겪어보는 체험 프로그램입니다. "여기캠프"가 CRIS 국제학교 골프 프로그램의 한국 파트너로서 신청부터 출국까지 안내를 도와드립니다.`}
-        />
-        <div className="grid gap-4 md:grid-cols-2">
-          <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
-            <h3 className="text-sm font-bold text-[var(--brand-navy)]">🎓 프로그램 소개</h3>
-            <p className="mt-3 text-sm leading-relaxed text-gray-600">
-              골프 국제학교 입학을 고려하는 학생을 위한 프로그램입니다. 태국 치앙라이의
-              CRIS(Chiang Rai International School)에서 실제 수업, 기숙사 생활, PGA 프로 골프
-              훈련을 1주간 그대로 체험합니다. 캘리포니아 학제 기반 커리큘럼과 영어 몰입
-              환경에서 진학 가능성을 직접 가늠해볼 수 있습니다.
-            </p>
-            <a
-              href="https://golf.cris.ac.th/ko/residence"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-[var(--brand-blue)]/30 px-4 py-2 text-xs font-semibold text-[var(--brand-blue)] transition hover:bg-[var(--surface-tint)]"
-            >
-              CRIS 국제학교 공식 홈페이지 바로가기
-              <span aria-hidden="true">↗</span>
-            </a>
-          </div>
-          <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
-            <h3 className="text-sm font-bold text-[var(--brand-navy)]">👥 참가 대상</h3>
-            <ul className="mt-3 space-y-2.5">
-              {[
-                "초등학교 4학년 ~ 고등학교 2학년",
-                "골프 국제학교 진학을 고려 중인 학생",
-                "학부모 동반 참가 가능",
-                "영어 실력 무관, 몰입 환경 체험 목적 참가 가능",
-              ].map((item) => (
-                <li key={item} className="flex items-start gap-2.5 text-sm text-gray-600">
-                  <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[var(--brand-blue)] text-[10px] font-bold text-white">
-                    ✓
-                  </span>
-                  {item}
-                </li>
-              ))}
-            </ul>
+      <section className="bg-[var(--surface-tint)] py-14">
+        <div className="mx-auto max-w-5xl px-4">
+          <SectionHead
+            eyebrow="PROGRAM"
+            title="학업과 골프, 두 가지를 동시에 확인하는 1주"
+            desc={`등록 전에 국제학교 생활을 미리 겪어보는 체험 프로그램입니다. "여기캠프"가 CRIS 국제학교 골프 프로그램의 한국 파트너로서 신청부터 출국까지 안내를 도와드립니다.`}
+          />
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
+              <h3 className="text-sm font-bold text-[var(--brand-navy)]">🎓 프로그램 소개</h3>
+              <p className="mt-3 text-sm leading-relaxed text-gray-600">
+                골프 국제학교 입학을 고려하는 학생을 위한 프로그램입니다. 태국 치앙라이의
+                CRIS(Chiang Rai International School)에서 실제 수업, 기숙사 생활, PGA 프로 골프
+                훈련을 1주간 그대로 체험합니다. 캘리포니아 학제 기반 커리큘럼과 영어 몰입
+                환경에서 진학 가능성을 직접 가늠해볼 수 있습니다.
+              </p>
+              <a
+                href="https://golf.cris.ac.th/ko/residence"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-[var(--brand-blue)]/30 px-4 py-2 text-xs font-semibold text-[var(--brand-blue)] transition hover:bg-white"
+              >
+                CRIS 국제학교 공식 홈페이지 바로가기
+                <span aria-hidden="true">↗</span>
+              </a>
+            </div>
+            <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
+              <h3 className="text-sm font-bold text-[var(--brand-navy)]">👥 참가 대상</h3>
+              <ul className="mt-3 space-y-2.5">
+                {[
+                  "초등학교 4학년 ~ 고등학교 2학년",
+                  "골프 국제학교 진학을 고려 중인 학생",
+                  "학부모 동반 참가 가능",
+                  "영어 실력 무관, 몰입 환경 체험 목적 참가 가능",
+                ].map((item) => (
+                  <li key={item} className="flex items-start gap-2.5 text-sm text-gray-600">
+                    <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[var(--brand-blue)] text-[10px] font-bold text-white">
+                      ✓
+                    </span>
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
         </div>
       </section>
@@ -323,7 +325,7 @@ export function CrisGolfProgram() {
         </div>
       </section>
 
-      <section className="bg-gray-50 py-14">
+      <section className="bg-[var(--surface-tint)] py-14">
         <div className="mx-auto max-w-5xl px-4">
           <SectionHead eyebrow="GUIDE" title="준비물 및 생활 안내" desc="출국 전 꼭 확인해 주세요." />
           <div className="grid gap-4 md:grid-cols-2">
@@ -333,7 +335,7 @@ export function CrisGolfProgram() {
                 {ESSENTIALS.map((item) => (
                   <span
                     key={item}
-                    className="rounded-full bg-[var(--surface-tint)] px-3 py-1.5 text-xs font-semibold text-[var(--brand-navy)]"
+                    className="rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-[var(--brand-navy)]"
                   >
                     {item}
                   </span>
@@ -462,25 +464,27 @@ export function CrisGolfProgram() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-5xl px-4 py-14">
-        <SectionHead
-          eyebrow="CAMPUS"
-          title="교육과정"
-          desc="유치원부터 고등과정까지, 실제 재학생들이 생활하는 캠퍼스와 커리큘럼입니다."
-        />
-        <div className="relative mb-4 h-56 w-full overflow-hidden rounded-2xl shadow-sm sm:h-72">
-          <Image
-            src="/travel/campus-cover.jpg"
-            alt="CRIS 캠퍼스 전경"
-            fill
-            sizes="(max-width: 640px) 100vw, 1024px"
-            className="object-cover"
+      <section className="bg-[var(--surface-tint)] py-14">
+        <div className="mx-auto max-w-5xl px-4">
+          <SectionHead
+            eyebrow="CAMPUS"
+            title="교육과정"
+            desc="유치원부터 고등과정까지, 실제 재학생들이 생활하는 캠퍼스와 커리큘럼입니다."
           />
+          <div className="relative mb-4 h-56 w-full overflow-hidden rounded-2xl shadow-sm sm:h-72">
+            <Image
+              src="/travel/campus-cover.jpg"
+              alt="CRIS 캠퍼스 전경"
+              fill
+              sizes="(max-width: 640px) 100vw, 1024px"
+              className="object-cover"
+            />
+          </div>
+          <ImageGrid items={CURRICULUM} cols="grid-cols-2 sm:grid-cols-5" />
         </div>
-        <ImageGrid items={CURRICULUM} cols="grid-cols-2 sm:grid-cols-5" />
       </section>
 
-      <section className="bg-gray-50 py-14">
+      <section className="py-14">
         <div className="mx-auto max-w-5xl px-4">
           <SectionHead eyebrow="FACILITIES" title="학교시설" desc="CRIS의 교실과 캠퍼스 시설을 살펴보세요." />
           <p className="mb-3 text-xs font-bold tracking-wider text-[var(--brand-navy)]">CLASSROOM</p>
@@ -490,44 +494,46 @@ export function CrisGolfProgram() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-5xl px-4 py-14">
-        <SectionHead
-          eyebrow="APPLY"
-          title="매 주차 선착순으로 마감됩니다"
-          desc={`"여기캠프"가 CRIS 국제학교 골프 프로그램의 한국 파트너로서 신청 접수부터 출국 안내까지 도와드립니다.`}
-        />
-        <div className="grid gap-4 md:grid-cols-2">
-          <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
-            <h3 className="text-sm font-bold text-[var(--brand-navy)]">신청 정보</h3>
-            <dl className="mt-3 divide-y divide-gray-100 text-sm">
-              {APPLY_INFO.map((row) => (
-                <div key={row.k} className="flex justify-between gap-4 py-2.5">
-                  <dt className="shrink-0 text-gray-400">{row.k}</dt>
-                  <dd className="text-right font-medium text-[var(--brand-navy)]">{row.v}</dd>
-                </div>
-              ))}
-            </dl>
+      <section className="bg-[var(--surface-tint)] py-14">
+        <div className="mx-auto max-w-5xl px-4">
+          <SectionHead
+            eyebrow="APPLY"
+            title="매 주차 선착순으로 마감됩니다"
+            desc={`"여기캠프"가 CRIS 국제학교 골프 프로그램의 한국 파트너로서 신청 접수부터 출국 안내까지 도와드립니다.`}
+          />
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
+              <h3 className="text-sm font-bold text-[var(--brand-navy)]">신청 정보</h3>
+              <dl className="mt-3 divide-y divide-gray-100 text-sm">
+                {APPLY_INFO.map((row) => (
+                  <div key={row.k} className="flex justify-between gap-4 py-2.5">
+                    <dt className="shrink-0 text-gray-400">{row.k}</dt>
+                    <dd className="text-right font-medium text-[var(--brand-navy)]">{row.v}</dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
+            <div className="flex flex-col justify-center rounded-2xl bg-white p-6 text-center shadow-sm">
+              <p className="text-sm text-gray-500">PlanPartners × 여기캠프</p>
+              <p className="mt-2 text-lg font-bold text-[var(--brand-navy)]">
+                CRIS 국제학교 골프 프로그램
+                <br />
+                무료 체험 신청 안내받기
+              </p>
+              <Link
+                href="/apply/travel"
+                className="mx-auto mt-6 w-full max-w-xs rounded-full bg-[var(--brand-blue)] px-6 py-3 text-sm font-semibold text-white shadow-sm shadow-blue-200 transition hover:bg-[var(--brand-blue-dark)]"
+              >
+                신청서 작성하고 안내받기
+              </Link>
+            </div>
           </div>
-          <div className="flex flex-col justify-center rounded-2xl bg-[var(--surface-tint)] p-6 text-center">
-            <p className="text-sm text-gray-500">PlanPartners × 여기캠프</p>
-            <p className="mt-2 text-lg font-bold text-[var(--brand-navy)]">
-              CRIS 국제학교 골프 프로그램
-              <br />
-              무료 체험 신청 안내받기
-            </p>
-            <Link
-              href="/apply/travel"
-              className="mx-auto mt-6 w-full max-w-xs rounded-full bg-[var(--brand-blue)] px-6 py-3 text-sm font-semibold text-white shadow-sm shadow-blue-200 transition hover:bg-[var(--brand-blue-dark)]"
-            >
-              신청서 작성하고 안내받기
-            </Link>
-          </div>
+          <p className="mt-6 text-xs leading-relaxed text-gray-400">
+            본 프로그램은 파트너사 여기캠프(나무투어)가 제공합니다. 상기 일정 및 혜택은 학교
+            사정에 따라 변경될 수 있으며, 신청 접수 및 상세 안내는 PlanPartners를 통해
+            진행됩니다.
+          </p>
         </div>
-        <p className="mt-6 text-xs leading-relaxed text-gray-400">
-          본 프로그램은 파트너사 여기캠프(나무투어)가 제공합니다. 상기 일정 및 혜택은 학교
-          사정에 따라 변경될 수 있으며, 신청 접수 및 상세 안내는 PlanPartners를 통해
-          진행됩니다.
-        </p>
       </section>
     </main>
   );

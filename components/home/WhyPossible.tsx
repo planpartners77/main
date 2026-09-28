@@ -18,21 +18,19 @@ const STEPS = [
 
 export function WhyPossible() {
   return (
-    <section className="bg-[var(--surface-tint)] py-14">
-      <div className="mx-auto max-w-5xl px-4">
-        <h2 className="text-xl font-bold text-[var(--brand-navy)]">이런 비교가 가능한 이유는</h2>
-        <div className="mt-8 grid gap-6 sm:grid-cols-3">
-          {STEPS.map((item) => (
-            <div key={item.step} className="rounded-2xl bg-white p-6 shadow-sm">
-              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--brand-blue)] text-xs font-bold text-white">
-                {item.step}
-              </span>
-              <h3 className="mt-3 font-semibold text-[var(--brand-navy)]">{item.title}</h3>
-              <p className="mt-2 text-sm text-gray-500">{item.body}</p>
-            </div>
-          ))}
-        </div>
+    <div className="mx-auto max-w-5xl px-4">
+      <h2 className="text-xl font-bold text-[var(--brand-navy)]">이런 비교가 가능한 이유는</h2>
+      <div className="mt-8 grid gap-6 sm:grid-cols-3">
+        {STEPS.map((item) => (
+          <div key={item.step} className="rounded-2xl bg-white p-6 shadow-sm">
+            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--brand-blue)] text-xs font-bold text-white">
+              {item.step}
+            </span>
+            <h3 className="mt-3 font-semibold text-[var(--brand-navy)]">{item.title}</h3>
+            <p className="mt-2 text-sm text-gray-500">{item.body}</p>
+          </div>
+        ))}
       </div>
-    </section>
+    </div>
   );
 }

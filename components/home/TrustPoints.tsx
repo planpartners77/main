@@ -55,7 +55,7 @@ function InfoIcon() {
 
 export function TrustPoints() {
   return (
-    <section className="mx-auto max-w-5xl px-4 py-14">
+    <div className="mx-auto max-w-5xl px-4">
       <h2 className="text-xl font-bold text-[var(--brand-navy)]">더 안심할 수 있도록</h2>
       <div className="mt-6 grid gap-8 md:grid-cols-2 md:items-center">
         <ul className="space-y-3">
@@ -83,6 +83,6 @@ export function TrustPoints() {
           ))}
         </div>
       </div>
-    </section>
+    </div>
   );
 }

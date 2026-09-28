@@ -20,28 +20,26 @@ const POINTS = [
 // 실제 수치는 §Phase5 컴플라이언스 검토 후 카테고리 랜딩(§12-4/§12-5)에서 개별적으로 노출한다.
 export function IncentiveBanner() {
   return (
-    <section className="bg-[var(--surface-tint)] py-14">
-      <div className="mx-auto max-w-5xl px-4">
-        <h2 className="text-center text-xl font-bold text-[var(--brand-navy)]">
-          비교는 필수, 혜택까지 꼼꼼하게
-        </h2>
-        <div className="mt-8 grid gap-4 sm:grid-cols-3">
-          {POINTS.map((point) => (
-            <div key={point.title} className="rounded-2xl bg-white p-6 shadow-sm">
-              <h3 className="font-semibold text-[var(--brand-navy)]">{point.title}</h3>
-              <p className="mt-2 text-sm text-gray-500">{point.body}</p>
-            </div>
-          ))}
-        </div>
-        <div className="mt-8 text-center">
-          <Link
-            href="/quiz/internet"
-            className="inline-block rounded-full bg-[var(--brand-blue)] px-6 py-3 text-sm font-medium text-white hover:bg-[var(--brand-blue-dark)]"
-          >
-            내 혜택 확인하기
-          </Link>
-        </div>
+    <div className="mx-auto max-w-5xl px-4">
+      <h2 className="text-center text-xl font-bold text-[var(--brand-navy)]">
+        비교는 필수, 혜택까지 꼼꼼하게
+      </h2>
+      <div className="mt-8 grid gap-4 sm:grid-cols-3">
+        {POINTS.map((point) => (
+          <div key={point.title} className="rounded-2xl bg-white p-6 shadow-sm">
+            <h3 className="font-semibold text-[var(--brand-navy)]">{point.title}</h3>
+            <p className="mt-2 text-sm text-gray-500">{point.body}</p>
+          </div>
+        ))}
       </div>
-    </section>
+      <div className="mt-8 text-center">
+        <Link
+          href="/quiz/internet"
+          className="inline-block rounded-full bg-[var(--brand-blue)] px-6 py-3 text-sm font-medium text-white hover:bg-[var(--brand-blue-dark)]"
+        >
+          내 혜택 확인하기
+        </Link>
+      </div>
+    </div>
   );
 }

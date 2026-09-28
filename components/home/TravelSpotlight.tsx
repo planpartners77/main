@@ -12,9 +12,8 @@ const BENEFITS = [
 // /travel(CrisGolfProgram) 랜딩으로 이어지는 별도 스포트라이트 카드로 대신 소개한다.
 export function TravelSpotlight() {
   return (
-    <section className="bg-[var(--surface-tint)] py-14">
-      <div className="mx-auto max-w-5xl px-4">
-        <h2 className="text-xl font-bold text-[var(--brand-navy)]">지금 인기 있는 여행 프로그램</h2>
+    <div className="mx-auto max-w-5xl px-4">
+      <h2 className="text-xl font-bold text-[var(--brand-navy)]">지금 인기 있는 여행 프로그램</h2>
 
         <div className="mt-6 rounded-3xl bg-white p-3 shadow-sm sm:flex sm:items-center sm:p-4">
           <div className="relative aspect-[1343/727] w-full overflow-hidden rounded-2xl sm:w-1/2">
@@ -50,8 +49,7 @@ export function TravelSpotlight() {
               <span aria-hidden="true">→</span>
             </Link>
           </div>
-        </div>
       </div>
-    </section>
+    </div>
   );
 }

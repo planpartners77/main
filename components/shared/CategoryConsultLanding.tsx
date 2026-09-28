@@ -27,7 +27,8 @@ const PROCESS_STEPS = [
 ] as const;
 
 // 가이드 §12-5 상담필수형 템플릿. /insurance, /funeral이 이 컴포넌트를 공유한다.
-// 가독성을 위해 구역마다 배경을 교차한다: 히어로(연블루) → 흰색 → 연회색(플랜) → 흰색 → 네이비 CTA.
+// 가독성을 위해 구역마다 배경을 교차한다: 히어로(연블루) → 흰색 → surface-tint(플랜) → 흰색 → 네이비 CTA.
+// surface-tint는 PageRenderer의 콘텐츠 섹션 교차 배경과 같은 토큰 — 페이지 종류가 달라도 배경 규칙을 통일한다.
 export function CategoryConsultLanding({
   category,
   products,
@@ -63,7 +64,7 @@ export function CategoryConsultLanding({
         </div>
       </section>
 
-      <section className="bg-gray-100">
+      <section className="bg-[var(--surface-tint)]">
         <div className="mx-auto max-w-5xl px-4 py-10">
           <h2 className={SECTION_TITLE}>플랜 요약</h2>
           {products.length === 0 ? (

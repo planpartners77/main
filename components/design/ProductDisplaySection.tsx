@@ -29,9 +29,8 @@ export function ProductDisplaySection({
   if (mode === "latest" && categories.length === 0) return null;
 
   return (
-    <section className="bg-white py-14">
-      <div className="mx-auto max-w-5xl px-4">
-        <h2 className="text-xl font-bold text-[var(--brand-navy)]">{title}</h2>
+    <div className="mx-auto max-w-5xl px-4">
+      <h2 className="text-xl font-bold text-[var(--brand-navy)]">{title}</h2>
 
         {mode === "latest" && categories.length > 1 && (
           <div className="mt-4 flex gap-2 overflow-x-auto pb-1">
@@ -62,8 +61,7 @@ export function ProductDisplaySection({
               <ProductCard key={product.id} product={product} isLoggedIn={isLoggedIn} />
             ))}
           </div>
-        )}
-      </div>
-    </section>
+      )}
+    </div>
   );
 }

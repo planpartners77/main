@@ -9,7 +9,7 @@ interface NoticeListItem {
 export function NoticeListSection({ title, notices }: { title: string; notices: NoticeListItem[] }) {
   if (notices.length === 0) return null;
   return (
-    <section className="mx-auto max-w-3xl px-4 py-14">
+    <div className="mx-auto max-w-3xl px-4">
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-bold text-[var(--brand-navy)]">{title}</h2>
         <Link href="/notices" className="text-xs font-semibold text-gray-400 hover:text-[var(--brand-navy)]">
@@ -26,6 +26,6 @@ export function NoticeListSection({ title, notices }: { title: string; notices: 
           </li>
         ))}
       </ul>
-    </section>
+    </div>
   );
 }
