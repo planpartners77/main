@@ -40,6 +40,26 @@ const CONTRACT_STATUS_STYLE: Record<string, string> = {
   terminated: "bg-gray-100 text-gray-500",
 };
 
+function PartnerLogoThumb({ src, alt }: { src: string; alt: string }) {
+  const [broken, setBroken] = useState(false);
+
+  if (broken) {
+    return (
+      <span
+        className="flex h-8 w-8 items-center justify-center rounded-full bg-red-50 text-[10px] font-semibold text-red-400"
+        title="로고 URL에 접근할 수 없습니다"
+      >
+        깨짐
+      </span>
+    );
+  }
+
+  return (
+    // eslint-disable-next-line @next/next/no-img-element -- 외부 URL 로고, next/image 미사용 컨벤션
+    <img src={src} alt={alt} className="h-8 w-8 rounded-full object-cover" onError={() => setBroken(true)} />
+  );
+}
+
 export function PartnerManager({ partners, categories }: { partners: PartnerRow[]; categories: CategoryOption[] }) {
   const router = useRouter();
   const [showForm, setShowForm] = useState(false);
@@ -229,8 +249,7 @@ export function PartnerManager({ partners, categories }: { partners: PartnerRow[
                 <tr key={partner.id} className="border-b border-gray-50 last:border-0">
                   <td className="px-4 py-3">
                     {partner.logo_url ? (
-                      // eslint-disable-next-line @next/next/no-img-element -- 외부 URL 로고, next/image 미사용 컨벤션
-                      <img src={partner.logo_url} alt={partner.name} className="h-8 w-8 rounded-full object-cover" />
+                      <PartnerLogoThumb src={partner.logo_url} alt={partner.name} />
                     ) : (
                       <span className="text-gray-300">-</span>
                     )}
