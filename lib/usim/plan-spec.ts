@@ -163,9 +163,9 @@ export function callLabel(minutes: number | null): string {
 }
 
 export function videoCallLabel(minutes: number | null): string {
-  if (minutes == null) return "영상통화 무제한";
-  if (minutes === 0) return "영상통화 없음";
-  return `영상통화 ${minutes}분`;
+  if (minutes == null) return "영상/부가통화 무제한";
+  if (minutes === 0) return "영상/부가통화 없음";
+  return `영상/부가통화 ${minutes}분`;
 }
 
 export function smsLabel(count: number | null): string {
